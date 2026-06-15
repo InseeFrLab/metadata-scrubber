@@ -1,0 +1,21 @@
+archives/mcp-rmes/README.md
+  s_7588ee46717b16::t_8ada9e23fd6f7c 6,8-9,11,13-15
+  s_7588ee46717b16::t_f65df8300a7d5f 41
+  s_7588ee46717b16::t_fde46e3c7f23e9 1-5,7,10,12,16-40,42-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "ee0e8278f4e751e68b4a405754936b2a2a050d56",
+  "prompts": {},
+  "sessions": {
+    "s_7588ee46717b16": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1357444ebffeEhM9M8K2IbMwFa",
+        "model": "qwen3-6-35b-moe"
+      },
+      "human_author": "h4njlg <cedric.couralet@insee.fr>"
+    }
+  }
+}
