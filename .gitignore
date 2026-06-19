@@ -1,1 +1,10 @@
 data/
+
+# Python / uv
+__pycache__/
+*.pyc
+.venv/
+
+# Artefacts de dédoublonnage (générés)
+output/
+*.sqlite
