@@ -1,0 +1,181 @@
+/* style.css — Styles custom pour Metadata Scrubber */
+
+/* Navbar */
+.navbar-brand {
+    font-weight: bold;
+}
+
+/* Progress bar */
+.progress {
+    height: 30px;
+    font-size: 1rem;
+}
+
+.progress-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.6s ease;
+}
+
+/* Cards */
+.card {
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    font-weight: 500;
+}
+
+/* Duplicate cards */
+.dup-card {
+    border-left: 4px solid #ccc;
+    margin-bottom: 0.5rem;
+}
+
+.dup-card.approve {
+    border-left-color: #198754;
+    background-color: #f0fff4;
+}
+
+.dup-card.reject {
+    border-left-color: #dc3545;
+    background-color: #fff5f5;
+}
+
+.dup-card.pending {
+    border-left-color: #ffc107;
+    background-color: #fffbeb;
+}
+
+/* Code comparison table */
+.code-table {
+    font-size: 0.85rem;
+}
+
+.code-table th {
+    white-space: nowrap;
+}
+
+.code-table td {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Logs */
+#logsContainer {
+    font-family: 'Courier New', Courier, monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* Toasts */
+.toast {
+    min-width: 300px;
+}
+
+/* Pagination */
+.pagination .page-link {
+    cursor: pointer;
+}
+
+/* Accordion */
+.accordion-button:not(.collapsed) {
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: rgba(0, 0, 0, 0.125);
+}
+
+/* Scrollable code blocks */
+pre {
+    margin: 0;
+}
+
+/* Badge for detection type */
+.badge-detection {
+    font-size: 0.75rem;
+    padding: 0.25em 0.5em;
+}
+
+/* Confidence bar */
+.confidence-bar {
+    height: 6px;
+    border-radius: 3px;
+    background-color: #e9ecef;
+}
+
+.confidence-bar-inner {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.confidence-high {
+    background-color: #198754;
+}
+
+.confidence-medium {
+    background-color: #ffc107;
+}
+
+.confidence-low {
+    background-color: #dc3545;
+}
+
+/* Loading spinner */
+.spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+
+    .row.g-2 > .col,
+    .row.g-2 > .col-md-3,
+    .row.g-2 > .col-md-4,
+    .row.g-2 > .col-md-6,
+    .row.g-2 > .col-md-8 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* Smooth transitions */
+.tab-pane {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Expander animation */
+.expander-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.expander-content.expanded {
+    max-height: 5000px;
+}

@@ -1,0 +1,419 @@
+---
+title: "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI)"
+author: "Agent de Data Science"
+format:
+  html:
+    theme: cosmo
+  pdf: default
+date: today
+documentclass: article
+---
+
+# Introduction
+
+Cette note décrit la méthodologie implémentée dans le pipeline `main.py` (module `metadata-scrubber`) pour identifier et regrouper les listes de codes en double au sein d'un fichier XML DDI (Data Dictionary Interface).
+
+Le scénario cible est le suivant : un fichier de métadonnées peut contenir plusieurs définitions de listes de codes (`CodeList`) qui, bien que nommées différemment ou légèrement variant dans leurs valeurs, décrivent en réalité le même concept. Leur multiplication alourdit inutilement la structure et complexifie la maintenance.
+
+Sur le fichier **BTS.xml** analysé (4,7 Mo) :
+- **156** CodeLists extraites, **831** catégories résolues, **503** références Variable → CodeList.
+- **102** signatures de contenu distinctes → **54** CodeLists redondantes (29 groupes de doublons).
+- Toutes les 156 CodeLists sont référencées par au moins une variable.
+
+---
+
+# 1. Modèle de Données DDI et Extraction
+
+## 1.1. Structure du fichier DDI
+
+Un fichier DDI 3.3 est une suite d'objets enfermés dans des balises `<Fragment>` (au total 2573 `Fragment` pour BTS.xml). Chaque `Fragment` contient **exactement un objet**, qui peut être :
+- une **`CodeList`** (la liste de codes elle-même) ;
+- une **`Category`** (le libellé d'une valeur de code) ;
+- une **`Variable`** ou un **`RepresentedVariable`** (qui référence une `CodeList`).
+
+Dans le fichier réel BTS.xml, les `Fragment` apparaissent dans un ordre arbitraire : on trouve parfois des `CodeList` avant les `Category` correspondantes, d'où la nécessité d'une approche en deux passes.
+
+### Exemple : la `CodeList` cible `N_domempl_23`
+
+La CodeList portant l'identifiant `36a67d27-866b-40c6-9e4d-286d1f3d31d1` contient **10 codes** :
+
+| Valeur | ID Catégorie | Libellé résolu |
+| ---: | --- | --- |
+| `1` | `a9116bf7` | Fonction publique d'État |
+| `2` | `863966af` | Fonction publique territoriale |
+| `3` | `0c867d98` | Fonction publique hospitalière |
+| `4` | `d72b4a6c` | Autres organismes publics administratifs |
+| `5` | `da4dda39` | Personnes morales de droit public soumises au droit commercial |
+| `6` | `f22d7d85` | Entreprises individuelles |
+| `7` | `a32cde98` | Particuliers Employeurs (PE) |
+| `8` | `a7f3aa93` | Organismes privés spécialisés et groupements de droit privé |
+| `9` | `04bdc7f2` | Autres sociétés privées |
+| `Vide` | `96271bef` | Entreprises sans catégorie juridique renseignée |
+
+### Structure XML d'un `Code`
+
+Chaque `<Code>` ne contient pas le libellé directement. Il contient **uniquement** :
+- sa **valeur brute** (`r:Value`, ex. `4`) ;
+- une **référence** vers une `Category` (`r:CategoryReference > r:ID`, ex. `d72b4a6c-b668-46c9-98d9-7ba4663e7fa0`).
+
+```xml
+<Code>
+  <r:ID>4dd22a77-9078-4417-9710-48699af3298a</r:ID>
+  <r:CategoryReference>
+    <r:ID>d72b4a6c-b668-46c9-98d9-7ba4663e7fa0</r:ID>
+  </r:CategoryReference>
+  <r:Value>4</r:Value>
+</Code>
+```
+
+### Structure XML d'une `Category`
+
+Le libellé de la valeur `4` est stocké dans une `Category` distincte, identifiée par l'`r:ID` de la référence :
+
+```xml
+<Category>
+  <r:ID>d72b4a6c-b668-46c9-98d9-7ba4663e7fa0</r:ID>
+  <r:Label>
+    <r:Content xml:lang="fr-FR">
+      Autres organismes publics administratifs
+    </r:Content>
+  </r:Label>
+  <CategoryName>domempl-4</CategoryName>
+</Category>
+```
+
+> **Implication** : l'extraction ne peut pas se faire en une seule passe. Il faut d'abord indexer toutes les `Category` pour disposer d'un dictionnaire `{cat_id → libellé}`, puis parcourir les `Code` et résoudre chaque référence.
+
+### Structure XML d'une `Variable` référençant une `CodeList`
+
+Les variables font le pont entre les métadonnées et les données réelles en pointant vers une `CodeList` :
+
+```xml
+<Variable>
+  <r:ID>7686be9c-7849-4941-bccc-62206f764a12</r:ID>
+  <VariableName><r:String xml:lang="fr-FR">domempl</r:String></VariableName>
+  <r:Label><r:Content xml:lang="fr-FR">
+    Domaine d'emploi de l'entreprise
+  </r:Content></r:Label>
+  <VariableRepresentation>
+    <r:CodeRepresentation>
+      <r:CodeListReference>
+        <r:ID>36a67d27-866b-40c6-9e4d-286d1f3d31d1</r:ID>
+      </r:CodeListReference>
+    </r:CodeRepresentation>
+  </VariableRepresentation>
+</Variable>
+```
+
+Pour la target `N_domempl_23`, les variables référentes sont **`domempl`** et **`domempl_empl`**, ce qui constitue son **signal d'usage**.
+
+## 1.2. Pipeline d'extraction récapitulatif
+
+```
+┌───────────────────────────────────────────────────┐
+│ 1. Lecture XML DDI                                │
+│    - Parsing avec lxml en ignorant les namespaces│
+│    - Filtrer par local(frag) == "Fragment"       │
+├───────────────────────────────────────────────────┤
+│ 2. Passe 1 — Indexation des Catégories            │
+│    - Pour chaque Fragment contenant une Category  │
+│      → {r:ID → r:Label > r:Content.text}         │
+│    Résultat : 831 cat_id → libellé               │
+├───────────────────────────────────────────────────┤
+│ 3. Passe 2 — Extraction des CodeLists             │
+│    - Pour chaque Fragment contenant une CodeList  │
+│      → Pour chaque <Code> enfant :                │
+│        - extraire r:Value et r:CategoryReference  │
+│        - résoudre le libellé via l'index        │
+│    Résultat : 156 codelists avec codes résolus   │
+├───────────────────────────────────────────────────┤
+│ 4. Passe 3 — Extraction des Références Variables  │
+│    - Pour chaque Variable / RepresentedVariable   │
+│      → Trouver le CodeListReference au plus profond│
+│    Résultat : 503 références Variable → CodeList  │
+└───────────────────────────────────────────────────┘
+```
+
+---
+
+# 2. L'Entonnoir de Détection
+
+L'approche dédoublonnage est un **entonnoir en trois niveaux**, du plus simple au plus coûteux.
+
+## 2.1. Phase 1 — Doublons Exact (Signature de Contenu)
+
+**Objectif** : détecter les listes de codes identiques dans leur contenu (mêmes paires `valeur, libellé`), indépendamment de leur nom, identifiant ou de l'ordre dans le fichier XML.
+
+### Méthode
+
+1. **Normalisation** de chaque valeur et libellé : décomposition Unicode NFC, minuscule, espaces multiples → espace unique, trim.
+2. **Signature** : tuple trié de l'ensemble des paires `(valeur_n, libellé_n)`.
+3. **Regroupement par signature** : deux listes partageant la même signature sont des **doublons exacts**.
+
+Le nom et l'identifiant de la liste sont **volontairement exclus** de la signature : deux listes identiques nommées différemment doivent être détectées.
+
+### Exemple concret : `N_domempl_23` et `DOMEMPL`
+
+Ces deux listes partiellement redondantes montrent comment la signature détecte — ou non — des différences subtiles :
+
+| Code | `N_domempl_23` (36a67d27) | `DOMEMPL` (d6e60a74) |
+| --- | --- | --- |
+| `1` | `Fonction publique d'`**É**`tat` | `Fonction publique d'`**E**`tat` |
+| `2` | `Fonction publique territo`<br>`riale` | `Fonction publique territo`<br>`riale` |
+| `3…9` | Identiques | Identiques |
+| `Vide` | `Entreprises sans catégorie…` | `Entreprises sans catégorie…` |
+| **Ordre** | `1, 2, 3, 4, 5, 6, 7, 8, 9, Vide` | `Vide, 1, 2, 3, 4, 5, 6, 7, 8, 9` |
+| **Vars** | `domempl, domempl_empl` | `domempl, domempl_empl, DOMEMPL, DOMEMPL_EMPL` |
+
+- **9 codes partagent** exactement la même paire `(valeur, libellé)` normalisé.
+- **1 code diffère** : `1` → `"d'État"` vs `"d'Etat"` (accent différent sur `E` → après NFC + minuscule, `"ét"` ≠ `"et"`).
+- **La signature est donc différente** → **NON détectées comme doublons exacts** par cette phase.
+- Cependant, les **mêmes variables** référent les deux listes → signal d'usage très fort (voir Section 3).
+
+→ Cette paire est détectée en **Phase 1 — quasi-doublon** (score textuel) puis en **Phase 2 — sémantique**.
+
+### Exemple de doublons exacts : les 18 listes à 1 code
+
+18 CodeLists différentes, nommées `N-categorie_juridique`, `N-region`, `N-conv_coll`, `N_Départements`, `N-uu_23`, `N-zem_23`, `N_cris`, `N-pays_naissance`, `N-pcs`, `N-CATEGORIE-JURIDIQUE`, `N-REGION`, `N-CONV_COLL`, `N-DEPARTEMENT`, `N-UU`, `N-ZONE_EMPLOI`, `N-PCS-ES`, `N_UU20`, `N_ZONE_EMPLOI_20`.
+
+Chacune contient **un seul code** :
+
+| Valeur | Libellé |
+| --- | --- |
+| `cf` | `Voir dictionnaire des nomenclatures` |
+
+Toutes 18 partagent **exactement la même signature** → **doublons exacts**.
+
+Chacune est pointée par des variables différentes mais le contenu est strictement identique : il s'agit très probablement de **codes génériques** « consulter le dictionnaire » qui ont été dupliqués dans 18 Contextes différents sans être consolidés.
+
+### Exemple : groupe `N_nomenclature_communes_2017`
+
+| Liste | Nbr codes | Variables réferentes |
+| --- | --- | --- |
+| `N_nomenclature_communes_2017` | 15 | `codcom_siege`, `codecom_siege`, `comt`, `com_empl` |
+| *(autre CL commune identique)* | 15 | … |
+
+Les deux listes partagent les **mêmes 15 codes** (communes de France) → **doublons exacts** détectés.
+
+### Caractéristiques
+
+| Aspect | Détail |
+| --- | --- |
+| **Complexité** | $O(N \cdot C)$ — linéaire, où $N$ = nb CodeLists, $C$ = nb codes moyen |
+| **Ressources** | Nécessite **aucun appel réseau** |
+| **Précision** | 100 % — zéro faux-positif |
+| **Limite** | Différences minimes (accent, casse, ordre) font passer la détection. Une seule différence de code dans une liste de 10 suffit pour ne pas détecter le doublon. |
+
+## 2.2. Phase 1 — Quasi-Doublons (Similarité Floue)
+
+**Objectif** : détecter les listes ayant des variations mineures (un code ajouté/supprimé, une faute de frappe, un libellé légèrement modifié).
+
+### Méthode
+
+1. À partir des listes **uniques** (une par groupe de doublon exact, soit **102** pour BTS.xml), on concatène le nom et toutes les paires `valeur:libellé` en une **seule chaîne normalisée**.
+2. On compare **toutes les paires** de chaînes avec `difflib.SequenceMatcher` (ratio de similarité).
+3. Seuil : **≥ 0.90** = quasi-doublon retenu ; **≥ 0.80** pour l'inspection.
+
+### Exemples concrets du BTS.xml
+
+#### Paire détectée : score 0.9985 → `SOURCE` ↔ `SOURCE_1`
+
+| `SOURCE` (6 codes) | `SOURCE_1` (6 codes) |
+| --- | --- |
+| `{("A", "Code A"), ("B", "Code B"), …}` | `{("A", "Code A"), ("B", "Code B"), …}` |
+
+**Contenu identique** à la casse près → score quasi-parfait.
+
+#### Paire détectée : score 0.9896 → `N_tr_ca_23` ↔ `TR_CA_1`
+
+Ces deux listes de **10 codes** chacune (tranches de chiffre d'affaires) ont un score de 0.99 mais diffèrent sur les **codes 0 et 4** :
+
+| Code | `N_tr_ca_23` | `TR_CA` |
+| --- | --- | --- |
+| `0` | `Moins de 0,5 M€` | `de 0 à moins de 0,5 M€` |
+| `4` | `De 5 à moins de 10 M€` | `de 5 à moins de 10 M€` |
+
+Même structure, mêmeslibellés, mais **légère divergence sur les majuscules/minuscules au début** et les **espaces**.
+
+#### Paire détectée : score 0.9961 → `ETAT_ET` ↔ `ETAT_ET_1`
+
+6 codes chacun (déchiffrement de l'état juridique) — contenu quasi-identique.
+
+#### Paire NON détectée : `N_domempl_23` ↔ `DOMEMPL` (score 0.86)
+
+Malgré un accent différent sur un code et un ordre différent, le score est **0.858** — **en dessous du seuil de 0.90**.
+
+→ Cette paire passe à travers le fichier flou mais sera rattrapée par les phases sémantiques et le signal d'usage.
+
+### Caractéristiques
+
+| Aspect | Détail |
+| --- | --- |
+| **Complexité** | $O(U^2 \cdot L)$ où $U$ = nb uniques, $L$ = longueur texte. OK car $U \approx 102$. |
+| **Faux négatifs** | Si la différence dépasse ~10 % du texte, la paire n'est pas détectée. |
+| **Faux positifs** | Possibles si deux listes ont un format similaire mais n'ont pas le même sens (ex : deux listes de 10 plages de valeurs). |
+
+## 2.3. Phase 2 — Doublons Sémantiques (Embeddings + LLM)
+
+Les deux phases précédentes ne comprennent **pas le sens** des données. Deux listes peuvent avoir des valeurs et noms complètement différents mais décrire le même concept (ex : "Sexe" vs "Genre", "CD" vs "Code Département").
+
+### 2.3.1. Rapprochement par Embeddings de Liste
+
+1. **Vectorisation** : chaque texte de liste (nom + label + codes) est vectorisé via le modèle d'embeddings `qwen3-embedding-8b`.
+2. **Similarité cosinus** entre toutes les paires ($M \times M$ avec $M = 102$ vecteurs normalisés).
+3. Filtrage : seules les paires avec un cosinus **≥ 0.90** sont retenues.
+4. **Validation par LLM** : les meilleures candidates sont soumises à un juge `gemma4-26b-moe` qui retourne un JSON structuré.
+
+```json
+{
+  "meme_concept": true,
+  "confiance": 0.95,
+  "raison": "Les deux listes contiennent les mêmes codes départementaux français ; seule la casse et les accents diffèrent."
+}
+```
+
+> **Attention** : pour le fichier BTS.xml, la phase 2 ne peut pas être exécutée sans un endpoint OpenAI-compatible configuré (`OPENAI_BASE_URL` et `OPENAI_API_KEY` dans l'environnement). Le paramètre CLI `--no-llm` permet de sauter cette phase.
+
+### 2.3.2. Rapprochement par l'Usage des Variables
+
+**Approche inversée** : au lieu de comparer les listes de codes elles-mêmes, on compare les **variables** qui les utilisent.
+
+La cible `N_domempl_23` est référencée par les variables **`domempl`** et **`domempl_empl`**.
+
+| Liste | Variables réferentes | `var_sig` |
+| --- | --- | --- |
+| `N_domempl_23` (36a67d27) | `domempl`, `domempl_empl` | `("domempl", "domempl_empl")` |
+| `DOMEMPL` (d6e60a74) | `domempl`, `domempl_empl`, `DOMEMPL`, `DOMEMPL_EMPL` | `("DOMEMPL", "DOMEMPL_EMPL", "domempl", "domempl_empl")` |
+
+Même sémantique pour les 2 premières variables → les deux listes mesurent **le même concept métier** (domaine d'emploi). La différence de `var_sig` vient de noms de variables légèrement différents dans le dataset de référence.
+
+> Cette approche fonctionne particulièrement bien dans BTS.xml où **toutes les 156 CodeLists** sont référencées par au moins une variable, à l'inverse de nombreux fichiers où des `CodeList` orphelles existent.
+
+### Caractéristiques
+
+| Aspect | Détail |
+| --- | --- |
+| **Complexité** | $O(U^2 \cdot D)$ pour les embeddings où $D$ = dimension (8192 pour qwen3), puis $O(U^2)$ pour le cosinus. Le LLM est appelé sur un sous-ensemble restreint (top-K). |
+| **Coût** | Appels réseau API ; dépend de `RUN_LLM=True` |
+| **Précision** | La plus élevée, surtout après validation LLM. |
+| **Limite** | Coût en temps de calcul, dépendance réseau. |
+
+---
+
+# 3. Signaux de Renforcement : `var_sig` (Signature d'Usage)
+
+Une `CodeList` n'est pas un objet isolé : elle est **toujours** référencée par au moins une variable (dans BTS.xml, 156/156 sont liées à des variables). Deux listes utilisées par les **mêmes variables** sont quasi-certainement identiques.
+
+## 3.1. Principe
+
+On construit pour chaque CodeList sa **signature d'usage** : l'ensemble trié des noms de variables qui la référencent.
+
+```
+var_sig(CL) = tuple(sorted( { var.name for var in variables referencing CL } ))
+```
+
+## 3.2. Exemples réels de BTS.xml
+
+### Groupe A : `var_sig` identique → quasi-certitude de doublon
+
+| CodeList | Variables réferentes | `var_sig` |
+| --- | --- | --- |
+| `N_saison_23` | `saison` | `("saison",)` |
+| `N_SAISON_Validité 2022` | `saison` | `("saison",)` |
+
+→ Même `var_sig` **+** même signature exacte → **doublons exacts confirmés d'usage**.
+
+### Groupe B : `var_sig` identique mais signatures de contenu différentes
+
+| CodeList | Variables | `var_sig` |
+| --- | --- | --- |
+| `N_champ_23` | `champ` | `("champ",)` |
+| `N_CHAMP_2022` | `champ` | `("champ",)` |
+
+→ Même usage métier mais **pas de doublon exact** détecté → candidats à vérifier (déclinaisons de version, ou variantes de libellé non détectées).
+
+### Groupe C : `var_sig` disjoints mais mêmes contenus
+
+| CodeList | Variables | Codes |
+| --- | --- | --- |
+| `SOURCE` | `source` | 6 codes (identiques) |
+| `SOURCE_1` | `source_1` | 6 codes (identiques) |
+
+→ Même contenu, usages disjoints → **doublon à consolider** : les deux variables devraient pointer vers la même CodeList.
+
+### Groupe D : les 18 listes à 1 code
+
+18 CodeLists nommées `N-categorie_juridique`, `N-region`, `N-conv_coll`, `N_Départements`, `N-uu_23`, `N-zem_23`, `N_cris`, `N-pays_naissance`, `N-pcs`, `N-CATEGORIE-JURIDIQUE`, `N-REGION`, `N-CONV_COLL`, `N-DEPARTEMENT`, `N-UU`, `N-ZONE_EMPLOI`, `N-PCS-ES`, `N_UU20`, `N_ZONE_EMPLOI_20`.
+
+| Code | Valeur | Libellé |
+| --- | --- | --- |
+| Unique | `cf` | `Voir dictionnaire des nomenclatures` |
+
+Toutes 18 pointées par des variables différentes mais **strictement mêmes contenus**. Elles constituent des **codes génériques** dupliqués sans consolidation — probablement des artefacts de l'outil de modélisation des métadonnées (Collectica).
+
+### Groupe E : `N_domempl_23` et `DOMEMPL` — cas limite
+
+| Aspect | `N_domempl_23` | `DOMEMPL` |
+| --- | --- | --- |
+| Variables | `domempl`, `domempl_empl` | `domempl`, `domempl_empl`, `DOMEMPL`, `DOMEMPL_EMPL` |
+| **Intersection** | `domempl`, `domempl_empl` | — |
+| Signatures exactes | — | differentes (accent sur code 1) |
+
+→ Même usage partagé pour le cœur des variables → **signal fort de quasi-doublon**, rattrapé par le signal d'usage même si la signature exacte diffère.
+
+## 3.3. Utilisation dans le Pipeline
+
+Pour chaque paire détectée par une phase précédente :
+
+- **`✓ même usage`** : ensembles de variables identiques → fort indicateur de redondance.
+- **`~ usage partiel`** : intersection significative → variation contextuelle possible.
+- **`✗ usages disjoints`** : aucune variable commune → probablement distinctes (ou besoin de consolidation).
+
+---
+
+# 4. Tableau Récapitulatif et Résultats sur BTS.xml
+
+| Méthode | Type | Seuil | Complexité | Résultat BTS.xml |
+| --- | --- | --- | --- | --- |
+| **Signature exacte** | Déterministe | — | $O(N \cdot C)$ | 29 groupes, 54 codes redondants |
+| **Similarité floue** | Textuel | ≥ 0.90 | $O(U^2 \cdot L)$ | ~10 paires détectées |
+| **Embeddings de liste** | Sémantique | ≥ 0.90 + LLM | $O(U^2 \cdot D)$ | Nécessite `OPENAI_BASE_URL` + `OPENAI_API_KEY` |
+| **Embeddings de variable**| Sémantique par usage | ≥ 0.92 | $O(V^2 \cdot D)$ | Nécessite `OPENAI_BASE_URL` + `OPENAI_API_KEY` |
+| **Signature d'usage**  | Métadonnée | Identique | $O(N)$ | 17 groupes de même usage |
+
+- $N$ = nb CodeLists (156), $C$ = nb codes moyen (10), $U$ = nb uniques après dédup (102)
+- $V$ = nb variables (287), $D$ = dimension embeddings (8192), $L$ = longueur texte moyen.
+
+---
+
+# 5. Perspectives d'Amélioration
+
+## 5.1. Performance à Grande Échelle
+
+- **Remplacer la comparaison par paires** ($O(n^2)$) par des algorithmes de *Locality Sensitive Hashing* (LSH) ou *MinHash*.
+- **Parallélisation** de la phase d'embeddings sur le cluster Kubernetes via Argo Workflows.
+
+## 5.2. Robustesse de la Détection
+
+- Ajouter la détection de **sous-ensembles** : une CodeList peut être incluse dans une autre (ex : version simplifiée vs version complète).
+- Explorer des embeddings spécialisés sur le vocabulaire statistique de l'Insee.
+
+## 5.3. Industrialisation
+
+- Le pipeline est déjà opérationnel via CLI (`main.py`) et une interface Streamlit (`scrubber_app/app.py`) sur Onyxia.
+- Envisager une transformation en pipeline reproductible avec **`targets`** (R) ou équivalent Python.
+- Intégrer dans une **CI/CD** pour déclencher le dédoublonnage à chaque commit.
+
+## 5.4. Analyse Fine de l'Usage
+
+- Exploiter la **hiérarchie des variables** (groupes, familles d'enquêtes) pour affiner le signal de redondance.
+- Pondérer les variables selon leur importance (métrique de centralité).
+- Tenir compte des **contextes d'enquête** : une même CodeList peut être valide dans un contexte mais pas dans un autre.
+
+---
+
+# Conclusion
+
+Un entonnoir en trois niveaux — **signature exacte** → **similarité floue** → **rapprochement sémantique** — permet de couvrir toute la palette des redondances possibles : copies conformes, variantes mineures, et synonymes conceptuels. Le filtre `var_sig` (signature d'usage) ajoute une couche de confiance ancrée dans l'usage réel des données.
+
+Sur BTS.xml, la méthodologie identifie **54 CodeLists redondantes** sur 156, ainsi que **17 groupes de CodeLists partageant le même contexte d'utilisation** — autant de candidats auditables par les experts métier pour la consolidation des métadonnées.
