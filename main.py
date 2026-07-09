@@ -99,6 +99,7 @@ def run_pipeline(
     audit_dir: str = "audit",
     run_llm: bool = True,
     verbose: bool = False,
+    registry_path: str | None = None,
 ) -> None:
     """
     Pipeline complet : extraction → détection → registre des doublons.
@@ -106,10 +107,13 @@ def run_pipeline(
     Output unique : `codelist_duplicates.json` dans `audit_dir`.
 
     Args:
-        xml_source: URL S3 ou chemin local du fichier DDI.
-        audit_dir:  Répertoire de sortie.
-        run_llm:    Si True, phases sémantiques (embeddings + juge LLM).
-        verbose:    Si True, détails LLM/embeddings.
+        xml_source:    URL S3 ou chemin local du fichier DDI.
+        audit_dir:     Répertoire de sortie.
+        run_llm:       Si True, phases sémantiques (embeddings + juge LLM).
+        verbose:       Si True, détails LLM/embeddings.
+        registry_path: Registre nettoyé (cleaned_codelists.json) à injecter :
+                       ses listes sont prioritaires (masters) et les listes
+                       déjà remplacées sont exclues de la détection.
     """
     print("=" * 60)
     print(f"  Dédoublonnage DDI — source : {xml_source}")
@@ -129,6 +133,26 @@ def run_pipeline(
     print("[2/9] Extraction des CodeLists et Catégories...")
     codelists = extract_codelists(objects)
     print(f"  {len(codelists)} CodeLists ({sum(len(cl.codes) for cl in codelists)} codes).")
+
+    # ------------------------------------------------------------------
+    # 2 bis. Injection du registre nettoyé (priorité aux entrées du registre)
+    # ------------------------------------------------------------------
+    if registry_path:
+        from scrubber.cleaned_registry import load_cleaned_codelists
+
+        registry_cls, replaced_ids = load_cleaned_codelists(registry_path)
+        registry_ids = {cl.id for cl in registry_cls}
+        avant = len(codelists)
+        codelists = [
+            cl for cl in codelists
+            if cl.id not in registry_ids and cl.id not in replaced_ids
+        ]
+        print(
+            f"  [registre] {len(registry_cls)} listes injectées, "
+            f"{avant - len(codelists)} listes XML exclues (déjà traitées)."
+        )
+        # Prépend : les entrées du registre deviennent masters des groupes
+        codelists = registry_cls + codelists
 
     # ------------------------------------------------------------------
     # 3. Extraction références Variables
@@ -279,8 +303,11 @@ def run_pipeline(
     )
     print(f"  {len(candidates)} candidats totaux.")
 
-    out_path = os.path.join(audit_dir, "codelist_duplicates.json")
-    os.makedirs(audit_dir, exist_ok=True)
+    if audit_dir.startswith("s3://"):
+        out_path = f"{audit_dir.rstrip('/')}/codelist_duplicates.json"
+    else:
+        out_path = os.path.join(audit_dir, "codelist_duplicates.json")
+        os.makedirs(audit_dir, exist_ok=True)
     write_duplicates_registry(candidates, codelists, out_path)
     print(f"  → {out_path}")
 
@@ -443,12 +470,19 @@ def main() -> None:
         default=False,
         help="Afficher les détails LLM/embeddings.",
     )
+    parser.add_argument(
+        "--registry",
+        default=None,
+        dest="registry_path",
+        help="Registre nettoyé (cleaned_codelists.json) à injecter dans la détection.",
+    )
     args = parser.parse_args()
     run_pipeline(
         xml_source=args.xml_source,
         audit_dir=args.audit_dir,
         run_llm=args.run_llm,
         verbose=args.verbose,
+        registry_path=args.registry_path,
     )
 
 

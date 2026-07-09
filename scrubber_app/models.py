@@ -17,6 +17,14 @@ class PipelineRequest(BaseModel):
     output_base: str = Field("audit", description="Dossier de sortie.")
     run_llm: bool = Field(True, description="Inclure les phases sémantiques (LLM).")
     verbose: bool = Field(False, description="Mode verbeux.")
+    registry_path: Optional[str] = Field(
+        None, description="Registre nettoyé (cleaned_codelists.json) à injecter dans la détection."
+    )
+
+
+class AddToCleanedRequest(BaseModel):
+    """Requête d'ajout manuel d'une CodeList au registre nettoyé."""
+    cl_id: str = Field(..., description="Id de la CodeList (parent du registre des doublons).")
 
 
 class PipelineResponse(BaseModel):

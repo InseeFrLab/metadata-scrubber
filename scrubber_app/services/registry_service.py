@@ -1,77 +1,22 @@
-"""registry_service.py — Load/save/decisions/bulk actions du registre des doublons.
+"""registry_service.py — Décisions/bulk/filtres du registre des doublons.
 
-Le registre est stockė sur filesystem local ou S3 (via s3fs).
+L'IO (local/S3) et le cycle de vie du registre nettoyé vivent dans le
+package `scrubber` (scrubber.registry_io, scrubber.cleaned_registry) —
+ce module ne garde que la logique propre à l'app (décisions, stats, filtres).
 """
 
 from __future__ import annotations
 
-import json
 import logging
-from pathlib import Path
 from typing import Any
 
+# Ré-exports : IO générique depuis le package scrubber
+from scrubber.registry_io import (  # noqa: F401
+    read_json_registry as read_registry,
+    write_json_registry as write_registry,
+)
+
 logger = logging.getLogger(__name__)
-
-
-def _try_s3_path(path: str) -> bool:
-    """Retourne True si la chaîne ressemble à un chemin S3."""
-    return path.startswith("s3://")
-
-
-def read_registry(path: str) -> dict[str, Any]:
-    """Lit le registre des doublons depuis un chemin local ou S3.
-
-    Args:
-        path: chemin local ou URL S3.
-
-    Returns:
-        Le registre des doublons sous forme de dict.
-    """
-    if _try_s3_path(path):
-        import s3fs
-        from botocore.exceptions import ClientError
-
-        s3 = s3fs.S3FileSystem()
-        url = path
-        try:
-            with s3.open(url, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except ClientError as e:
-            raise ConnectionError(f"Erreur S3 pour {path}: {e}") from e
-    else:
-        p = Path(path)
-        if not p.exists():
-            raise FileNotFoundError(f"Le fichier {path} n'existe pas")
-        with open(p, "r", encoding="utf-8") as f:
-            return json.load(f)
-
-
-def write_registry(registry: dict[str, Any], path: str) -> None:
-    """Écrit le registre des doublons vers un chemin local ou S3.
-
-    Args:
-        registry: Le registre des doublons.
-        path: chemin de destination (local ou S3).
-    """
-    formatted = json.dumps(registry, indent=2, ensure_ascii=False)
-    if _try_s3_path(path):
-        import s3fs
-
-        s3 = s3fs.S3FileSystem()
-        url = path
-        parent = Path(url.replace("s3://", "")).parent
-        try:
-            s3.makedirs(parent, exist_ok=True)
-        except Exception:
-            pass  # bucket existe probablement déjà
-        with s3.open(url, "w", encoding="utf-8") as f:
-            f.write(formatted)
-        logger.info("Registre écrit sur S3: %s", path)
-    else:
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(formatted)
-        logger.info("Registre écrit en local: %s", path)
 
 
 def get_stats(registry: dict[str, Any]) -> dict[str, Any]:
@@ -134,7 +79,7 @@ def bulk_set_decisions(registry: dict[str, Any], criteria: str, action: str) -> 
 
     Args:
         registry: Le registre des doublons.
-        criteria: "exact", "high_confidence", "*", "approved_exact", "rejected_all", "pending_all".
+        criteria: "exact", "high-confidence", "all", "approved_exact", "rejected_all", "pending_all".
         action: "approve", "reject" ou "pending".
 
     Returns:
@@ -144,11 +89,11 @@ def bulk_set_decisions(registry: dict[str, Any], criteria: str, action: str) -> 
     for cl_data in registry.values():
         for dup in cl_data.get("duplicates", []):
             should = False
-            if criteria == "*":
+            if criteria == "all":
                 should = True
             elif criteria == "exact":
                 should = "exact" in dup.get("detection_types", [])
-            elif criteria == "high_confidence":
+            elif criteria == "high-confidence":
                 should = dup.get("confidence", 0) >= 0.95
             elif criteria == "approved_exact":
                 should = (

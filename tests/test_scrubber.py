@@ -394,9 +394,13 @@ class TestDuplicatesRegistry:
         assert len(candidates) == 1
         assert candidates[0].detection_type == "exact"
 
-        # Build registry depuis les candidats
+        # Build registry depuis les candidats — chaque paire n'apparaît qu'une
+        # fois : cl-001 (premier dans le document) est parent, cl-002 n'a pas
+        # d'entrée top-level.
         registry = build_duplicates_registry(candidates, codelists)
-        assert len(registry) >= 2  # au moins cl-001 et cl-002
+        assert "cl-001" in registry
+        assert "cl-002" not in registry
+        assert [d["id"] for d in registry["cl-001"]["duplicates"]] == ["cl-002"]
 
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = os.path.join(tmpdir, "codelist_duplicates.json")
@@ -406,9 +410,8 @@ class TestDuplicatesRegistry:
             with open(path, encoding="utf-8") as f:
                 data = json.load(f)
 
-            assert len(data) >= 2
             assert "cl-001" in data
-            assert "cl-002" in data
+            assert "cl-002" not in data
 
 
 # =====================================================================

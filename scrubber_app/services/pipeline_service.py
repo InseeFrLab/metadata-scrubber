@@ -7,6 +7,7 @@ et d'injecter les événements de progression dans le JobManager (SSE).
 from __future__ import annotations
 
 import io
+import logging
 import os
 import sys
 import threading
@@ -15,6 +16,24 @@ import traceback
 from typing import Any
 
 from services.job_manager import JobManager, JobStatus, job_manager
+
+logger = logging.getLogger(__name__)
+
+
+class _Tee(io.StringIO):
+    """Bufferise en mémoire et recopie vers le flux original (console serveur)."""
+
+    def __init__(self, original):
+        super().__init__()
+        self._original = original
+
+    def write(self, s: str) -> int:
+        try:
+            self._original.write(s)
+            self._original.flush()
+        except Exception:
+            pass
+        return super().write(s)
 
 
 class _ProgressLogger:
@@ -62,6 +81,7 @@ def _run_pipeline_internal(
     verbose: bool,
     capture,
     progress,
+    registry_path: str | None = None,
 ) -> dict[str, Any]:
     """Logique interne — peut être réutilisée."""
     print(
@@ -69,17 +89,17 @@ def _run_pipeline_internal(
         f"\n  xml_source: {xml_source}"
         f"\n  output (local tmp): {local_tmp}"
         f"\n  run_llm: {run_llm}"
-        f"\n  verbose: {verbose}",
+        f"\n  verbose: {verbose}"
+        f"\n  registre nettoye: {registry_path or '—'}",
         file=capture,
         flush=True,
     )
 
     try:
-        # Injector les chemins d'imports
-        _scrub_dir = os.path.dirname(os.path.abspath(__file__))
-        _project_root = os.path.normpath(os.path.join(_scrub_dir, ".."))
-        _src = os.path.join(_scrub_dir, "..", "src")
-        _src = os.path.normpath(_src)
+        # Injecter les chemins d'imports (ce fichier est dans scrubber_app/services/)
+        _services_dir = os.path.dirname(os.path.abspath(__file__))
+        _project_root = os.path.normpath(os.path.join(_services_dir, "..", ".."))
+        _src = os.path.join(_project_root, "src")
         for p in [_project_root, _src]:
             if p not in sys.path:
                 sys.path.insert(0, p)
@@ -92,19 +112,33 @@ def _run_pipeline_internal(
             audit_dir=local_tmp,
             run_llm=run_llm,
             verbose=verbose,
+            registry_path=registry_path,
         )
 
         # --- Result ---
         output_files = {}
 
-        local_path = os.path.join(local_tmp, "codelist_duplicates.json")
-        if os.path.isfile(local_path):
-            fsize = os.path.getsize(local_path)
-            print(f"[scrubber] codelist_duplicates.json: {fsize} octets", file=capture, flush=True)
-            output_files["codelist_duplicates.json"] = local_path
-            print("[scrubber] Registre des doublons genere avec succes", file=capture, flush=True)
+        if local_tmp.startswith("s3://"):
+            from scrubber.s3 import make_s3_filesystem
+
+            dest = f"{local_tmp.rstrip('/')}/codelist_duplicates.json"
+            fs = make_s3_filesystem()
+            if fs.exists(dest):
+                fsize = fs.size(dest)
+                print(f"[scrubber] codelist_duplicates.json: {fsize} octets (S3)", file=capture, flush=True)
+                output_files["codelist_duplicates.json"] = dest
+                print("[scrubber] Registre des doublons genere avec succes", file=capture, flush=True)
+            else:
+                print(f"[scrubber] codelist_duplicates.json: ABSENT de {local_tmp}", file=capture, flush=True)
         else:
-            print("[scrubber] codelist_duplicates.json: ABSENT", file=capture, flush=True)
+            local_path = os.path.join(local_tmp, "codelist_duplicates.json")
+            if os.path.isfile(local_path):
+                fsize = os.path.getsize(local_path)
+                print(f"[scrubber] codelist_duplicates.json: {fsize} octets", file=capture, flush=True)
+                output_files["codelist_duplicates.json"] = local_path
+                print("[scrubber] Registre des doublons genere avec succes", file=capture, flush=True)
+            else:
+                print("[scrubber] codelist_duplicates.json: ABSENT", file=capture, flush=True)
 
         # Diagnostic if nothing was written
         if not output_files:
@@ -139,6 +173,7 @@ def _run_pipeline_in_thread(
     audit_dir: str,
     run_llm: bool,
     verbose: bool,
+    registry_path: str | None = None,
 ) -> None:
     """Target du thread qui execute le pipeline et publie sur SSE."""
 
@@ -189,27 +224,26 @@ def _run_pipeline_in_thread(
     # Phase 0 — lancement
     _progress("phase", "Lancement du pipeline...", 0.0, 0)
 
-    capture = io.StringIO()
     old_stdout, old_stderr = sys.stdout, sys.stderr
+    capture = _Tee(old_stderr)
 
-    # Rediriger stdout vers le logger de progression
+    # Rediriger stdout vers le logger de progression (+ copie console)
     pl = _ProgressLogger(_progress)
 
-    class _Redirector(io.StringIO):
+    class _Redirector(_Tee):
         def write(self, s: str) -> int:
-            pl.log(s, is_phase_update=True)
+            if s.strip():  # ignorer les écritures vides ("\n" de print)
+                pl.log(s, is_phase_update=True)
             return super().write(s)
 
-        def flush(self) -> None:
-            pass
-
-    sys.stdout = _Redirector()
+    sys.stdout = _Redirector(old_stdout)
     sys.stderr = capture
 
     start = time.time()
     try:
         result = _run_pipeline_internal(
             xml_source, audit_dir, run_llm, verbose, capture, _progress,
+            registry_path=registry_path,
         )
         duration = time.time() - start
         result["duration_seconds"] = duration
@@ -220,14 +254,23 @@ def _run_pipeline_in_thread(
             for line in internal_logs.splitlines():
                 job_manager_instance.jobs[job_id].add_log(line[:500])
 
-        _progress("done", f"Termine en {duration:.1f}s", 1.0, 9)
-        job_manager_instance.set_result(job_id, result)
+        if result.get("status") == "error":
+            # Échec interne capturé par _run_pipeline_internal : ne pas
+            # marquer le job en succès.
+            err_msg = result.get("error_message", "Erreur pipeline")
+            _progress("error", err_msg, None, None)
+            logger.error("Job %s échoué: %s", job_id, err_msg)
+        else:
+            _progress("done", f"Termine en {duration:.1f}s", 1.0, 9)
+            job_manager_instance.set_result(job_id, result)
+            logger.info("Job %s terminé en %.1fs", job_id, duration)
 
     except Exception as exc:
         tb = traceback.format_exc()
         duration = time.time() - start
         _progress("error", str(exc), None, None)
         job_manager_instance.set_error(job_id, str(exc))
+        logger.error("Job %s échoué: %s", job_id, exc)
         # Logger le traceback
         for line in tb.splitlines():
             job_manager_instance.jobs[job_id].add_log(line[:500])
@@ -240,6 +283,7 @@ def start_pipeline_job(
     audit_dir: str,
     run_llm: bool = True,
     verbose: bool = False,
+    registry_path: str | None = None,
 ) -> str:
     """Creer un job de pipeline et le lancer dans un thread separe.
 
@@ -247,10 +291,13 @@ def start_pipeline_job(
         L'identifiant unique du job (job_id).
     """
     job_id = job_manager.create_job()
+    logger.info(
+        "Pipeline job %s démarré — source: %s, sortie: %s", job_id, xml_source, audit_dir
+    )
 
     t = threading.Thread(
         target=_run_pipeline_in_thread,
-        args=(job_id, job_manager, xml_source, audit_dir, run_llm, verbose),
+        args=(job_id, job_manager, xml_source, audit_dir, run_llm, verbose, registry_path),
         daemon=True,
         name="pipeline-worker",
     )

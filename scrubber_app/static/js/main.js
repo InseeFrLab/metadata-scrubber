@@ -20,15 +20,32 @@ function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
     if (!container) return;
 
+    const colors = {
+        success: '#198754',
+        danger: '#dc3545',
+        warning: '#ffc107',
+        info: '#0dcaf0',
+    };
+    const bgColor = colors[type] || '#6c757d';
+
     const toastEl = document.createElement('div');
-    toastEl.className = `toast align-items-center text-bg-${type} border-0`;
+    toastEl.className = 'toast align-items-center border-0';
     toastEl.setAttribute('role', 'alert');
+    toastEl.style.cssText = `
+        background-color: ${bgColor};
+        border-radius: 0.375rem;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        max-width: 600px;
+        min-width: 400px;
+        padding: 0.75rem;
+    `;
     toastEl.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">${message}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                    data-bs-dismiss="toast" aria-label="Fermer"></button>
-        </div>
+        <div class="toast-body text-white">${message}</div>
+        <button type="button" class="btn-close btn-close-white ms-3 me-2 m-auto"
+                data-bs-dismiss="toast" aria-label="Fermer"></button>
     `;
 
     container.appendChild(toastEl);

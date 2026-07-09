@@ -35,6 +35,7 @@ class DuplicateInfo:
     vars: list[str]
     detection_types: list[str] = field(default_factory=list)
     confidence: float = 0.0
+    origin: str = "xml"
 
 
 def _serialize_minimal(cl) -> dict:
@@ -47,6 +48,7 @@ def _serialize_minimal(cl) -> dict:
         "codes": [list(pair) for pair in cl.codes],
         "cat_ids": sorted(cl.cat_ids),
         "vars": cl.vars or [],
+        "origin": getattr(cl, "origin", "xml"),
     }
 
 
@@ -56,10 +58,13 @@ def build_duplicates_registry(
 ) -> dict:
     """Construit le registre JSON « doublons par CodeList ».
 
-    Pour chaque CandidateFusion (master + slaves), on ajoute pour CHAQUE CodeList
-    (master ET slaves) les autres membres du groupe comme « duplicates ».
-    On fusionne les multiples détections sur une même paire en agrégeant les
-    `detection_types` et en gardant le max `confidence`.
+    Chaque paire/groupe de doublons n'apparaît qu'UNE fois : les paires sont
+    regroupées par composante connexe, et le parent est la liste la plus tôt
+    dans l'ordre de `codelists` (les entrées du registre nettoyé, prépendées,
+    restent donc toujours parents). Les autres membres du groupe sont ses
+    « duplicates » et n'ont pas d'entrée top-level. Les détections multiples
+    sur une même paire sont fusionnées (union des `detection_types`, max des
+    `confidence`). Les listes sans doublon ont une entrée avec `duplicates: []`.
 
     Args:
         candidates: Liste de `CandidateFusion` issue de `_build_candidates()`.
@@ -84,14 +89,9 @@ def build_duplicates_registry(
         "confidence": 0.0,
     })
 
-    # Collecte de toutes les IDs rencontrées
-    seen_ids: set[str] = set()
-
     for cand in candidates:
         # Tous les membres de ce groupe
         members = [cand.master_cl] + list(cand.slave_cls)
-        member_ids = [c.id for c in members]
-        seen_ids.update(member_ids)
 
         # Pour chaque paire unique dans ce groupe
         for i, a in enumerate(members):
@@ -103,60 +103,74 @@ def build_duplicates_registry(
                 data["types"].add(cand.detection_type)
                 data["confidence"] = max(data["confidence"], cand.confidence)
 
-    # ── 4. Construire les entrées par CL ──
+    # Graphe non orienté des paires : id → partenaires
+    partners: dict[str, set[str]] = defaultdict(set)
+    for a_id, b_id in pair_data:
+        partners[a_id].add(b_id)
+        partners[b_id].add(a_id)
+
+    # ── 4. Construire les entrées par CL — une paire n'apparaît qu'une fois ──
+    # Parcours dans l'ordre du document : la première liste rencontrée d'une
+    # composante connexe devient le parent, tous les autres membres deviennent
+    # ses duplicates (et n'ont pas d'entrée top-level).
     entries: dict[str, dict] = {}
+    visited: set[str] = set()
 
-    for cl_id in seen_ids:
-        cl = cl_by_id.get(cl_id)
-        if cl is None:
-            # Fallback : essayer de retrouver la CL dans les candidates
-            found = None
-            for cand in candidates:
-                if cand.master_cl.id == cl_id:
-                    found = cand.master_cl
-                    break
-                for slave in cand.slave_cls:
-                    if slave.id == cl_id:
-                        found = slave
-                        break
-                if found:
-                    break
-            cl = found
-            if cl is None:
+    for cl in codelists:
+        if cl.id in visited:
+            continue
+        visited.add(cl.id)
+
+        if cl.id not in partners:
+            # Liste sans doublon détecté (ajout manuel au registre possible)
+            entries[cl.id] = {**_serialize_minimal(cl), "duplicates": []}
+            continue
+
+        # Composante connexe de la liste (groupe de doublons)
+        component: set[str] = {cl.id}
+        stack = [cl.id]
+        while stack:
+            node = stack.pop()
+            for nb in partners.get(node, ()):
+                if nb not in component:
+                    component.add(nb)
+                    stack.append(nb)
+        visited |= component
+
+        dupes_infos: list[DuplicateInfo] = []
+        for tid in component:
+            if tid == cl.id:
                 continue
-
-        # Construire la liste des duplicates pour cette CL
-        dupes_by_target_id: dict[str, DuplicateInfo] = {}
-
-        for source_id, tid in pair_data:
-            if source_id != cl_id:
+            target_cl = cl_by_id.get(tid)
+            if target_cl is None:
                 continue
-            data = pair_data[(source_id, tid)]
-
-            target_cl = cl_by_id.get(tid, None)
-
-            if tid in dupes_by_target_id:
-                existing = dupes_by_target_id[tid]
-                existing.detection_types.update(data["types"])
-                existing.confidence = max(existing.confidence, data["confidence"])
-            else:
-                dupes_by_target_id[tid] = DuplicateInfo(
+            # Fusionner toutes les détections impliquant ce membre (deux sens)
+            types: set = set()
+            conf = 0.0
+            for other in component:
+                for key in ((other, tid), (tid, other)):
+                    if key in pair_data:
+                        types |= pair_data[key]["types"]
+                        conf = max(conf, pair_data[key]["confidence"])
+            dupes_infos.append(
+                DuplicateInfo(
                     id=tid,
-                    name=target_cl.name if target_cl and target_cl.name else "",
-                    label=target_cl.label if target_cl and target_cl.label else "",
-                    codes_count=len(target_cl.codes) if target_cl else 0,
-                    codes=list(target_cl.codes) if target_cl else [],
-                    cat_ids=sorted(target_cl.cat_ids) if target_cl else [],
-                    vars=list(target_cl.vars) if target_cl else [],
-                    detection_types=data["types"].copy(),
-                    confidence=data["confidence"],
+                    name=target_cl.name or "",
+                    label=target_cl.label or "",
+                    codes_count=len(target_cl.codes),
+                    codes=list(target_cl.codes),
+                    cat_ids=sorted(target_cl.cat_ids),
+                    vars=list(target_cl.vars),
+                    detection_types=types,
+                    confidence=conf,
+                    origin=getattr(target_cl, "origin", "xml"),
                 )
+            )
 
         # Trier les duplicates par ordre XML
-        dupes = sorted(dupes_by_target_id.values(),
-                       key=lambda d: xml_order.get(d.id, 9999))
+        dupes = sorted(dupes_infos, key=lambda d: xml_order.get(d.id, 9999))
 
-        entries[cl_id] = {
+        entries[cl.id] = {
             **_serialize_minimal(cl),
             "duplicates": [
                 {
@@ -169,6 +183,7 @@ def build_duplicates_registry(
                     "vars": d.vars,
                     "detection_types": sorted(d.detection_types),
                     "confidence": d.confidence,
+                    "origin": d.origin,
                     "decision": "pending",
                 }
                 for d in dupes
@@ -200,9 +215,17 @@ def write_duplicates_registry(
         Chemin du fichier écrit.
     """
     registry = build_duplicates_registry(candidates, codelists)
+    formatted = json.dumps(registry, indent=2, ensure_ascii=False)
 
-    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(registry, f, indent=2, ensure_ascii=False)
+    if output_path.startswith("s3://"):
+        from scrubber.s3 import make_s3_filesystem
+
+        fs = make_s3_filesystem()
+        with fs.open(output_path, "w", encoding="utf-8") as f:
+            f.write(formatted)
+    else:
+        os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(formatted)
 
     return output_path

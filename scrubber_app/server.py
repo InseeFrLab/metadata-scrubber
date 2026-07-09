@@ -27,6 +27,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from models import (
+    AddToCleanedRequest,
     BulkDecision,
     CodelistFilter,
     DecisionUpdate,
@@ -38,6 +39,14 @@ from models import (
 )
 from services.job_manager import JobStatus, job_manager
 from services.pipeline_service import start_pipeline_job
+from scrubber.cleaned_registry import (
+    add_entry_from_parent,
+    cleaned_registry_path,
+    empty_cleaned_doc,
+    read_cleaned_registry,
+    validate_cleaned_doc,
+    write_cleaned_registry,
+)
 from services.registry_service import (
     bulk_set_decisions,
     filter_codelists,
@@ -123,18 +132,6 @@ async def health():
         "version": "1.0.0",
     }
 
-@app.get("/static/{file_path:path}")
-async def serve_static(file_path: str):
-    """Serve static files."""
-    file_path = STATIC_DIR / file_path
-    if file_path.exists() and file_path.is_file():
-        return StreamingResponse(
-            open(file_path, "rb"),
-            media_type="application/octet-stream"
-        )
-    raise HTTPException(status_code=404, detail="Static file not found")
-
-
 # ============================================================================
 # Pipeline API
 # ============================================================================
@@ -151,6 +148,7 @@ async def launch_pipeline(req: PipelineRequest):
         audit_dir=req.output_base,
         run_llm=req.run_llm,
         verbose=req.verbose,
+        registry_path=req.registry_path,
     )
     return PipelineResponse(job_id=job_id, status="pending")
 
@@ -188,64 +186,80 @@ async def pipeline_sse(job_id: str):
             """Format a dict as SSE protocol."""
             return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
-        # Send initial state
-        yield _sse("init", {
-            "status": job.status.value if isinstance(job.status, JobStatus) else job.status,
-            "progress": job.progress,
-            "phase": job.phase,
-            "phase_label": job.phase_label,
-            "current_log": job.current_log,
-            "logs": job.logs[-10:],
-        })
-
-        # Create a new asyncio.Queue for this client
-        client_queue = asyncio.Queue(maxsize=100)
-        job.listeners.append({
+        # Register the listener BEFORE reading history: broadcast() holds
+        # job.lock too, so every event is either in `history` or delivered
+        # to the queue — no gap, no duplicate.
+        loop = asyncio.get_running_loop()
+        client_queue: asyncio.Queue = asyncio.Queue(maxsize=100)
+        listener = {
             "queue": client_queue,
+            "loop": loop,
             "connected_at": time.time(),
             "job_id": job_id,
-        })
+        }
+        with job.lock:
+            history = list(job.events)
+            job.listeners.append(listener)
 
-        # Track whether we already forwarded a "done" event
-        done_sent = False
-
-        # Send events from this connection's own queue
         try:
-            while True:
-                try:
-                    msg = await asyncio.wait_for(client_queue.get(), timeout=15.0)
-                    event_type = msg.get("event", "message")
-                    # Mark when a "done" event is forwarded
-                    if event_type == "done":
-                        done_sent = True
-                    yield _sse(event_type, msg.get("data", ""))
-                except asyncio.TimeoutError:
-                    # Keepalive ping
-                    yield _sse("ping", "keepalive")
-        except asyncio.CancelledError:
-            pass
+            # Padding anti-buffering : certains proxys ne flushent qu'après ~2 Ko.
+            # (ligne de commentaire SSE, ignorée par EventSource)
+            yield ":" + (" " * 2048) + "\n" + "retry: 3000\n\n"
 
-        # Fallback: if the job reached a final state and we haven't
-        # forwarded a "done" event yet, emit it now (e.g. connection
-        # dropped mid-stream).
-        if not done_sent and job.status not in (JobStatus.PENDING, JobStatus.RUNNING):
-            final_data = {
+            # Send initial state (logs are replayed via history, not here)
+            yield _sse("init", {
                 "status": job.status.value if isinstance(job.status, JobStatus) else job.status,
                 "progress": job.progress,
-                "finished": True,
-            }
-            if job.result:
-                final_data["result"] = job.result
-            if job.error_message:
-                final_data["error"] = job.error_message
+                "phase": job.phase,
+                "phase_label": job.phase_label,
+                "current_log": job.current_log,
+            })
 
-            yield _sse("done", final_data)
+            # Replay des événements émis avant la connexion du client
+            for msg in history:
+                event_type = msg.get("event", "message")
+                yield _sse(event_type, msg.get("data", ""))
+                if event_type == "done":
+                    return
+
+            # Job déjà terminé sans événement "done" enregistré (sécurité)
+            if job.status not in (JobStatus.PENDING, JobStatus.RUNNING):
+                final_data = {
+                    "status": job.status.value if isinstance(job.status, JobStatus) else job.status,
+                    "progress": job.progress,
+                    "finished": True,
+                }
+                if job.result:
+                    final_data["result"] = job.result
+                if job.error_message:
+                    final_data["error"] = job.error_message
+                yield _sse("done", final_data)
+                return
+
+            # Flux temps réel
+            try:
+                while True:
+                    try:
+                        msg = await asyncio.wait_for(client_queue.get(), timeout=15.0)
+                        event_type = msg.get("event", "message")
+                        yield _sse(event_type, msg.get("data", ""))
+                        if event_type == "done":
+                            return
+                    except asyncio.TimeoutError:
+                        # Keepalive ping
+                        yield _sse("ping", "keepalive")
+            except asyncio.CancelledError:
+                pass
+        finally:
+            with job.lock:
+                if listener in job.listeners:
+                    job.listeners.remove(listener)
 
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",
         headers={
-            "Cache-Control": "no-cache",
+            "Cache-Control": "no-cache, no-transform",
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no",  # Disable nginx buffering
         },
@@ -306,11 +320,109 @@ async def save_registry(path: str | None = Query(None)):
 
     try:
         write_registry(data, path)
+        cleaned_path, cleaned_count = write_cleaned_registry(data, path)
         with _registry_lock:
             _registry_path = path
-        return {"message": "Registry saved", "path": path}
+        return {
+            "message": "Registry saved",
+            "path": path,
+            "cleaned_path": cleaned_path,
+            "cleaned_count": cleaned_count,
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving registry: {e}")
+
+
+@app.get("/api/registry/cleaned", response_model=dict[str, Any])
+async def get_cleaned_registry():
+    """Registre des CodeLists nettoyées associé au registre chargé (lu sur disque)."""
+    with _registry_lock:
+        if _registry_path is None:
+            raise HTTPException(status_code=400, detail="No registry loaded")
+        path = cleaned_registry_path(_registry_path)
+    try:
+        return read_cleaned_registry(path)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Registre nettoyé introuvable ({path}) — sauvegardez d'abord le registre.",
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lecture registre nettoyé: {e}")
+
+
+@app.post("/api/registry/add-to-cleaned")
+async def add_to_cleaned(req: AddToCleanedRequest):
+    """Ajoute manuellement une CodeList (sans doublon) au registre nettoyé."""
+    with _registry_lock:
+        if _registry_state is None or _registry_path is None:
+            raise HTTPException(status_code=400, detail="No registry loaded")
+        cl_data = _registry_state.get(req.cl_id)
+        if cl_data is None:
+            raise HTTPException(status_code=404, detail=f"CodeList {req.cl_id} not found")
+        path = cleaned_registry_path(_registry_path)
+
+    try:
+        cleaned = read_cleaned_registry(path)
+    except FileNotFoundError:
+        cleaned = empty_cleaned_doc()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lecture registre nettoyé: {e}")
+
+    if not add_entry_from_parent(cleaned, cl_data):
+        raise HTTPException(status_code=409, detail="CodeList déjà présente dans le registre nettoyé")
+
+    try:
+        write_registry(cleaned, path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur écriture: {e}")
+    return {
+        "message": "CodeList ajoutée au registre nettoyé",
+        "path": path,
+        "count": len(cleaned["codelists"]),
+    }
+
+
+# ============================================================================
+# Cleaned registry API (édition du registre nettoyé — stateless)
+# ============================================================================
+
+@app.get("/api/cleaned", response_model=dict[str, Any])
+async def get_cleaned(path: str = Query(...)):
+    """Lit un registre nettoyé (local ou S3), migré au schéma v2."""
+    try:
+        return read_cleaned_registry(path)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Fichier introuvable: {path}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lecture: {e}")
+
+
+@app.post("/api/cleaned/save")
+async def save_cleaned(request: Request, path: str = Query(...)):
+    """Sauvegarde un registre nettoyé édité (validation avant écriture)."""
+    from datetime import datetime, timezone
+
+    try:
+        doc = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Corps JSON invalide")
+
+    errors = validate_cleaned_doc(doc)
+    if errors:
+        raise HTTPException(status_code=422, detail=errors)
+
+    doc["generated_at"] = datetime.now(timezone.utc).isoformat()
+    doc["version"] = 2
+    try:
+        write_registry(doc, path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur écriture: {e}")
+    return {
+        "message": "Registre nettoyé sauvegardé",
+        "path": path,
+        "count": len(doc.get("codelists", {})),
+    }
 
 
 @app.patch("/api/registry/decision")
