@@ -2,28 +2,15 @@
 
 // API_BASE is defined in config.js (loaded first)
 
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    const toastEl = document.createElement('div');
-    toastEl.className = `toast align-items-center text-bg-${type} border-0`;
-    toastEl.setAttribute('role', 'alert');
-    toastEl.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">${message}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    `;
-    container.appendChild(toastEl);
-    const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
-    toast.show();
-    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
-}
+// showToast is defined in main.js — shared globally
+
 
 /* ------------------------------------------------------------------ */
 
 async function launchPipeline() {
     const xmlSource = document.getElementById('xmlSource').value.trim();
     const outputBase = document.getElementById('outputBase').value.trim();
+    const registryPath = document.getElementById('pipelineRegistryPath').value.trim();
     const runLlm = document.getElementById('runLlm').checked;
     const verbose = document.getElementById('verbose').checked;
 
@@ -55,6 +42,7 @@ async function launchPipeline() {
                 output_base: outputBase,
                 run_llm: runLlm,
                 verbose: verbose,
+                registry_path: registryPath || null,
             }),
         });
 
@@ -100,6 +88,14 @@ function connectSSE(jobId) {
 
     let logs = [];  // array of { text, ts }
 
+    // Fallback polling : certains proxys (port forward VS Code) bufferisent
+    // le flux SSE et ne le délivrent qu'à la fermeture. Si le SSE reste
+    // silencieux > 3 s pendant que le job tourne, on bascule sur du polling
+    // du endpoint /status toutes les 2 s (bascule définitive pour ce job).
+    let lastEventTs = Date.now();
+    let finished = false;
+    let usePolling = false;
+
     function updateUI(progress, message, phase, phase_label) {
         // Progress bar
         const pct = Math.min(Math.round((progress ?? 0) * 100), 100);
@@ -128,34 +124,37 @@ function connectSSE(jobId) {
 
         const ts = new Date().toLocaleTimeString('fr-FR');
         logs.push({ text, ts });
+        renderLogs();
+    }
+
+    function renderLogs() {
         logsContainer.textContent = logs.map(l => `[${l.ts}] ${l.text}`).join('\n');
         logsContainer.scrollTop = logsContainer.scrollHeight;
         logCountEl.textContent = `(${logs.length})`;
     }
 
+    // Remplace l'affichage par le snapshot du polling (50 derniers logs) —
+    // évite les doublons quand on mélange sources SSE et polling.
+    function setLogsFromSnapshot(lines) {
+        const ts = new Date().toLocaleTimeString('fr-FR');
+        const prevTs = new Map(logs.map(l => [l.text, l.ts]));
+        logs = lines
+            .filter(t => t)
+            .map(text => {
+                const t = text.length > 500 ? text.substring(0, 500) + '…' : text;
+                return { text: t, ts: prevTs.get(t) || ts };
+            });
+        renderLogs();
+    }
+
     // --- EventSource ---
     const es = new EventSource(API_BASE + `api/pipeline/${jobId}/sse`);
 
-    es.addEventListener('init', (ev) => {
-        const d = JSON.parse(ev.data);
-        if (d.status === 'running' || d.status === 'pending') {
-            updateUI(d.progress, d.current_log, d.phase, d.phase_label);
-        }
-        if (d.logs) d.logs.forEach(appendLog);
-    });
-
-    es.addEventListener('progress', (ev) => {
-        const d = JSON.parse(ev.data);
-        updateUI(d.progress, d.message, d.phase, d.phase_label);
-    });
-
-    es.addEventListener('log', (ev) => {
-        const d = JSON.parse(ev.data);
-        appendLog(d.message);
-    });
-
-    es.addEventListener('done', (ev) => {
-        const d = JSON.parse(ev.data);
+    // Fin de job (SSE "done" ou polling) — le premier arrivé gagne.
+    function finishJob(d) {
+        if (finished) return;
+        finished = true;
+        clearInterval(poller);
         es.close();
 
         if (d.status === 'success') {
@@ -168,6 +167,33 @@ function connectSSE(jobId) {
         const lb = document.getElementById('launchBtn');
         lb.disabled = false;
         lb.textContent = '🚀 Lancer le pipeline';
+    }
+
+    es.addEventListener('init', (ev) => {
+        lastEventTs = Date.now();
+        const d = JSON.parse(ev.data);
+        if (d.status === 'running' || d.status === 'pending') {
+            updateUI(d.progress, d.current_log, d.phase, d.phase_label);
+        }
+        if (d.logs) d.logs.forEach(appendLog);
+    });
+
+    es.addEventListener('progress', (ev) => {
+        lastEventTs = Date.now();
+        if (usePolling) return;  // rafale SSE bufferisée arrivée en retard
+        const d = JSON.parse(ev.data);
+        updateUI(d.progress, d.message, d.phase, d.phase_label);
+    });
+
+    es.addEventListener('log', (ev) => {
+        lastEventTs = Date.now();
+        if (usePolling) return;
+        const d = JSON.parse(ev.data);
+        appendLog(d.message);
+    });
+
+    es.addEventListener('done', (ev) => {
+        finishJob(JSON.parse(ev.data));
     });
 
     es.addEventListener('error', (ev) => {
@@ -175,12 +201,31 @@ function connectSSE(jobId) {
     });
 
     es.onerror = () => {
-        console.error('Connection lost');
-        const lb = document.getElementById('launchBtn');
-        lb.disabled = false;
-        lb.textContent = '🚀 Lancer le pipeline';
-        showToast('Connexion SSE perdue', 'danger');
+        // Fermeture normale (après "done") → pas une erreur
+        if (es.readyState === EventSource.CLOSED) return;
+        // SSE mort en cours de job → le polling prend le relais
+        if (!finished) {
+            console.warn('SSE indisponible — bascule sur le polling');
+            usePolling = true;
+        }
     };
+
+    // Poller de secours (voir commentaire en tête de connectSSE)
+    const poller = setInterval(async () => {
+        if (finished) { clearInterval(poller); return; }
+        if (!usePolling && Date.now() - lastEventTs < 3000) return;  // SSE vivant
+        usePolling = true;
+        try {
+            const r = await fetch(`${API_BASE}api/pipeline/${jobId}/status`);
+            if (!r.ok) return;
+            const d = await r.json();
+            updateUI(d.progress, d.current_log, d.phase, d.phase_label);
+            if (d.logs) setLogsFromSnapshot(d.logs);
+            if (d.status === 'success' || d.status === 'error') {
+                finishJob({ status: d.status, result: d.result, error: d.error_message });
+            }
+        } catch (e) { /* serveur temporairement injoignable → on réessaie */ }
+    }, 2000);
 
     window._sseConnection = es;
 
@@ -212,6 +257,10 @@ function connectSSE(jobId) {
             const dupUrl = data.result.output_files['codelist_duplicates.json'];
             if (dupUrl) {
                 document.getElementById('registryPath').value = dupUrl;
+                // Boucle incrémentale : préremplir aussi les chemins du registre nettoyé
+                const cleanedUrl = dupUrl.replace(/codelist_duplicates\.json$/, 'cleaned_codelists.json');
+                document.getElementById('cleanedPath').value = cleanedUrl;
+                document.getElementById('pipelineRegistryPath').value = cleanedUrl;
             }
         }
 

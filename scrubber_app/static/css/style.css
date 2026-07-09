@@ -65,6 +65,11 @@
     white-space: nowrap;
 }
 
+.code-compare-wrap {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
 /* Logs */
 #logsContainer {
     font-family: 'Courier New', Courier, monospace;
@@ -73,8 +78,18 @@
 }
 
 /* Toasts */
+.toast-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100% !important;
+}
+
 .toast {
-    min-width: 300px;
+    min-width: 400px !important;
+    width: 100% !important;
+    max-width: 600px !important;
+    margin-bottom: 8px;
 }
 
 /* Pagination */
@@ -157,6 +172,22 @@ pre {
         flex: 0 0 100%;
         max-width: 100%;
     }
+}
+
+/* Copyable ID button */
+.copy-id-btn {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.8em;
+    color: #6c757d;
+    text-decoration: none;
+    cursor: pointer;
+    padding: 0 !important;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+.copy-id-btn:hover {
+    color: #0d6efd;
+    text-decoration: underline;
 }
 
 /* Smooth transitions */

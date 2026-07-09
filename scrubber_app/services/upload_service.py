@@ -40,27 +40,10 @@ def upload_file_to_s3(
     def _log(msg: str) -> None:
         logger.info("[upload] %s", msg)
 
-    endpoint = os.environ.get("AWS_S3_ENDPOINT", "minio.lab.sspcloud.fr")
-    if not endpoint.startswith("http://") and not endpoint.startswith("https://"):
-        endpoint = "https://" + endpoint
-
-    key = os.environ.get("AWS_ACCESS_KEY_ID", "")
-    secret = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
-    token = os.environ.get("AWS_SESSION_TOKEN", "")
-
-    if not key or not secret:
-        _log("Pas de credentials S3 — upload sauté")
-        return None
-
     try:
-        import s3fs
+        from scrubber.s3 import make_s3_filesystem
 
-        s3 = s3fs.S3FileSystem(
-            endpoint_url=endpoint,
-            key=key,
-            secret=secret,
-            token=token or None,
-        )
+        s3 = make_s3_filesystem()
 
         # Vérifier connexion
         try:

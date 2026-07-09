@@ -18,6 +18,7 @@ class CodeList:
     var_ids: set[str] = field(default_factory=set)              # IDs des variables référentes
     cat_ids: set[str] = field(default_factory=set)              # IDs des catégories présentes
     var_sig: tuple[str, ...] = field(default_factory=tuple)     # signature d'usage (trié)
+    origin: str = "xml"                                         # "xml" ou "registry"
 
 
 @dataclass

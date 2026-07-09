@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-import s3fs
 from lxml import etree
 
+from .s3 import make_s3_filesystem
 from .types import CodeList, VariableRef
 
 
 def read_bytes(source: str) -> bytes:
     """Lit la source : objet S3 (via s3fs) ou fichier local."""
-    fs = s3fs.S3FileSystem(
-        endpoint_url="https://minio.lab.sspcloud.fr",
-        client_kwargs={"region_name": "us-east-1"},
-    )
-    with fs.open(source, "rb") as f:
+    if source.startswith("s3://"):
+        fs = make_s3_filesystem()
+        with fs.open(source, "rb") as f:
+            return f.read()
+    with open(source, "rb") as f:
         return f.read()
 
 

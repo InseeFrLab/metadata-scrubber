@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import threading
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -20,11 +21,12 @@ class JobStatus(str, Enum):
     ERROR = "error"
 
 
-@dataclass
-class SSEListener:
-    """Channel asynchrone pour un client SSE connecté."""
-    queue: asyncio.Queue
-    created_at: float = field(default_factory=time.time)
+def _safe_put(queue: asyncio.Queue, msg: dict) -> None:
+    """Dépose un message dans la queue d'un client SSE (exécuté dans la boucle asyncio)."""
+    try:
+        queue.put_nowait(msg)
+    except asyncio.QueueFull:
+        pass  # client trop lent → on droppe l'événement
 
 
 @dataclass
@@ -41,23 +43,33 @@ class Job:
     error_message: str | None = None
     created_at: float = field(default_factory=time.time)
     finished_at: float | None = None
-    listeners: list[SSEListener] = field(default_factory=list)
+    listeners: list[dict] = field(default_factory=list)
+    events: list[dict] = field(default_factory=list)  # historique pour replay SSE
+    lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
     def add_log(self, msg: str) -> None:
         self.logs.append(msg)
 
     def broadcast(self, event: str, data: Any) -> None:
-        for listener in self.listeners:
-            # Support both SSEListener(dataclass) and plain-dict listeners.
-            queue = getattr(listener, "queue", None) or (listener.get("queue") if isinstance(listener, dict) else None)
-            if queue is None:
-                continue
-            try:
-                # put_nowait() is thread-safe — no asyncio loop needed.
-                queue.put_nowait({"event": event, "data": data})
-            except (asyncio.QueueFull, RuntimeError):
-                # Queue full → drop oldest; RuntimeError → listener already gone.
-                pass
+        """Enregistre l'événement et le pousse aux clients SSE connectés.
+
+        Appelé depuis le thread worker : la livraison passe par
+        call_soon_threadsafe pour réveiller la boucle asyncio
+        (asyncio.Queue.put_nowait seul ne réveille pas epoll depuis
+        un autre thread).
+        """
+        msg = {"event": event, "data": data}
+        with self.lock:
+            self.events.append(msg)
+            for listener in list(self.listeners):
+                queue = listener.get("queue")
+                loop = listener.get("loop")
+                if queue is None or loop is None:
+                    continue
+                try:
+                    loop.call_soon_threadsafe(_safe_put, queue, msg)
+                except RuntimeError:
+                    pass  # boucle fermée → listener obsolète
 
 
 # Singleton global
@@ -126,14 +138,6 @@ class JobManager:
 
         data = {"status": "error", "error_message": error_message}
         job.broadcast("done", data)
-
-    def add_listener(self, job_id: str) -> SSEListener:
-        job = self.jobs.get(job_id)
-        if job is None:
-            return SSEListener(queue=asyncio.Queue())
-        listener = SSEListener(queue=asyncio.Queue())
-        job.listeners.append(listener)
-        return listener
 
     def cleanup(self, max_age: float = 3600) -> int:
         """Remove finished jobs older than max_age seconds."""
