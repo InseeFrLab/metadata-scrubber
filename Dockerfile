@@ -1,6 +1,16 @@
-FROM inseefrlab/python-datascience:latest
+# syntax=docker/dockerfile:1
+# ============================================================
+# Build Metadata Scrubber
+# ============================================================
+#
+# Phase de build : ghcr.io/astral-sh/uv (image uv avec Python 3.13 bookworm-slim)
+# Runtime        : python 3.13 bookworm-slim (image officielle)
+# Entrée         : scrubber-web → FastAPI sur le port 8000
+# Secrets        : injectés en variables d'environnement
+# ============================================================
 
-LABEL org.opencontainers.image.source="https://github.com/inseefrlab/metadata-scrubber"
+# --- Stage 1 : compilation des dépendances ---
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
 
 WORKDIR /app
 
@@ -11,7 +21,16 @@ RUN uv sync --frozen --no-install-project
 # Code source du projet
 COPY . .
 
-EXPOSE 8000
+# --- Stage 2 : image finale minimale ---
+FROM python:3.13-slim
 
-# Démarrage du serveur monolithique FastAPI
-CMD ["uv", "run", "scrubber-web"]
+WORKDIR /app
+
+# Virtualenv + code depuis builder
+COPY --from=builder /app/.venv        /.venv
+COPY --from=builder /app/src          ./src
+COPY --from=builder /app/pyproject.toml ./
+
+ENV PATH="/.venv/bin:$PATH"
+
+CMD ["scrubber-web"]
