@@ -96,7 +96,7 @@ def _localized(el: etree._Element, name: str) -> str:
 
 def run_pipeline(
     xml_source: str = "s3://projet-metadonnees-rmes/BTS.xml",
-    audit_dir: str = "audit",
+    audit_dir: str = "s3://projet-metadonnees-rmes/scrubber_output",
     run_llm: bool = True,
     verbose: bool = False,
     registry_path: str | None = None,
@@ -447,7 +447,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--audit-dir",
-        default="audit",
+        default="s3://projet-metadonnees-rmes/scrubber_output",
         help="Répertoire de sortie (codelist_duplicates.json).",
     )
     parser.add_argument(

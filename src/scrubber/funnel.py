@@ -35,8 +35,8 @@ def detect_exact_duplicates(codelists: list[CodeList]) -> dict[tuple, list[CodeL
 
 
 def _text_for_dedup(cl: CodeList) -> str:
-    """Version normalisee concatenee d'une codelist (nom + label + codes)."""
-    return concat_text(cl.name, cl.label, cl.codes)
+    """Version normalisee concatenee d'une codelist (nom + label + desc + codes)."""
+    return concat_text(cl.name, cl.label, cl.codes, cl.description)
 
 
 def _text_map(codelists: list[CodeList]) -> dict[str, str]:

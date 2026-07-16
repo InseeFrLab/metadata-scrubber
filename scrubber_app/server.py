@@ -485,7 +485,10 @@ async def get_codelist(cl_id: str):
 @app.post("/api/upload")
 async def upload_file(
     file: UploadFile = File(...),
-    output_base: str = Query("audit", description="Repertoire ou URL S3 de destination"),
+    output_base: str = Query(
+        "s3://projet-metadonnees-rmes/",
+        description="Repertoire ou URL S3 de destination",
+    ),
 ):
     """Upload un fichier vers S3."""
     try:

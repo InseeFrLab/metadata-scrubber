@@ -123,6 +123,8 @@ def extract_codelists(objects: list[etree._Element]) -> list[CodeList]:
         cl_id = _text_of(o, "ID")
         cl_name = _localized(o, "CodeListName")
         cl_label = _localized(o, "Label")
+        cl_description = _localized(o, "Description")
+        cl_user_id = _text_of(o, "UserID")
 
         if cl_id:
             codelists.append(
@@ -133,6 +135,8 @@ def extract_codelists(objects: list[etree._Element]) -> list[CodeList]:
                     codes=codes,
                     var_ids=var_to_cl.get(cl_id, set()),
                     cat_ids=cat_ids,
+                    description=cl_description,
+                    user_id=cl_user_id,
                 )
             )
 

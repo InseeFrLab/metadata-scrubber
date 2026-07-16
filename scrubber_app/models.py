@@ -14,7 +14,10 @@ from pydantic import BaseModel, Field
 class PipelineRequest(BaseModel):
     """Requête pour lancer un pipeline."""
     xml_source: str = Field(..., description="Chemin ou URL S3 du fichier DDI.")
-    output_base: str = Field("audit", description="Dossier de sortie.")
+    output_base: str = Field(
+        "s3://projet-metadonnees-rmes/scrubber_output",
+        description="Répertoire de sortie (S3 ou local).",
+    )
     run_llm: bool = Field(True, description="Inclure les phases sémantiques (LLM).")
     verbose: bool = Field(False, description="Mode verbeux.")
     registry_path: Optional[str] = Field(
