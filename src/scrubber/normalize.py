@@ -28,12 +28,15 @@ def concat_text(
     name: str,
     label: str,
     codes: list[tuple[str, str]],
+    description: str = "",
 ) -> str:
     """
-    Concatène nom, label et codes en un seul texte normalisé.
+    Concatène nom, label, description optionnelle et codes en un seul texte normalisé.
 
     Utilisé pour les comparaisons floues et les embeddings.
     """
     parts = [name, label]
+    if description:
+        parts.append(description)
     parts += [f"{normalize(v)}: {normalize(label)}" for v, label in codes]
     return normalize(" ".join(parts))

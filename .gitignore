@@ -44,3 +44,8 @@ Thumbs.db
 .env
 .env.local
 *.env
+
+# Agents skills
+.agents/
+.claude/
+skills-lock.json

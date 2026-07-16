@@ -19,6 +19,10 @@ class CodeList:
     cat_ids: set[str] = field(default_factory=set)              # IDs des catégories présentes
     var_sig: tuple[str, ...] = field(default_factory=tuple)     # signature d'usage (trié)
     origin: str = "xml"                                         # "xml" ou "registry"
+    description: str = ""                                       # texte depuis r:Description
+    user_id: str = ""                                           # texte brut depuis r:UserID
+    description: str = ""                                       # texte depuis r:Description
+    user_id: str = ""                                           # texte brut depuis r:UserID
 
 
 @dataclass
@@ -34,7 +38,7 @@ class VariableRef:
 class CandidateFusion:
     """Candidat de fusion entre une CodeList master et plusieurs slaves."""
     fusion_id: str
-    detection_type: str  # "exact", "fuzzy", "semantic_list", "semantic_var", "usage"
+    detection_type: str  # "exact", "fuzzy", "semantic_list", "semantic_var", "semantic_userid", "usage"
     master_cl: CodeList
     slave_cls: list[CodeList]
     confidence: float  # 0.0 – 1.0

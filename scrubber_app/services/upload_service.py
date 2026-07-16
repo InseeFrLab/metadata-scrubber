@@ -51,7 +51,7 @@ def upload_file_to_s3(
             _log("Connexion S3 OK")
         except Exception as e:
             _log(f"Connexion S3 échouée: {e}")
-            return s3
+            return None
 
         # Construire la destination
         s3_key = s3_base.replace("s3://", "")

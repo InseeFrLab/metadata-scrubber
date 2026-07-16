@@ -58,20 +58,23 @@
                             <div class="mb-3">
                                 <label for="xmlSource" class="form-label">Chemin DDI (XML) — local ou S3</label>
                                 <input type="text" class="form-control" id="xmlSource"
+                                    value="s3://projet-metadonnees-rmes/BTS.xml"
                                     placeholder="s3://<bucket>/data/input/dde-metadonnees.xml" required>
                                 <div class="form-text">URL S3 ou chemin local vers le fichier DDI à analyser.</div>
                             </div>
                             <div class="mb-3">
                                 <label for="outputBase" class="form-label">Dossier de sortie — local ou S3</label>
-                                <input type="text" class="form-control" id="outputBase" placeholder="audit"
-                                    value="audit" required>
+                                <input type="text" class="form-control" id="outputBase"
+                                    value="s3://projet-metadonnees-rmes/scrubber_output"
+                                    placeholder="s3://<bucket>/output/scrubber" required>
                                 <div class="form-text">S3 : écrit les outputs sur le bucket. Local : dossier temporaire.
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label for="pipelineRegistryPath" class="form-label">Registre nettoyé (optionnel)</label>
                                 <input type="text" class="form-control" id="pipelineRegistryPath"
-                                    placeholder="audit/cleaned_codelists.json">
+                                    value="s3://projet-metadonnees-rmes/scrubber_output/cleaned_codelists.json"
+                                    placeholder="s3://<bucket>/output/scrubber/cleaned_codelists.json">
                                 <div class="form-text">Les listes de ce registre sont prioritaires (masters) ;
                                     les listes déjà remplacées sont exclues de la détection.
                                 </div>
@@ -155,8 +158,8 @@
                         <div class="row g-2 mb-3">
                             <div class="col-md-8">
                                 <input type="text" class="form-control form-control-sm" id="registryPath"
-                                    placeholder="Chemin du codelist_duplicates.json"
-                                    value="audit/codelist_duplicates.json">
+                                    value="s3://projet-metadonnees-rmes/scrubber_output/codelist_duplicates.json"
+                                    placeholder="s3://<bucket>/output/scrubber/codelist_duplicates.json">
                             </div>
                             <div class="col-md-4">
                                 <button class="btn btn-sm btn-outline-primary w-100" id="loadRegistryBtn">
@@ -321,8 +324,8 @@
                         <div class="row g-2 mb-3">
                             <div class="col-md-6">
                                 <input type="text" class="form-control form-control-sm" id="cleanedPath"
-                                    placeholder="Chemin du cleaned_codelists.json"
-                                    value="audit/cleaned_codelists.json">
+                                    value="s3://projet-metadonnees-rmes/scrubber_output/cleaned_codelists.json"
+                                    placeholder="s3://<bucket>/output/scrubber/cleaned_codelists.json">
                             </div>
                             <div class="col-md-2">
                                 <button class="btn btn-sm btn-outline-primary w-100" id="loadCleanedBtn">
