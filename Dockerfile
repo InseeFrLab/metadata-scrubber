@@ -16,9 +16,8 @@ WORKDIR /app
 
 # 1. Dépendances seules (cache Docker maximal)
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen
 
-# 2. Le projet et ses entrypoints console (scrubber-web, scrubber)
+# 2. Code source + le projet avec ses entrypoints console
 COPY . .
 RUN uv sync --frozen
 
