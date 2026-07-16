@@ -1,5 +1,5 @@
 """
-Meta Scrubber — Interface de validation des doublons de CodeLists.
+Metadata Scrubber — Interface de validation des doublons de CodeLists.
 
 Charge codelist_duplicates.json, permet de valider chaque duplicate
 (decision = approve | reject | pending), avec auto-save et actions
@@ -7,28 +7,22 @@ globales (approuver les exactes, approuver confiance ≥ 0.95…).
 Peut aussi lancer un pipeline complet depuis l'onglet Pipeline.
 
 Lancement :
-    uv run -A streamlit run scrubber_app/app.py --
+    uv run scrubber-web           # FastAPI
+    uv run -A streamlit run src/ui/app.py  # Streamlit
 """
 
 from __future__ import annotations
 
 import json
 import os
-import sys
 from pathlib import Path
 from typing import Any
 
-import queue  # noqa: E402
-
-# --- Ajustement du path pour imports relatifs ---
-_app_dir = os.path.dirname(os.path.abspath(__file__))
-if _app_dir not in sys.path:
-    sys.path.insert(0, _app_dir)
-
-import streamlit as st  # noqa: E402  # must be after sys.path fix
+import queue
+import streamlit as st  # noqa: E402
 import pandas as pd  # noqa: E402
 
-from pipeline_runner import PipelineResult, run_pipeline_async  # noqa: E402
+from metadata_scrubber.ui.pipeline_runner import PipelineResult, run_pipeline_async
 
 
 # ---------------------------------------------------------------------------

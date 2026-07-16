@@ -1,12 +1,12 @@
 """server.py — FastAPI application for the Metadata Scrubber.
 
 This is the API + frontend server that replaces Streamlit.
-Start with: uv run -- scrubber_app/server.py
+Start with: uv run scrubber-web
 
 Key features:
 - SSE (Server-Sent Events) for real-time pipeline progress
 - REST API for registry management
-- Jinja2 templating for the frontend (HTML/JS/CSS separation)
+- Embedded frontend (HTML/CSS/JS inline from package resources)
 """
 
 from __future__ import annotations
@@ -19,14 +19,13 @@ import tempfile
 import threading
 import time
 from contextlib import asynccontextmanager
-from pathlib import Path
+from importlib import resources as importlib_resources
 from typing import Any, AsyncGenerator
 
 from fastapi import FastAPI, HTTPException, Query, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, StreamingResponse
-from fastapi.staticfiles import StaticFiles
 
-from models import (
+from metadata_scrubber.ui.models import (
     AddToCleanedRequest,
     BulkDecision,
     CodelistFilter,
@@ -37,9 +36,9 @@ from models import (
     PipelineStatus,
     RegistryStats,
 )
-from services.job_manager import JobStatus, job_manager
-from services.pipeline_service import start_pipeline_job
-from scrubber.cleaned_registry import (
+from metadata_scrubber.ui.services.job_manager import JobStatus, job_manager
+from metadata_scrubber.ui.services.pipeline_service import start_pipeline_job
+from metadata_scrubber.cleaned_registry import (
     add_entry_from_parent,
     cleaned_registry_path,
     empty_cleaned_doc,
@@ -47,7 +46,7 @@ from scrubber.cleaned_registry import (
     validate_cleaned_doc,
     write_cleaned_registry,
 )
-from services.registry_service import (
+from metadata_scrubber.ui.services.registry_service import (
     bulk_set_decisions,
     filter_codelists,
     get_duplicates_for_codelist,
@@ -56,16 +55,11 @@ from services.registry_service import (
     set_decision,
     write_registry,
 )
-from services.upload_service import upload_file_to_s3
+from metadata_scrubber.ui.services.upload_service import upload_file_to_s3
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
-
-# Paths
-BASE_DIR = Path(__file__).parent
-TEMPLATES_DIR = BASE_DIR / "templates"
-STATIC_DIR = BASE_DIR / "static"
 
 # Global registry state (in-memory, synchronized by registry_path)
 _registry_lock = threading.Lock()
@@ -101,10 +95,61 @@ app = FastAPI(
     root_path=os.environ.get("X_SCRIPT_NAME", ""),
 )
 
-# No Jinja2 — the HTML template is pure static, no templating logic.
-# Passing module globals() to Jinja2 fails because job_manager.jobs is a unhashable dict.
-# We serve index.html directly instead.
-_INDEX_HTML = (TEMPLATES_DIR / "index.html").read_text(encoding="utf-8")
+# ============================================================================
+# Frontend — embedded from package resources (no StaticFiles needed)
+# ============================================================================
+
+_UI_PACKAGE = "metadata_scrubber.ui"
+
+
+def _read_template() -> str:
+    """Load index.html from the ui.templates package resource."""
+    return (
+        importlib_resources.files(f"{_UI_PACKAGE}.templates")
+        .joinpath("index.html")
+        .read_text(encoding="utf-8")
+    )
+
+
+def _read_static(filename: str) -> str:
+    """Read a CSS or JS file from ui.static.<path>."""
+    if filename.endswith(".css"):
+        return (
+            importlib_resources.files(f"{_UI_PACKAGE}.static.css")
+            .joinpath(filename)
+            .read_text(encoding="utf-8")
+        )
+    return (
+        importlib_resources.files(f"{_UI_PACKAGE}.static.js")
+        .joinpath(filename)
+        .read_text(encoding="utf-8")
+    )
+
+
+def _inline_assets(html: str) -> str:
+    """
+    Inline local CSS and JS into the HTML so no /static endpoint is needed.
+
+    - <link rel="stylesheet" href="static/css/style.css"> → <style>…</style>
+    - <script src="static/js/…"> → <script>…</script>
+
+    CDN links are left untouched.
+    """
+    css_file = "style.css"
+    css = _read_static(css_file)
+    html = html.replace(
+        f'<link rel="stylesheet" href="static/css/{css_file}">',
+        f"<style>\n{css}\n</style>",
+    )
+
+    js_files = ["config.js", "main.js", "pipeline.js", "registry.js", "cleaned.js"]
+    for js_file in js_files:
+        js = _read_static(js_file)
+        # Replace <script src="static/js/xxx.js"></script> → <script>…</script>
+        pattern = f'<script src="static/js/{js_file}"></script>'
+        html = html.replace(pattern, f"<script>{js}</script>")
+
+    return html
 
 
 # ============================================================================
@@ -112,11 +157,10 @@ _INDEX_HTML = (TEMPLATES_DIR / "index.html").read_text(encoding="utf-8")
 # ============================================================================
 
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    """Serve the main page."""
-    # Inject API_BASE from the proxy prefix (X-Script-Name) so JS works
-    # whether deployed at root "/" or under a sub-path like "/my-svc/".
-    html = _INDEX_HTML
+async def index():
+    """Serve the main page with CSS/JS inlined from package resources."""
+    html = _read_template()
+    html = _inline_assets(html)
     return HTMLResponse(html)
 
 
@@ -518,15 +562,6 @@ async def upload_file(
 
 
 # ============================================================================
-# Static Files
-# ============================================================================
-
-# Only mount static files if the directory exists
-if STATIC_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-
-
-# ============================================================================
 # Entrypoint
 # ============================================================================
 
@@ -534,6 +569,19 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         app,
+        host="0.0.0.0",
+        port=8000,
+        reload=False,
+        log_level="info",
+    )
+
+
+def main() -> None:
+    """Entry-point console pour ``uv run scrubber-web``."""
+    import uvicorn
+
+    uvicorn.run(
+        "metadata_scrubber.ui.server:app",
         host="0.0.0.0",
         port=8000,
         reload=False,

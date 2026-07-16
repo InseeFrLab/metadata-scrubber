@@ -35,7 +35,7 @@ def read_json_registry(path: str) -> dict[str, Any]:
     if _is_s3_path(path):
         from botocore.exceptions import ClientError
 
-        from scrubber.s3 import make_s3_filesystem
+        from metadata_scrubber.s3 import make_s3_filesystem
 
         s3 = make_s3_filesystem()
         try:
@@ -59,7 +59,7 @@ def write_json_registry(doc: dict[str, Any], path: str) -> None:
     """
     formatted = json.dumps(doc, indent=2, ensure_ascii=False)
     if _is_s3_path(path):
-        from scrubber.s3 import make_s3_filesystem
+        from metadata_scrubber.s3 import make_s3_filesystem
 
         s3 = make_s3_filesystem()
         parent = Path(path.replace("s3://", "")).parent

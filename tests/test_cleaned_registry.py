@@ -2,7 +2,7 @@
 
 import json
 
-from scrubber.cleaned_registry import (
+from metadata_scrubber.cleaned_registry import (
     add_entry_from_parent,
     cleaned_registry_path,
     empty_cleaned_doc,
@@ -11,10 +11,10 @@ from scrubber.cleaned_registry import (
     sync_cleaned_registry,
     validate_cleaned_doc,
 )
-from scrubber.funnel import detect_exact_duplicates
-from scrubber.normalize import signature_from_codes
-from scrubber.reporting.duplicates_registry import build_duplicates_registry
-from scrubber.types import CandidateFusion, CodeList
+from metadata_scrubber.funnel import detect_exact_duplicates
+from metadata_scrubber.normalize import signature_from_codes
+from metadata_scrubber.reporting.duplicates_registry import build_duplicates_registry
+from metadata_scrubber.types import CandidateFusion, CodeList
 
 
 def _registry(decision="approve", dup_id="dup-1"):

@@ -30,30 +30,30 @@ if str(_src) not in sys.path:
 
 from lxml import etree  # noqa: E402
 
-from scrubber.extractor import (  # noqa: E402
+from .extractor import (  # noqa: E402
     extract_codelists,
     parse_xml,
     read_bytes,
 )
-from scrubber.funnel import (  # noqa: E402
+from .funnel import (  # noqa: E402
     detect_exact_duplicates,
     detect_fuzzy_duplicates,
 )
-from scrubber.normalize import normalize, signature_from_codes  # noqa: E402
-from scrubber.reporting.duplicates_registry import (  # noqa: E402
+from .normalize import normalize, signature_from_codes  # noqa: E402
+from .reporting.duplicates_registry import (  # noqa: E402
     write_duplicates_registry,
 )
-from scrubber.signals import (  # noqa: E402
+from .signals import (  # noqa: E402
     cross_check as compute_cross,
     find_usage_groups,
 )
-from scrubber.semantic import (  # noqa: E402
+from .semantic import (  # noqa: E402
     _VarRecord,
     detect_semantic_codelists,
     detect_semantic_via_variables,
     llm_judge,
 )
-from scrubber.types import CandidateFusion, CodeList  # noqa: E402
+from .types import CandidateFusion, CodeList  # noqa: E402
 
 
 # ────────────────────────────────────────────────────────────────────────
@@ -138,7 +138,7 @@ def run_pipeline(
     # 2 bis. Injection du registre nettoyé (priorité aux entrées du registre)
     # ------------------------------------------------------------------
     if registry_path:
-        from scrubber.cleaned_registry import load_cleaned_codelists
+        from .cleaned_registry import load_cleaned_codelists
 
         registry_cls, replaced_ids = load_cleaned_codelists(registry_path)
         registry_ids = {cl.id for cl in registry_cls}
@@ -281,7 +281,7 @@ def run_pipeline(
 
                 max_llm = min(len(unique_pairs), 20)
                 if max_llm > 0:
-                    from scrubber.semantic import _get_openai_client
+                    from .semantic import _get_openai_client
 
                     client = _get_openai_client()
                     for cl_a, cl_b, *_ in unique_pairs[:max_llm]:

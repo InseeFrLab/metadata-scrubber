@@ -752,7 +752,7 @@ wheels = [
 [[package]]
 name = "metadata-scrubber"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "jinja2" },
@@ -761,6 +761,7 @@ dependencies = [
     { name = "openai" },
     { name = "pandas" },
     { name = "pyarrow" },
+    { name = "python-multipart" },
     { name = "s3fs" },
     { name = "sse-starlette" },
     { name = "tqdm" },
@@ -786,6 +787,7 @@ requires-dist = [
     { name = "openai", specifier = ">=2.41.1" },
     { name = "pandas", specifier = ">=3.0.3" },
     { name = "pyarrow", specifier = ">=24.0.0" },
+    { name = "python-multipart", specifier = ">=0.0.18" },
     { name = "s3fs", specifier = ">=2026.6.0" },
     { name = "sse-starlette", specifier = ">=3.4.5" },
     { name = "tqdm", specifier = ">=4.68.2" },

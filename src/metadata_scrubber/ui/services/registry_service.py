@@ -11,7 +11,7 @@ import logging
 from typing import Any
 
 # Ré-exports : IO générique depuis le package scrubber
-from scrubber.registry_io import (  # noqa: F401
+from metadata_scrubber.registry_io import (  # noqa: F401
     read_json_registry as read_registry,
     write_json_registry as write_registry,
 )
