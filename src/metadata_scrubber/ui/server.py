@@ -56,6 +56,7 @@ from metadata_scrubber.ui.services.registry_service import (
     write_registry,
 )
 from metadata_scrubber.ui.services.upload_service import upload_file_to_s3
+from metadata_scrubber.ui.auth import AuthMiddleware
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -94,6 +95,9 @@ app = FastAPI(
     lifespan=lifespan,
     root_path=os.environ.get("X_SCRIPT_NAME", ""),
 )
+
+# Protège tous les_ENDPOINTS sauf /health, /docs, /openapi.json
+app.add_middleware(AuthMiddleware)
 
 # ============================================================================
 # Frontend — embedded from package resources (no StaticFiles needed)

@@ -121,20 +121,20 @@ Le libellé est stocké séparément :
 
 Chacune contient un seul code :
 
-| Valeur | Libellé |
-|---|---|
-| `cf` | `Voir dictionnaire des nomenclatures` |
+| Valeur | Libellé                               |
+|--------|---------------------------------------|
+| `cf`   | `Voir dictionnaire des nomenclatures` |
 
 Toutes 18 partagent **exactement la même signature** → doublons exacts. Probablement des **codes génériques** « consulter le dictionnaire » dupliqués par l'outil de modélisation (Collectica).
 
 ### Caractéristiques
 
-| Aspect | Détail |
-|---|---|
+| Aspect     | Détail                                                              |
+|------------|---------------------------------------------------------------------|
 | Complexité | $O(N \cdot C)$ — linéaire, $N$ = nb CodeLists, $C$ = nb codes moyen |
-| Réseau | Aucun appel nécessaire |
-| Précision | 100 % — zéro faux-positif |
-| Limite | 1 différence dans une liste de 10 suffit pour passer |
+| Réseau     | Aucun appel nécessaire                                              |
+| Précision  | 100 % — zéro faux-positif                                           |
+| Limite     | 1 différence dans une liste de 10 suffit pour passer                |
 
 Sur BTS.xml : **29 groupes** détectés, **54** CodeLists redondantes.
 
@@ -148,19 +148,19 @@ Sur BTS.xml : **29 groupes** détectés, **54** CodeLists redondantes.
 
 ### Exemples BTS.xml
 
-| Paire | Score | Différence |
-|---|---|---|
-| `SOURCE` ↔ `SOURCE_1` | 0.9985 | Identique (casse près) |
-| `N_tr_ca_23` ↔ `TR_CA` | 0.9896 | Majuscules/espace sur 2 codes |
-| `ETAT_ET` ↔ `ETAT_ET_1` | 0.9961 | Quasi-identique |
+| Paire                      | Score    | Différence                        |
+|----------------------------|----------|-----------------------------------|
+| `SOURCE` ↔ `SOURCE_1`      | 0.9985   | Identique (casse près)            |
+| `N_tr_ca_23` ↔ `TR_CA`     | 0.9896   | Majuscules/espace sur 2 codes     |
+| `ETAT_ET` ↔ `ETAT_ET_1`    | 0.9961   | Quasi-identique                   |
 | `N_domempl_23` ↔ `DOMEMPL` | **0.86** | **NON détectée** (accent + ordre) |
 
 ### Caractéristiques
 
-| Aspect | Détail |
-|---|---|
-| Complexité | $O(U^2 \cdot L)$, $U$ ≈ 102 uniques |
-| Faux négatifs | Différence > ~10 % du texte |
+| Aspect        | Détail                                      |
+|---------------|---------------------------------------------|
+| Complexité    | $O(U^2 \cdot L)$, $U$ ≈ 102 uniques         |
+| Faux négatifs | Différence > ~10 % du texte                 |
 | Faux positifs | Deux listes de plages de valeurs similaires |
 
 ## 2.3. Phase 2 — Doublons Sémantiques (Embeddings + LLM)
@@ -186,22 +186,22 @@ Les deux phases précédentes ne comprennent **pas le sens** : possible de "Sexe
 
 **Approche inversée** : on compare les **variables** qui référencent les CodeLists.
 
-| Liste | Variables | `var_sig` |
-|---|---|---|
-| `N_domempl_23` | `domempl`, `domempl_empl` | `("domempl", "domempl_empl")` |
-| `DOMEMPL` | `domempl`, `domempl_empl`, `DOMEMPL`, `DOMEMPL_EMPL` | `("DOMEMPL", "DOMEMPL_EMPL", "domempl", "domempl_empl")` |
+| Liste          | Variables                                            | `var_sig`                                                |
+|----------------|------------------------------------------------------|----------------------------------------------------------|
+| `N_domempl_23` | `domempl`, `domempl_empl`                            | `("domempl", "domempl_empl")`                            |
+| `DOMEMPL`      | `domempl`, `domempl_empl`, `DOMEMPL`, `DOMEMPL_EMPL` | `("DOMEMPL", "DOMEMPL_EMPL", "domempl", "domempl_empl")` |
 
 Même sémantique des 2 premières variables → mêmes concept métier.
 Particulièrement efficace quand toutes les CodeLists sont référencées (BTS.xml : 156/156).
 
 ### Caractéristiques
 
-| Aspect | Détail |
-|---|---|
-| Complexité | $O(U^2 \cdot D)$ pour embeddings, $D$ = 8192 |
-| Coût | Appels réseau ; dépend de `OPENAI_BASE_URL` + `OPENAI_API_KEY` |
-| Précision | La plus élevée (validation LLM) |
-| Limite | Coût calcul, dépendance réseau |
+| Aspect     | Détail                                                         |
+|------------|----------------------------------------------------------------|
+| Complexité | $O(U^2 \cdot D)$ pour embeddings, $D$ = 8192                   |
+| Coût       | Appels réseau ; dépend de `OPENAI_BASE_URL` + `OPENAI_API_KEY` |
+| Précision  | La plus élevée (validation LLM)                                |
+| Limite     | Coût calcul, dépendance réseau                                 |
 
 ---
 
@@ -215,26 +215,26 @@ var_sig(CL) = tuple(sorted( noms_des_variables_qui_la_referencent ))
 
 ## 3.1. Types de recoupement
 
-| Signal | Signification |
-|---|---|
-| `✓ même usage` | Ensembles de variables identiques → fort indicateur de redondance |
-| `~ usage partiel` | Intersection significative → variation contextuelle possible |
+| Signal               | Signification                                                                |
+|----------------------|------------------------------------------------------------------------------|
+| `✓ même usage`       | Ensembles de variables identiques → fort indicateur de redondance            |
+| `~ usage partiel`    | Intersection significative → variation contextuelle possible                 |
 | `✗ usages disjoints` | Aucune variable commune → probablement distinctes ou besoin de consolidation |
 
 ## 3.2. Exemples BTS.xml
 
 ### Groupe A : `var_sig` identique + contenu identique → doublon exact confirmé
 
-| CodeList | `var_sig` |
-|---|---|
-| `N_saison_23` | `("saison",)` |
+| CodeList                 | `var_sig`     |
+|--------------------------|---------------|
+| `N_saison_23`            | `("saison",)` |
 | `N_SAISON_Validité 2022` | `("saison",)` |
 
 ### Groupe B : `var_sig` identique + contenu différent → à vérifier
 
-| CodeList | `var_sig` |
-|---|---|
-| `N_champ_23` | `("champ",)` |
+| CodeList       | `var_sig`    |
+|----------------|--------------|
+| `N_champ_23`   | `("champ",)` |
 | `N_CHAMP_2022` | `("champ",)` |
 
 ### Groupe C : `var_sig` disjoints + contenu identique → à consolider
@@ -246,36 +246,41 @@ var_sig(CL) = tuple(sorted( noms_des_variables_qui_la_referencent ))
 
 ---
 
-# 4. Le Flag `--registry` :Cycle Itératif de Nettoyage
+# 4. Le Flag `--registry` : Dédoublonnage Transversal Itératif
 
 ## 4.1. Pourquoi `--registry` ?
 
-Un seul run du pipeline génère un **instantané** de toutes les redondances possibles. L'expert valide manuellement (interface web) chaque paire. Mais les paires résolues réapparaissent dans les runs suivants → **réexécution redondante**.
+Un seul run du pipeline identifie les redondances **au sein d'un unique fichier traité**.
+Mais les mêmes CodeLists peuvent apparaître dans plusieurs opérations (BTS, BPE, CPE…).
+Sans registre partagé, chaque nouvel run redécouvre les paires déjà validées dans les
+opérations précédentes.
 
-La solution : un **registre nettoyé persistant** (`cleaned_codelists.json`, schéma v2) injectable dans le pipeline.
+Le registre `cleaned_codelists.json` est un **catalogue transversal de vérité** : il
+s'alimente au fil des opérations et alimente la détection du run suivant, y compris les
+appariements **cross-opération**.
 
-## 4.2. Cycle complet
+## 4.2. Flux transversal
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Cycle de nettoyage itératif               │
-│                                                              │
-│  1. Run pipeline (sans registry)                             │
-│     → codelist_duplicates.json (tous les doublons)           │
-│                                                              │
-│  2. Interface web : examiner/approuver/rejeter               │
-│     → /api/registry/save → cleaned_codelists.json (sync)     │
-│                                                              │
-│  3. Run pipeline (--registry cleaned_codelists.json)         │
-│     → codelist_duplicates.json (résiduels uniquement)        │
-│                                                              │
-│  4. Répéter étapes 2-3 jusqu'à couvrir tout le référentiel   │
-│                                                              │
-│  Résultat final :                                            │
-│     • cleaned_codelists.json : registres validés             │
-│     • codelist_duplicates.json : paires résiduelles ou vides  │
-└─────────────────────────────────────────────────────────────┘
-```
+````md
+Opération 1 : BTS_demo.xml (sans --registry)
+  → codelist_duplicates.json → 4 paires détectées (exact + flou + sémantique)
+  → Interface web : examiner / approuver / rejeter
+  → /api/registry/save → cleaned_codelists.json (mères BTS)
+
+Opération 2 : BPE_demo.xml avec --registry cleaned_codelists.json
+  → masters BTS injectés dans la détection
+  → CodeLists BTS doublons exclues (déjà validées)
+  → codelist_duplicates.json → paires BPE intra + BPE↔BTS (cross-fichier)
+  → /api/registry/save → cleaned_codelists.json mis à jour (BTS + BPE)
+
+Opération N : fichier suivant avec --registry cleaned_codelists.json
+  → registry = tous les masters validés précédemment
+  → détection = intra-fichier + cross-opération sur les masters cumulés
+  → registre s'enrichit, les paires résiduelles diminuent à chaque étape
+
+Plus le registre grossit, plus la détection évite les réitérations
+et capture les appariements inter-opérations.
+````
 
 ## 4.3. Ce que fait `--registry` dans le pipeline (main.py, §2 bis)
 
@@ -343,95 +348,99 @@ Le dossier `demo/` contient des fichiers XML de petite taille, générés depuis
 
 Générer les fichiers : `uv run demo/make_demo_files.py`.
 
-## 5.1. `demo/BTS_demo.xml` — 4 paires connues + 2 uniques
+## 5.1. `demo/BTS_demo.xml` — Run 1 (sans registry)
 
-### Paire 1 : `N_nom_23` ↔ `NOM`
+**Contexte** : 10 CodeLists issues de BTS.xml : 4 paires connues + 2 listes uniques.
 
-| Paire de codes | N_nom_23 | NOM | Type |
-|---|---|---|---|
-| (1, "Privé administratif") | ✓ | ✓ | Exact |
-| (2, "Privé lucratif") | ✓ | ✓ | Exact |
-| … (7 codes totaux) | | | |
+### Paire 1 — Exact : `N_NAF_6` ↔ `N-ACTIVITE-FRANCAISE-6-POSTES`
 
-**Signal d'usage** : variables partagées `sdsi`, `idcc`, `reglem`.
-
-**Détection** :
-- Phase 1 Exact : ✓ (signature identique)
-- Signal usage : ✓ (mêmes variables)
-- Phase 2 Sémantique : ✓
-
-### Paire 2 : `N_pcs_23` ↔ `N_PCS`
-
-| Codes | N_pcs_23 | N_PCS | Type |
-|---|---|---|---|
-| (1, "Cadres et professions intellectuelles supérieures") | ✓ | ✓ | Exact (ordre différent) |
-| (2, "Professions intermédiaires") | ✓ | ✓ | Exact |
-| (3, "Employés") | ✓ | ✓ | Exact |
-
-**Particularité** : codes identiques mais **ordre différent** → signatures identiques après tri, donc détectés comme exact.
-
-**Signal d'usage** : variables disjointes (`N_pcs_23` n'a pas de variable référente directe dans ce demo).
-
-### Paire 3 : `N_cp_23` ↔ `CP`
-
-| Codes | N_cp_23 | CP |
+| Valeur | N_NAF_6 | N-ACTIVITE-FRANCAISE-6-POSTES |
 |---|---|---|
-| (1, "Zone non urbaine") | ✓ | ✓ |
-| (2, "Commune chef-lieu … < 2 000 hab.") | ✓ | ✓ |
-| … (6 codes totaux) | | |
+| AZ | Agriculture, sylviculture et pêche | Agriculture, sylviculture et pêche |
+| BE | Industrie manufacturière, ind. extractives et autres | Industrie manufacturière, ind. extractives et autres |
+| FZ | Construction | Construction |
+| GI | Commerce de gros et de détail, transports, hébergement et restauration | Commerce de gros et de détail, transports, hébergement et restauration |
+| JU | Services divers | Services divers |
+| OQ | Administration publique, enseignement, santé et action sociale | Administration publique, enseignement, santé et action sociale |
+| Vide | Non renseigné | Non renseigné |
 
-**Signal d'usage** : `cp_siege`, `cp_lieu_trav` partagées → `✓ même usage`.
+**Détection** : exact (signature `(valeur, libellé)` identique sur les 7 codes).
+**Signal d'usage** : mêmes variables référentes dans les deux listes.
+**Décision expert** : `N_NAF_6` retenue comme maître → `N-ACTIVITE-FRANCAISE-6-POSTES` placée dans `replaces[]` de `N_NAF_6`.
 
-### Paire 4 : `N_departements_23` ↔ `DEPARTEMENTS`
+### Paire 2 — Fuzzy : `N_nat_etab_23` ↔ `NAT_ETAB`
 
-| Codes | N_departements_23 | DEPARTEMENTS |
-|---|---|---|
-| (01, "Ain") | ✓ | ✓ |
-| (02, "Aisne") | ✓ | ✓ |
-| … (101 codes) | | |
+3 codes partagés (CCP, COM, STD) — libellés identiques mais noms de CodeList différents et description légèrement différente.
 
-**Particularité** : 101 codes, **ordre différent** (croissant vs décroissant) → signatures identiques après tri.
+**Détection** : SequenceMatcher ≥ 0.90.
 
-**Signal d'usage** : `codp_siege` partagée.
+### Paire 3 — Fuzzy : `N_champ_23` ↔ `N_CHAMP_2022`
 
-### Codes uniques (non appariés)
+5 codes partagés (DADS, DADS-PUBLIC, DSN, DSN-PUBLIC, PE).
 
-Deux CodeLists sans doublon dans le demo : `N_siret` et `N_forme_juridique_23`.
+### Paire 4 — Sémantique (LLM) : `N_etat_23` ↔ `Etat_2020`
 
-## 5.2. `demo/BPE_demo.xml` — Variantes annuelles + clones cross-fichier
+Pas de chevauchement direct de codes — détectée uniquement par embeddings + juge LLM.
 
-### Paire 5 : `N_annee_24` ↔ `N_ANNEE_2023` ↔ `N_ANNEE_22`
-
-Trois listes identiques à 1 code, nommées avec des années différentes :
-
-| Valeur | Libellé |
-|---|---|
-| `Année` | `Année` |
-
-Toutes 3 → signature identique → **groupe de 3**, pas juste 2.
-
-**Signal d'usage** : variables différentes dans le fichier démo → `~ usage partiel` ou `✗ disjoint` selon la démo.
-
-### Paire 6 : `N_nature_juridique_24` ↔ `NATURE_JURIDI_2023`
-
-| Codes | N_nature_juridique_24 | NATURE_JURIDI_2023 |
-|---|---|---|
-| (1, "Exploitant à RESPONSABILITÉ LIMITÉE") | ✓ | ✓ |
-| (2, "Société par ACTIONS simplifiée") | ✓ | ✓ |
-| … (36 codes totaux) | | |
-
-**Signal d'usage** : `natureJuridiqueSIEGE`, `natureJurIDIQUESIEGE` → intersection partielle.
+**Résultat run 1** : `codelist_duplicates.json` contient 4 paires. Sauvegarde dans `cleaned_codelists.json` (v1) : 4 entrées de maître avec leurs `replaces[]`.
 
 ---
 
-# 6. Tableau Récapitulatif
+## 5.2. `demo/BPE_demo.xml` — Run 2 (avec `--registry cleaned_codelists.json`)
 
-| Méthode | Seuil | Complexité | Output BTS.xml |
+**Contexte** : 9 CodeLists issues de BPE.xml — 6 listes BPE natives, 2 copies de BTS avec IDs neufs, 1 unique à ajouter manuellement.
+
+### Paires intra-BPE (indépendantes du registre)
+
+**Paire 5 — `L_VAR_SPECIF_2023` ↔ `L_VAR_SPECIF_2021`**
+
+Même concept, variantes annuelles différentes (codes 0/1/_U/_Z pour 2023 vs OUI/NON/IND/NC pour 2021).
+
+**Paire 6 — `L_AN_BPE_EVOL_2023` ↔ `L_AN_BPE_EVOL_2022`**
+
+Codes : `2013/2017/2018/2023` pour 2023 vs `2017/2022` pour 2022 — même concept, années différentes.
+
+### Paires cross-fichier (détectées GRÂCE AU REGISTRY)
+
+**Paire 7 — `NAF_6_POSTES_BPE` ↔ registre `N_NAF_6` (exact, cross-fichier)**
+
+`NAF_6_POSTES_BPE` est une copie exacte de `N_NAF_6` avec des UUIDs entièrement neufs. Sans le registre, le pipeline ne détecterait qu'une similarité de contenu brute. Avec le registre, `N_NAF_6` est injectée comme **master prioritaire** et servira de candidat à la comparaison — la détection exacte la reconnaît immédiatement.
+
+**Paire 8 — `ETAT_UNITE_BPE` ↔ registre `N_etat_23` (fuzzy, cross-fichier)**
+
+`ETAT_UNITE_BPE` est une copie de `N_etat_23` avec des tweaks sur les libellés (ex. `Unité active` → `Unité en activité`, `Non renseigné` → `Non renseignée`). La détection par signature exacte ne la capturera pas, mais la signature floue (SequenceMatcher ≥ 0.90) plus le registre qui place `N_etat_23` comme master prioritaire permettent sa détection.
+
+---
+
+## 5.3. Registre après opération 2 (BPE)
+
+`cleaned_codelists.json` (v2) contient maintenant 6 entrées de maître :
+
+| Maître | Origine | `replaces[]` contient |
+|---|---|---|
+| `N_NAF_6` | BTS_demo | `N-ACTIVITE-FRANCAISE-6-POSTES` (run 1) + `NAF_6_POSTES_BPE` (run 2) |
+| `N_nat_etab_23` | BTS_demo | `NAT_ETAB` (run 1) |
+| `N_champ_23` | BTS_demo | `N_CHAMP_2022` (run 1) |
+| `N_etat_23` | BTS_demo | `Etat_2020` (run 1) + `ETAT_UNITE_BPE` (run 2) |
+| `L_VAR_SPECIF_2023` | BPE_demo | `L_VAR_SPECIF_2021` (run 2) |
+| `L_AN_BPE_EVOL_2023` | BPE_demo | `L_AN_BPE_EVOL_2022` (run 2) |
+
+---
+
+## 5.4. Ajout manuel : `L_QUALITE_ZONAGE_2023`
+
+Cette CodeList est unique (aucun doublon intra ou cross-fichier détecté). L'expert peut l'ajouter **manuellement** au registre (bouton "Ajouter au registre" dans l'interface), sans validation de paire. Elle sera présente comme master dans le registre pour les opérations futures.
+
+---
+
+# 6. Tableau Récapitulatif — Dédoublonnage BTS.xml
+
+| Méthode | Seuil | Complexité | Output BTS.xml (156 CLs) |
 |---|---|---|---|
-| **Signature exacte** | — | $O(N \cdot C)$ | 29 groupes, 54 CodeLists redondantes |
+| **Signature exacte** | — | $O(N \cdot C)$ | 29 groupes, 54 CLs redondantes |
 | **Similarité floue** | ≥ 0.90 | $O(U^2 \cdot L)$ | ~10 paires |
-| **Embeddings de liste** | ≥ 0.90 + LLM | $O(U^2 \cdot D)$ | Dépend de OpenAI config |
-| **Embeddings de variable** | ≥ 0.92 | $O(V^2 \cdot D)$ | Dépend de OpenAI config |
+| **Embeddings de liste** | ≥ 0.90 + LLM | $O(U^2 \cdot D)$ | Dépend de config OpenAI |
+| **Embeddings de variable** | ≥ 0.92 | $O(V^2 \cdot D)$ | Dépend de config OpenAI |
 | **var_sig** | Identique | $O(N)$ | 17 groupes de même usage |
 
 - $N$ = nb CodeLists (156), $C$ = nb codes moyen (10)
@@ -467,6 +476,10 @@ Toutes 3 → signature identique → **groupe de 3**, pas juste 2.
 
 # Conclusion
 
-Un entonnoir en trois niveaux — **exact** → **flou** → **sémantique** — complété par un signal d'usage (`var_sig`) et un cycle de nettoyage itératif (`--registry`) permet de couvrir toute la palette des redondances : copies conformes, variantes mineures, synonymes conceptuels.
+Un entonnoir en trois niveaux — **exact** → **flou** → **sémantique** — complété par un signal d'usage (`var_sig`) et un registre transversal itératif (`--registry`) permet de couvrir toute la palette des redondances : copies conformes, variantes mineures, synonymes conceptuels, **et doublons cross-opération**.
 
-Les datasets `demo/` illustrent ces patterns avec des paires de tailles variées (1 code, 6 codes, 101 codes), des variantes d'ordre, des groupes de 3+, et des clones cross-fichier.
+Les datasets `demo/` illustrent ce workflow complet :
+
+1. **BTS_demo** (run 1) : 4 paires intra-fichier détectées (exact, fuzzy, sémantique)
+2. **BPE_demo** (run 2, avec registre) : 2 paires intra-BPE + 2 paires cross-fichier (`NAF_6_POSTES_BPE` ↔ `N_NAF_6`, `ETAT_UNITE_BPE` ↔ `N_etat_23`)
+3. Le registre `cleaned_codelists.json` accumule 6 maîtres validés couvrant les deux opérations

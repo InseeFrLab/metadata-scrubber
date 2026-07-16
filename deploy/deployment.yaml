@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metadata-scrubber
+  namespace: projet-metadonnees-rmes
+  labels:
+    app: metadata-scrubber
+    app.kubernetes.io/managed-by: argocd
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: metadata-scrubber }
+  template:
+    metadata:
+      labels: { app: metadata-scrubber }
+    spec:
+      containers:
+        - name: scrubber
+          image: ghcr.io/inseefrlab/metadata-scrubber:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          # Toutes les variables (S3 + auth) proviennent d'un seul Secret K8s
+          envFrom:
+            - secretRef: { name: scrubber-config }
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits:   { cpu: 1500m, memory: 2Gi }

@@ -159,36 +159,53 @@ codelist_duplicates.json  (regroupe toutes les paires)
 
 ---
 
-## Feature : `--registry` (cycle de nettoyage itératif)
+## Feature : `--registry` (dédoublonnage transversal itératif)
 
-Le flag `--registry` permet de réinjection un registre nettoyé dans le pipeline :
+Le registre nettoyé (`cleaned_codelists.json`, schéma v2) est un **catalogue transversal
+de vérité** qui s'incrémente opération par opération (BTS.xml → cleaned → BPE.xml →
+cleaned → CPE.xml → …). Chaque fichier traité enrichit le registre, ce qui améliore la
+détection sur les fichiers suivants, y compris les appariements **cross-opération**.
 
-1. **Validation dans l'interface** : l'expert examine les cartes de CodeLists,
-   approuve (consolider) ou rejette chaque paire de doublon.
-2. **Sauvegarde automatique** : `/api/registry/save` synchronise le registre
-   des doublons et produit `cleaned_codelists.json` (schéma v2) automatiquement.
-3. **Ré-exécution avec `--registry`** : le pipeline charge `cleaned_codelists.json`,
-   injecte ses entrées comme **masters prioritaires**, et **exclut** les listes
-   déjà traitées de la détection.
-4. **Boucle itérative** : le nouveau registre de doublons ne contient plus les
-   paires déjà résolues ; l'expert affine jusqu'à couvrir tout le référentiel.
+### 1. Flux transversal
 
 ```
-Cycle complet :
-─────────────────────────────────────────────────────────────
-Run pipeline     → codelist_duplicates.json   (tous les doublons)
-                  ↓
-Interface web    → examiner / approuver / rejeter
-                  → /api/registry/save         → cleaned_codelists.json
-                  ↓
-Run --registry   → codelist_duplicates.json   (résiduels uniquement)
-                  ↓
-Ré-examiner      → sauvegarder
-                  → ...
-─────────────────────────────────────────────────────────────
+Opération 1 : BTS_demo.xml (sans --registry)
+  → codelist_duplicates.json → 4 paires détectées (exact+flou+sémantique)
+  → Interface web : examiner / approuver / rejeter
+  → /api/registry/save → cleaned_codelists.json (mères BTS)
+
+Opération 2 : BPE_demo.xml avec --registry cleaned_codelists.json
+  → masters BTS injectés dans la détection
+  → CodeLists BTS doublons exclues (déjà validées)
+  → codelist_duplicates.json → paires BPE intra + BPE↔BTS (cross-fichier)
+  → /api/registry/save → cleaned_codelists.json mis à jour (BTS + BPE)
+
+Opération N : fichier suivant avec --registry cleaned_codelists.json
+  → registry = tous les masters validés précédemment
+  → détection = intra-fichier + cross-opération sur les masters cumulés
+  → registre s'enrichit, les paires résiduelles diminuent à chaque étape
+
+Plus le registre grossit, plus la détection évite les réitérations
+et capture les appariements inter-opérations.
 ```
 
-**Schéma `cleaned_codelists.json` (v2) :**
+### 2. Exemple rapide avec les données démo
+
+```bash
+# Opération 1 — BTS_demo : 4 paires
+uv run scrubber demo/BTS_demo.xml         # → codelist_duplicates.json
+# Interface web → approuver → /api/registry/save → cleaned_codelists.json
+
+# Opération 2 — BPE_demo avec registre
+uv run scrubber --registry cleaned_codelists.json demo/BPE_demo.xml
+# → NAF_6_POSTES_BPE ↔ N_NAF_6          (exact, cross-fichier)
+# → ETAT_UNITE_BPE ↔ N_etat_23          (fuzzy, cross-fichier)
+# → L_VAR_SPECIF_2023 ↔ 2021            (intra-BPE)
+# → L_AN_BPE_EVOL_2023 ↔ 2022           (intra-BPE)
+# → registre enrichi BTS + BPE
+```
+
+### 3. Schéma `cleaned_codelists.json` (v2)
 
 ```json
 {
@@ -218,7 +235,8 @@ Ré-examiner      → sauvegarder
 }
 ```
 
-**Comportement injecté dans le pipeline (`main.py` §2 bis) :**
+### 4. Comportement injecté dans le pipeline (`main.py` §2 bis)
+
 - Les entrées du registre deviennent les **masters** de leur groupe (prépended à la liste).
 - Les CodeLists dont l'`id` figure dans `replaces[].id` sont **exclues** de la détection.
 
@@ -397,3 +415,74 @@ Projet interne SSP Cloud / Insee — usage académique et interne uniquement.
 Données publiques/non sensibles uniquement sur instance publique.
 
 > **Note méthodologique complète** : [doc/note_methodologique_dedoublonnage.qmd](doc/note_methodologique_dedoublonnage.qmd)
+
+---
+
+## Déploiement Kubernetes (SSP Cloud / Onyxia)
+
+> Le déploiement se fait en GitOps via **ArgoCD** sur le namespace
+> `projet-metadonnees-rmes`. L'application est exposée sous le hostname
+> `metadata-scrubber.lab.sspcloud.fr` avec un contrôle d'accès par mot de passe
+> partagé (Basic Auth).
+
+### 1. Secret Kubernetes `scrubber-config`
+
+Un seul Secret regroupe toutes les variables d'environnement — S3 et Basic Auth :
+
+```bash
+kubectl create secret generic scrubber-config \
+  --from-literal=AWS_ACCESS_KEY_ID="xxx" \
+  --from-literal=AWS_SECRET_ACCESS_KEY="yyy" \
+  --from-literal=AWS_SESSION_TOKEN="zzz" \
+  --from-literal=AWS_S3_ENDPOINT="minio.lab.sspcloud.fr" \
+  --from-literal=AWS_DEFAULT_REGION="us-east-1" \
+  --from-literal=SCRUBBER_AUTH_PASSWORD="m9n_p4s5" \
+  -n projet-metadonnees-rmes \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+**Variables injectées :**
+
+| Clé du Secret | Rôle |
+|---|---|
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN` | Accès S3/MinIO (jetons persistants) |
+| `AWS_S3_ENDPOINT` | Endpoint MinIO (défaut `minio.lab.sspcloud.fr`) |
+| `AWS_DEFAULT_REGION` | Région (défaut `us-east-1`) |
+| `SCRUBBER_AUTH_PASSWORD` | Mot de passe partagé pour le Basic Auth |
+
+> **Création des clés S3** :
+> `mc admin accesskey create`
+
+### 2. Ingress ArgoCD
+
+Déclarer l'application ArgoCD (une seule fois) :
+
+```bash
+kubectl apply -f deploy/application.yaml -n projet-metadonnees-rmes
+```
+
+ArgoCD surveille ensuite le dépôt et synchronise automatiquement le cluster
+(~5 min ou avec `kubectl argo app sync metadata-scrubber`).
+
+Cela crée :
+
+| Ressource | Rôle |
+|---|---|
+| **Deployment** | 1 replica, image `ghcr.io/inseefrlab/metadata-scrubber:latest`, probes sur `/health` |
+| **Service** | ClusterIP port 80 → 8000 |
+| **Ingress** | Host `metadata-scrubber.lab.sspcloud.fr`, timeout SSE 3600s, body 100m |
+
+### 3. CI — GitHub Actions → GHCR
+
+À chaque push sur `main` ou tag `v*`, le workflow
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) construit l'image
+et la push sur **GHCR** (`ghcr.io/inseefrlab/metadata-scrubber`).
+
+### Accès
+
+Ouvrir `https://metadata-scrubber.lab.sspcloud.fr` dans un navigateur — une
+boîte Basic Auth demande le mot de passe partagé.
+
+- `/health` — check public (jamais protégé)
+- `/docs` — swagger UI (jamais protégé)
+- Reste de l'API et du Frontend — protégé par Basic Auth
