@@ -1,4 +1,4 @@
-# Ajoute src/ au PYTHONPATH pour que les imports `scrubber.*` fonctionnent.
+# Ajoute src/ au PYTHONPATH pour que les imports `metadata_scrubber.*` fonctionnent.
 import sys
 from pathlib import Path
 

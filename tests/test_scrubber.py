@@ -12,8 +12,8 @@ import pytest
 # normalize.py
 # =====================================================================
 
-from scrubber.normalize import normalize, signature_from_codes
-from scrubber.namespace import detect_ddi_namespace
+from metadata_scrubber.normalize import normalize, signature_from_codes
+from metadata_scrubber.namespace import detect_ddi_namespace
 
 
 class TestNormalize:
@@ -54,8 +54,8 @@ class TestSignatureFromCodes:
 # funnel.py
 # =====================================================================
 
-from scrubber.funnel import detect_exact_duplicates, detect_fuzzy_duplicates
-from scrubber.types import CodeList
+from metadata_scrubber.funnel import detect_exact_duplicates, detect_fuzzy_duplicates
+from metadata_scrubber.types import CodeList
 
 
 class TestDetectExactDuplicates:
@@ -107,7 +107,7 @@ class TestDetectFuzzyDuplicates:
 # signals.py
 # =====================================================================
 
-from scrubber.signals import cross_check, find_usage_groups
+from metadata_scrubber.signals import cross_check, find_usage_groups
 
 
 class TestCrossCheck:
@@ -160,7 +160,7 @@ class TestFindUsageGroups:
 # types.py
 # =====================================================================
 
-from scrubber.types import CandidateFusion
+from metadata_scrubber.types import CandidateFusion
 
 
 class TestCandidateFusion:
@@ -280,19 +280,19 @@ XML_SAMPLE = b"""<?xml version="1.0" encoding="UTF-8"?>
 
 class TestExtractFromXML:
     def test_parse_xml(self):
-        from scrubber.extractor import parse_xml
+        from metadata_scrubber.extractor import parse_xml
         objects = parse_xml(XML_SAMPLE)
         assert len(objects) == 5  # 2 CodeList + 2 Category + 1 Variable
 
     def test_extract_categories(self):
-        from scrubber.extractor import parse_xml, extract_categories
+        from metadata_scrubber.extractor import parse_xml, extract_categories
         objects = parse_xml(XML_SAMPLE)
         cats = extract_categories(objects)
         assert cats["cat-1"] == "Actif"
         assert cats["cat-2"] == "Inactif"
 
     def test_extract_codelists(self):
-        from scrubber.extractor import parse_xml, extract_codelists
+        from metadata_scrubber.extractor import parse_xml, extract_codelists
         objects = parse_xml(XML_SAMPLE)
         cls = extract_codelists(objects)
         assert len(cls) == 2
@@ -304,9 +304,9 @@ class TestExtractFromXML:
         assert ("2", "Inactif") in cl1.codes
 
     def test_exact_detection_on_sample(self):
-        from scrubber.extractor import parse_xml, extract_codelists
-        from scrubber.funnel import detect_exact_duplicates
-        from scrubber.normalize import signature_from_codes
+        from metadata_scrubber.extractor import parse_xml, extract_codelists
+        from metadata_scrubber.funnel import detect_exact_duplicates
+        from metadata_scrubber.normalize import signature_from_codes
         objects = parse_xml(XML_SAMPLE)
         codelists = extract_codelists(objects)
         for cl in codelists:
@@ -328,14 +328,14 @@ class TestExtractFromXML:
 # Reporting — duplicates_registry
 # =====================================================================
 
-from scrubber.extractor import full_extract
+from metadata_scrubber.extractor import full_extract
 
 
 class TestDuplicatesRegistry:
     def test_empty_candidates(self):
-        from scrubber.funnel import detect_exact_duplicates, detect_fuzzy_duplicates
-        from scrubber.normalize import signature_from_codes
-        from scrubber.reporting.duplicates_registry import (
+        from metadata_scrubber.funnel import detect_exact_duplicates, detect_fuzzy_duplicates
+        from metadata_scrubber.normalize import signature_from_codes
+        from metadata_scrubber.reporting.duplicates_registry import (
             build_duplicates_registry,
             write_duplicates_registry,
         )
@@ -355,13 +355,13 @@ class TestDuplicatesRegistry:
             assert data == {}
 
     def test_simple_duplicate_pair(self):
-        from scrubber.funnel import detect_exact_duplicates, detect_fuzzy_duplicates
-        from scrubber.normalize import signature_from_codes
-        from scrubber.reporting.duplicates_registry import (
+        from metadata_scrubber.funnel import detect_exact_duplicates, detect_fuzzy_duplicates
+        from metadata_scrubber.normalize import signature_from_codes
+        from metadata_scrubber.reporting.duplicates_registry import (
             build_duplicates_registry,
             write_duplicates_registry,
         )
-        from scrubber.types import CandidateFusion
+        from metadata_scrubber.types import CandidateFusion
 
         # Extraire les CodeLists
         result = full_extract(XML_SAMPLE)

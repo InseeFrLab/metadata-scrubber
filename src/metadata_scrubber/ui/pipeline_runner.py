@@ -67,17 +67,8 @@ def _run_pipeline_internal(
     )
 
     try:
-        # Injector les chemins d'imports
-        _scrub_dir = os.path.dirname(os.path.abspath(__file__))
-        _project_root = os.path.normpath(os.path.join(_scrub_dir, ".."))
-        _src = os.path.join(_scrub_dir, "..", "src")
-        _src = os.path.normpath(_src)
-        for p in [_project_root, _src]:
-            if p not in sys.path:
-                sys.path.insert(0, p)
-
         # Exécuter le pipeline
-        from main import run_pipeline as main_run_pipeline
+        from metadata_scrubber.main import run_pipeline as main_run_pipeline
 
         main_run_pipeline(
             xml_source=xml_source,

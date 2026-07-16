@@ -15,7 +15,7 @@ import time
 import traceback
 from typing import Any
 
-from services.job_manager import JobManager, JobStatus, job_manager
+from metadata_scrubber.ui.services.job_manager import JobManager, JobStatus, job_manager
 
 logger = logging.getLogger(__name__)
 
@@ -96,16 +96,8 @@ def _run_pipeline_internal(
     )
 
     try:
-        # Injecter les chemins d'imports (ce fichier est dans scrubber_app/services/)
-        _services_dir = os.path.dirname(os.path.abspath(__file__))
-        _project_root = os.path.normpath(os.path.join(_services_dir, "..", ".."))
-        _src = os.path.join(_project_root, "src")
-        for p in [_project_root, _src]:
-            if p not in sys.path:
-                sys.path.insert(0, p)
-
         # Execute the pipeline
-        from main import run_pipeline as main_run_pipeline
+        from metadata_scrubber.main import run_pipeline as main_run_pipeline
 
         main_run_pipeline(
             xml_source=xml_source,
@@ -119,7 +111,7 @@ def _run_pipeline_internal(
         output_files = {}
 
         if local_tmp.startswith("s3://"):
-            from scrubber.s3 import make_s3_filesystem
+            from metadata_scrubber.s3 import make_s3_filesystem
 
             dest = f"{local_tmp.rstrip('/')}/codelist_duplicates.json"
             fs = make_s3_filesystem()

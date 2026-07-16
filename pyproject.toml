@@ -1,3 +1,7 @@
+[build-system]
+requires = ["uv_build>=0.6"]
+build-backend = "uv_build"
+
 [project]
 name = "metadata-scrubber"
 version = "0.1.0"
@@ -16,13 +20,12 @@ dependencies = [
     "sse-starlette>=3.4.5",
     "tqdm>=4.68.2",
     "uvicorn>=0.49.0",
+    "python-multipart>=0.0.18",
 ]
 
 [project.scripts]
-scrubber = "main:main"
-
-[tool.setuptools.packages.find]
-where = ["src"]
+scrubber = "metadata_scrubber.main:main"
+scrubber-web = "metadata_scrubber.ui.server:main"
 
 [dependency-groups]
 dev = [

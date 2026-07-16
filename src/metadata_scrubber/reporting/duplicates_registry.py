@@ -4,7 +4,7 @@ Génère un dictionnaire JSON qui, pour chaque CodeList identifiée, liste tous
 ses doublons potentiels détectés par les différentes méthodes du pipeline.
 
 Usage :
-    from scrubber.reporting.duplicates_registry import (
+    from metadata_scrubber.reporting.duplicates_registry import (
         build_duplicates_registry,
         write_duplicates_registry,
     )
@@ -218,7 +218,7 @@ def write_duplicates_registry(
     formatted = json.dumps(registry, indent=2, ensure_ascii=False)
 
     if output_path.startswith("s3://"):
-        from scrubber.s3 import make_s3_filesystem
+        from metadata_scrubber.s3 import make_s3_filesystem
 
         fs = make_s3_filesystem()
         with fs.open(output_path, "w", encoding="utf-8") as f:

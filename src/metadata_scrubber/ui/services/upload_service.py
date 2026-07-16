@@ -41,7 +41,7 @@ def upload_file_to_s3(
         logger.info("[upload] %s", msg)
 
     try:
-        from scrubber.s3 import make_s3_filesystem
+        from metadata_scrubber.s3 import make_s3_filesystem
 
         s3 = make_s3_filesystem()
 

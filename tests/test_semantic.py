@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from scrubber.semantic import (
+from metadata_scrubber.semantic import (
     _CandidatePair,
     _VarRecord,
     _embed_texts,
@@ -17,7 +17,7 @@ from scrubber.semantic import (
     pairs_to_candidates,
     run_semantic_detection,
 )
-from scrubber.types import CodeList
+from metadata_scrubber.types import CodeList
 
 
 class TestEmbedTexts:
@@ -71,7 +71,7 @@ class TestDetectSemanticCodelists:
             ]
         )
 
-        with patch("scrubber.semantic._get_openai_client", return_value=client_mock):
+        with patch("metadata_scrubber.semantic._get_openai_client", return_value=client_mock):
             codelists = [
                 CodeList(id="cl-1", name="A", label="", codes=[("1", "Un")]),
             ]
@@ -90,7 +90,7 @@ class TestDetectSemanticCodelists:
 
         client_mock.embeddings.create.return_value = MagicMock(data=[mock_emb_a, mock_emb_b])
 
-        with patch("scrubber.semantic._get_openai_client", return_value=client_mock):
+        with patch("metadata_scrubber.semantic._get_openai_client", return_value=client_mock):
             codelists = [
                 CodeList(id="cl-a", name="Liste A", label="Label A", codes=[("1", "Un")]),
                 CodeList(id="cl-b", name="Liste B", label="Label B", codes=[("2", "Deux")]),
@@ -109,7 +109,7 @@ class TestDetectSemanticViaVariables:
         mock_emb.embedding = [0.7, 0.7]
         client_mock.embeddings.create.return_value = MagicMock(data=[mock_emb])
 
-        with patch("scrubber.semantic._get_openai_client", return_value=client_mock):
+        with patch("metadata_scrubber.semantic._get_openai_client", return_value=client_mock):
             codelists = [
                 CodeList(id="cl-1", name="A", label="", codes=[("1", "Un")]),
             ]
@@ -135,7 +135,7 @@ class TestDetectSemanticViaVariables:
 
         client_mock.embeddings.create.return_value = MagicMock(data=[mock_emb_a, mock_emb_b])
 
-        with patch("scrubber.semantic._get_openai_client", return_value=client_mock):
+        with patch("metadata_scrubber.semantic._get_openai_client", return_value=client_mock):
             codelists = [
                 CodeList(id="cl-1", name="A", label="", codes=[("1", "Un")]),
             ]
@@ -314,7 +314,7 @@ class TestRunSemanticDetection:
         mock_emb.embedding = [1.0, 0.0]
         client_mock.embeddings.create.return_value = MagicMock(data=[mock_emb])
 
-        with patch("scrubber.semantic._get_openai_client", return_value=client_mock):
+        with patch("metadata_scrubber.semantic._get_openai_client", return_value=client_mock):
             codelists = [
                 CodeList(id="cl-1", name="A", label="", codes=[("1", "Un")]),
             ]

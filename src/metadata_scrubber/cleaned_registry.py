@@ -28,8 +28,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from scrubber.registry_io import read_json_registry, write_json_registry
-from scrubber.types import CodeList
+from .registry_io import read_json_registry, write_json_registry
+from .types import CodeList
 
 
 def _now() -> str:
