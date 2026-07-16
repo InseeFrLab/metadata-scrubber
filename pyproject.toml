@@ -33,9 +33,6 @@ dev = [
     "pytest>=8.0.0",
     "ruff>=0.15.20",
 ]
-app = [
-    "streamlit>=1.40.0",
-]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
