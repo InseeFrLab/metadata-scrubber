@@ -1,10 +1,3 @@
----
-# Metadata Scrubber — Dockerfile pour le déploiement Kubernetes
-#
-# Image de base : inseefrlab/python-datascience:latest (outilssp cloud déjà inclus)
-# Entrée : scrubber-web → FastAPI exposé sur le port 8000
-# Secrets : injectés en variables d'environnement (jamais en clair ici)
----
 FROM inseefrlab/python-datascience:latest
 
 LABEL org.opencontainers.image.source="https://github.com/inseefrlab/metadata-scrubber"
