@@ -19,8 +19,6 @@ COPY pyproject.toml uv.lock ./
 
 # 2. Code source + le projet avec ses entrypoints console
 COPY . .
-# venv construit directement dans /.venv
-ENV UV_PROJECT_ENVIRONMENT=/.venv
 
 RUN uv sync --frozen
 
@@ -30,12 +28,11 @@ FROM python:3.13-slim
 WORKDIR /app
 
 # Virtualenv + code depuis builder
-COPY --from=builder /app/.venv  /.venv
-COPY --from=builder /app/src    ./src
-COPY --from=builder /app/pyproject.toml  ./
+COPY --from=builder /app/.venv  /app/.venv
+COPY --from=builder /app/src    /app/src
+COPY --from=builder /app/pyproject.toml  /app/.
 
-ENV PATH="/.venv/bin:$PATH"
+ENV PATH="/app/.venv/bin:$PATH"
 
-RUN ls -alR /.venv
 
 CMD ["scrubber-web"]
