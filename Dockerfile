@@ -19,6 +19,9 @@ COPY pyproject.toml uv.lock ./
 
 # 2. Code source + le projet avec ses entrypoints console
 COPY . .
+# venv construit directement dans /.venv
+ENV UV_PROJECT_ENVIRONMENT=/.venv
+
 RUN uv sync --frozen
 
 # --- Stage 2 : image finale minimale ---
