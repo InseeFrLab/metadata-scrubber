@@ -33,4 +33,6 @@ COPY --from=builder /app/pyproject.toml  ./
 
 ENV PATH="/.venv/bin:$PATH"
 
+RUN ls -alR /.venv
+
 CMD ["scrubber-web"]
