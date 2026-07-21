@@ -4,7 +4,6 @@ author: "Agent de Data Science — SSP Cloud / Onyxia"
 format:
   html:
     theme: cosmo
-  pdf: default
 date: today
 documentclass: article
 ---

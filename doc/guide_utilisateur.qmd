@@ -8,7 +8,6 @@ format:
     toc: true
     toc-depth: 3
     number-sections: true
-  pdf: default
 date: today
 documentclass: article
 ---
