@@ -1,5 +1,152 @@
 [
   {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Accueil — Metadata Scrubber",
+    "section": "",
+    "text": "Pipeline de dédoublonnage des CodeLists DDI 3.3 / 6.0.\nIl analyse un fichier de métadonnées au format DDI, identifie les listes de codes redondantes via un entonnoir de quatre méthodes (exact, flou, embeddings, usage) et propose une interface de validation interactive pour que l’expert métier puisse examiner, approuver ou rejeter chaque paire détectée.\nLe résultat est un registre épuré (cleaned_codelists.json) qui ne conserve qu’une CodeListe maître par groupe de redondances — injectable de manière itérative via l’option --registry pour traiter les fichiers suivants.\n\n\n\n\n\n\nDocument\nDescription\n\n\n\n\nGuide Utilisateur\nComment utiliser l’interface web : lancer le pipeline, examiner les paires, prendre des décisions, sauvegarder le registre.\n\n\nNote Méthodologique\nAlgorithme de détection en trois niveaux, walkthrough avec les datasets démo, schéma du registre v2."
+  },
+  {
+    "objectID": "index.html#metadata-scrubber",
+    "href": "index.html#metadata-scrubber",
+    "title": "Accueil — Metadata Scrubber",
+    "section": "",
+    "text": "Pipeline de dédoublonnage des CodeLists DDI 3.3 / 6.0.\nIl analyse un fichier de métadonnées au format DDI, identifie les listes de codes redondantes via un entonnoir de quatre méthodes (exact, flou, embeddings, usage) et propose une interface de validation interactive pour que l’expert métier puisse examiner, approuver ou rejeter chaque paire détectée.\nLe résultat est un registre épuré (cleaned_codelists.json) qui ne conserve qu’une CodeListe maître par groupe de redondances — injectable de manière itérative via l’option --registry pour traiter les fichiers suivants.\n\n\n\n\n\n\nDocument\nDescription\n\n\n\n\nGuide Utilisateur\nComment utiliser l’interface web : lancer le pipeline, examiner les paires, prendre des décisions, sauvegarder le registre.\n\n\nNote Méthodologique\nAlgorithme de détection en trois niveaux, walkthrough avec les datasets démo, schéma du registre v2."
+  },
+  {
+    "objectID": "guide_utilisateur.html",
+    "href": "guide_utilisateur.html",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "",
+    "text": "Le Metadata Scrubber est un outil qui identifie les listes de codes (CodeList) redondantes au sein d’un fichier de métadonnées au format DDI (Data Dictionary Interface). Il propose deux modes d’utilisation complémentaires :\n\nExécution automatique — analyse le fichier XML DDI et génère un registre de paires de CodeLists détectées comme potentiellement redondantes.\nInterface de validation interactive — permet d’examiner chaque paire, prendre des décisions (consolider ou rejeter), et produire en sortie un registre épuré ne conservant qu’une CodeListe maîtresse par groupe de redondances.\n\nCe document s’adresse à l’expert métier qui utilise l’interface web pour examiner les résultats et valider les rapprochements. La logique algorithmique du pipeline (entonnoir exact → flou → sémantique) est décrite en détail dans la note méthodologique (§ 8)."
+  },
+  {
+    "objectID": "guide_utilisateur.html#configurer-le-pipeline",
+    "href": "guide_utilisateur.html#configurer-le-pipeline",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "3.1 Configurer le pipeline",
+    "text": "3.1 Configurer le pipeline\nQuatre champs paramètrent le run :\n\n\n\n\n\n\n\nChamp\nRôle\n\n\n\n\nChemin source DDI (XML)\nURL S3 ou chemin local vers le fichier DDI à analyser.\n\n\nDossier de sortie\nEmplacement où sera écrit le registre de doublons.\n\n\nRegistre nettoyé (optionnel)\nChemin vers un cleaned_codelists.json préexistant. Les CodeLists maîtres de ce registre sont injectées comme candidates prioritaires ; les doublons déjà validés sont exclus de la détection.\n\n\nExécuter les phases LLM / embeddings\nDécocher pour un run rapide (exact + flou uniquement, sans embeddings ni juge LLM).\n\n\nMode verbeux\nAfficher les détails d’exécution (étapes d’embeddings, messages LLM …) dans les logs.\n\n\n\n\n\n\nFormulaire de configuration du pipeline"
+  },
+  {
+    "objectID": "guide_utilisateur.html#exécuter-le-pipeline",
+    "href": "guide_utilisateur.html#exécuter-le-pipeline",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "3.2 Exécuter le pipeline",
+    "text": "3.2 Exécuter le pipeline\nAprès avoir complété les champs, cliquez sur 🚀 Lancer le pipeline.\nLa barre de progression apparaît et avance en temps réel :\n\nPourcentage : progression globale (0 % → 100 %)\nTexte de phase : indique l’étape en cours, par exemple Phase 5/9 — Détection exacte\nLogs d’exécution : panneau rétractable affichant la sortie détaillée du pipeline\n\nCliquez sur le bouton 📋 Logs d’exécution pour déplier le texte brut de l’exécution : timestamps, messages de chaque phase, noms des CodeLists traitées, résultats des comparaisons.\n\n\n\nProgression du pipeline et logs d’exécution\n\n\n\nTemps d’exécution estimé : quelques secondes pour un petit fichier (&lt; 500 Ko), 1–3 minutes pour un fichier standard. La phase LLM (embeddings + juge) peut ajouter plusieurs minutes supplémentaires."
+  },
+  {
+    "objectID": "guide_utilisateur.html#résultat",
+    "href": "guide_utilisateur.html#résultat",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "3.3 Résultat",
+    "text": "3.3 Résultat\nEn fin d’exécution, une alerte verte affiche :\n\nLe nombre de CodeLists traitées\nLe nombre de paires de doublons détectées\nLe chemin du fichier produit\nUn bouton pour aller directement à l’onglet Validation des doublons"
+  },
+  {
+    "objectID": "guide_utilisateur.html#charger-le-registre",
+    "href": "guide_utilisateur.html#charger-le-registre",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.1 Charger le registre",
+    "text": "4.1 Charger le registre\nSi un pipeline n’a pas été lancé depuis l’interface, chargez un registre préexistant :\n\nSaisissez le chemin (S3 ou local) vers le fichier de sortie du pipeline, par exemple s3://projet-metadonnees-rmes/scrubber_output/codelist_duplicates.json\nCliquez sur 📂 Charger le registre\nLes résultats s’affichent alors sous forme de cartes"
+  },
+  {
+    "objectID": "guide_utilisateur.html#vue-densemble",
+    "href": "guide_utilisateur.html#vue-densemble",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.2 Vue d’ensemble",
+    "text": "4.2 Vue d’ensemble\nQuatre indicateurs en haut de page résument l’état du registre :\n\n\n\n\n\n\n\nIndicateur\nSignification\n\n\n\n\nCodeLists\nNombre total de CodeLists dans le fichier analysé\n\n\nDoublons\nNombre de CodeLists marquées comme potentiellement redondantes\n\n\nApprouvés\nPairs pour lesquelles l’expert a validé le rapprochement\n\n\nEn attente\nPaires n’ayant pas encore été examinées\n\n\n\nChaque CodeListe est présentée sous forme de carte comportant :\n\nLe nom de la CodeListe et un bouton Voir à côté (pour la comparaison)\nLe nombre de codes\nLe score de confiance (0–100 %)\nLe badge de décision : 🟡 en attente, 🟢 approuvé, 🔴 rejeté\nLes signaux de détection : exact, flou, usage, synonyme, semantic\nUn bouton 📋 Détails affichant une liste (valeur → libellé) pour chaque CodeListe du groupe\n\n\n\n\nVue en cartes du registre avec indicateurs"
+  },
+  {
+    "objectID": "guide_utilisateur.html#comparer-côte-à-côte",
+    "href": "guide_utilisateur.html#comparer-côte-à-côte",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.3 Comparer côte à côte",
+    "text": "4.3 Comparer côte à côte\nCliquez sur Voir (à côté du nom de la CodeListe) pour ouvrir le panneau de comparaison en deux colonnes :\n\nColonne gauche : la CodeListe maître (la plus récente, ou celle retenue)\nColonne droite : la CodeListe candidate détectée comme redondante\nLignes colorées : les lignes où les valeurs ou libellés diffèrent entre les deux listes (mise en évidence rouge)\nLes codes communs (valeur + libellé identiques) ne sont pas colorés\n\n\n\n\nComparaison côte à côte de deux CodeLists\n\n\nCette vue permet de juger rapidement si la différence entre les deux listes est un simple artefact (casse, accent, ordre des codes) ou un changement réel de contenu."
+  },
+  {
+    "objectID": "guide_utilisateur.html#décisions-par-paire",
+    "href": "guide_utilisateur.html#décisions-par-paire",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.4 Décisions par paire",
+    "text": "4.4 Décisions par paire\nSous chaque paire de CodeLists, trois boutons permettent de prendre une décision :\n\n✅ Approuver — les listes sont redondantes, la candidate doit être remplacée\n❌ Rejeter — les listes sont distinctes, le rapprochement est incorrect\n🔄 En attente — la décision est remise à plus tard (état par défaut)\n\nChaque changement de décision met à jour le badge coloré de la carte."
+  },
+  {
+    "objectID": "guide_utilisateur.html#actions-de-masse",
+    "href": "guide_utilisateur.html#actions-de-masse",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.5 Actions de masse",
+    "text": "4.5 Actions de masse\nQuatre boutons en haut de la page permettent d’appliquer des décisions à plusieurs paires simultanément :\n\n\n\n\n\n\n\nBouton\nEffet\n\n\n\n\n✅ Valider exactes\nApplique Approuver à toutes les paires détectées par correspondance exacte (100 % de confiance automatique)\n\n\n✅ Valider ≥ 0.95\nApplique Approuver à toutes les paires avec un score de confiance supérieur ou égal à 95 %\n\n\n❌ Tout rejeter\nApplique Rejeter à toutes les paires restées en attente\n\n\n🔄 Tout remettre en attente\nRemet toutes les décisions en état En attente (permet de reprendre le parcours)"
+  },
+  {
+    "objectID": "guide_utilisateur.html#filtres",
+    "href": "guide_utilisateur.html#filtres",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.6 Filtres",
+    "text": "4.6 Filtres\nPour se concentrer sur un sous-ensemble de CodeLists :\n\nFiltre décision : Toutes / En attente / Approuvés / Rejetés / Sans doublon\nFiltre origine : Toutes / Registre uniquement (uniquement les CodeLists qui sont des maîtres d’un registre existant)\nRecherche : champ texte — recherche par nom de la CodeListe\nAfficher : 20 / 50 / 100 éléments par page"
+  },
+  {
+    "objectID": "guide_utilisateur.html#sauvegarder-les-décisions",
+    "href": "guide_utilisateur.html#sauvegarder-les-décisions",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.7 Sauvegarder les décisions",
+    "text": "4.7 Sauvegarder les décisions\nAprès examen, cliquez sur 💾 sauvegarder. L’interface :\n\nMet à jour les états decision dans le registre codelist_duplicates.json\nGénère ou met à jour le registre nettoyé cleaned_codelists.json\n\nUne notification (toast) verte apparaît en confirmation :\n\n\n\nNotification de sauvegarde\n\n\n\nCe que la sauvegarde produit : cleaned_codelists.json ne contient que les CodeLists maîtres — celles qui ont été approuvées et celles marquées “sans doublon”. Chaque maître possède un champ replaces[] listant les CodeLists redondantes qu’il remplace. Ce fichier est un input pour les runs suivants (workflow itératif, § 6.2)."
+  },
+  {
+    "objectID": "guide_utilisateur.html#ajouter-une-codeliste-au-registre",
+    "href": "guide_utilisateur.html#ajouter-une-codeliste-au-registre",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.8 Ajouter une CodeListe au registre",
+    "text": "4.8 Ajouter une CodeListe au registre\nLorsqu’une CodeListe n’a aucun doublon détecté, l’expert peut décider tout de même de l’ajouter au registre épuré :\n\nCliquez sur le bouton ➕ Ajouter au registre (en haut de la carte de la CodeListe concernée, accessible via le bouton 📋 Détails ou dans la vue comparée)\nLa CodeListe apparaît alors comme maître dans le registre nettoyé\nLa sauvegarde (💾 sauvegarder) écrit cette entrée dans cleaned_codelists.json\n\n\nÀ utiliser pour les CodeLists uniques mais importantes qu’on souhaite conserver comme référence dans le registre propre."
+  },
+  {
+    "objectID": "guide_utilisateur.html#charger-le-registre-1",
+    "href": "guide_utilisateur.html#charger-le-registre-1",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "5.1 Charger le registre",
+    "text": "5.1 Charger le registre\n\nSaisissez le chemin vers le fichier cleaned_codelists.json\nCliquez sur 📂 Charger\n\nL’interface affiche alors la liste des CodeLists maîtres avec leurs remplaçants.\n\n\n\nRegistre nettoyé chargé"
+  },
+  {
+    "objectID": "guide_utilisateur.html#contenu-dune-entrée",
+    "href": "guide_utilisateur.html#contenu-dune-entrée",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "5.2 Contenu d’une entrée",
+    "text": "5.2 Contenu d’une entrée\nChaque carte de CodeListe maître contient :\n\nNom et label (libellé)\nNombre de codes\nCodes : liste de paires (valeur → libellé) dans un bloc copiable\nVariables référentes : noms des variables DDI qui référencent cette CodeListe\nReplace : badge indiquant le nombre de CodeLists redondantes remplacées (cliquable, affiche la liste détaillée des remplaçants — nom, type de détection, score de confiance)"
+  },
+  {
+    "objectID": "guide_utilisateur.html#édition",
+    "href": "guide_utilisateur.html#édition",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "5.3 Édition",
+    "text": "5.3 Édition\nLes champs Nom et Label de chaque entrée sont modifiables directement dans le navigateur. Les champs Codes et Variables sont en lecture seule.\nLe dirty tracking est signalé par un badge orange en haut de la page : modifications non sauvegardées. Les modifications restent locales jusqu’au clic sur 💾 Sauvegarder."
+  },
+  {
+    "objectID": "guide_utilisateur.html#sauvegarder-et-télécharger",
+    "href": "guide_utilisateur.html#sauvegarder-et-télécharger",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "5.4 Sauvegarder et télécharger",
+    "text": "5.4 Sauvegarder et télécharger\n\n\n\n\n\n\n\nBouton\nEffet\n\n\n\n\n💾 Sauvegarder\nÉcrit l’état actuel du registre vers le chemin S3 ou local spécifié\n\n\n⬇️ Télécharger\nTélécharge le registre en tant que fichier JSON dans le navigateur\n\n\n\nLe bouton 📂 Charger permet de recharger le registre à tout moment (utile pour reprendre une session ou charger une version mise à jour)."
+  },
+  {
+    "objectID": "guide_utilisateur.html#un-run-complet",
+    "href": "guide_utilisateur.html#un-run-complet",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "6.1 Un run complet",
+    "text": "6.1 Un run complet\nLe circuit se décompose en 5 étapes :\n\nExécuter le pipeline (§ 3) — configurez le chemin source et lancez le pipeline. Le résultat est un fichier de doublons.\nExaminer les cartes (§ 4.1–4.2) — passez à l’onglet Validation, chargez le registre si nécessaire, et parcourrez les cartes. Les cartes sont triées par nombre de codes par défaut, mais vous pouvez les filtrer par décision, origine ou recherche textuelle.\nComparer par paire (§ 4.3) — pour chaque paire douteuse, cliquez sur Voir pour comparer les deux CodeLists côte à côte. Les lignes colorées en rouge indiquent les différences de contenu.\nPrendre des décisions (§ 4.4–4.5) — pour chaque paire, cliquez sur ✅ Approuver (les listes sont redondantes) ou ❌ Rejeter (les listes sont distinctes). Les actions de masse (§ 4.5) permettent de accélérer le traitement des paires à fort score de confiance.\nSauvegarder (§ 4.7) — une fois toutes les décisions prises (ou avant de reprendre plus tard), cliquez sur 💾 sauvegarder. Ceci met à jour le registre codelist_duplicates.json et écrit le registre nettoyé cleaned_codelists.json.\n\n\nBonnes pratiques : sauvegardez régulièrement, même partiellement. Un clic sur 💾 sauvegarder peut être fait à tout moment — les décisions validées sont conservées. Le bouton 🔄 Tout remettre en attente permet de reprendre le parcours depuis le début sans perdre les modifications intermédiaires."
+  },
+  {
+    "objectID": "guide_utilisateur.html#workflow-itératif",
+    "href": "guide_utilisateur.html#workflow-itératif",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "6.2 Workflow itératif",
+    "text": "6.2 Workflow itératif\nLes runs successifs s’enrichissent mutuellement grâce au registre propre :\nStep 1 — Analyser BTS\n  Pipeline → examiner → décider → sauvegarder\n  ↓\n  cleaned_codelists.json = maîtres BTS + leurs replaces\n\nStep 2 — Analyser BPE\n  Chemin source → BPE.xml\n  Registre nettoyé → cleaned_codelists.json (issu de BTS)\n  Pipeline → examiner → décider → sauvegarder\n  ↓\n  cleaned_codelists.json = maîtres BTS + maîtres BPE + leurs replaces\nPourquoi c’est utile :\n\nLes doublons déjà validés (ex. N_NAF_6) sont exclus de la détection : on ne les redécouvre pas dans des runs ultérieurs.\nLes nouveaux doublons sont détectés par rapport aux maîtres cumulés : une CodeListe BPE peut être reconnue comme doublon d’une CodeListe BTS, même si aucune des deux ne figure dans le même fichier.\nLe registre propre croît à chaque run et constitue une référence transversale sur tout le projet.\n\nDans l’interface : saisissez simplement le chemin cleaned_codelists.json dans le champ Registre nettoyé de l’onglet Pipeline avant de lancer le nouveau run."
+  },
+  {
+    "objectID": "guide_utilisateur.html#ajouter-des-listes-sans-doublon",
+    "href": "guide_utilisateur.html#ajouter-des-listes-sans-doublon",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "6.3 Ajouter des listes sans doublon",
+    "text": "6.3 Ajouter des listes sans doublon\nLorsqu’une CodeListe n’est détectée comme doublon de personne par le pipeline (ex. L_QUALITE_ZONAGE_2023 dans l’exemple BPE_demo), vous pouvez la ajouter manuellement au registre propre :\n\nConsultez la CodeListe dans l’onglet Validation (ou via son détail)\nCliquez sur ➕ Ajouter au registre\nSauvegardez (💾 sauvegarder) — la liste apparaît dans cleaned_codelists.json comme maître sans remplacent.\n\n\nCette fonctionnalité est particulièrement utile pour les CodeLists uniques mais essentielles, ou lorsque vous souhaitez créer une référence maître pour un nouveau concept métier avant d’identifier ses variantes."
+  },
+  {
     "objectID": "note_methodologique_dedoublonnage.html",
     "href": "note_methodologique_dedoublonnage.html",
     "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
@@ -145,152 +292,5 @@
     "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
     "section": "8.4 7.4. Analyse Fine de l’Usage",
     "text": "8.4 7.4. Analyse Fine de l’Usage\n\nHiérarchie des variables (groupes, familles d’enquêtes)\nPondération par importance (métrique de centralité)\nContextes d’enquête : une CodeList valide dans un contexte mais pas un autre"
-  },
-  {
-    "objectID": "guide_utilisateur.html",
-    "href": "guide_utilisateur.html",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "",
-    "text": "Le Metadata Scrubber est un outil qui identifie les listes de codes (CodeList) redondantes au sein d’un fichier de métadonnées au format DDI (Data Dictionary Interface). Il propose deux modes d’utilisation complémentaires :\n\nExécution automatique — analyse le fichier XML DDI et génère un registre de paires de CodeLists détectées comme potentiellement redondantes.\nInterface de validation interactive — permet d’examiner chaque paire, prendre des décisions (consolider ou rejeter), et produire en sortie un registre épuré ne conservant qu’une CodeListe maîtresse par groupe de redondances.\n\nCe document s’adresse à l’expert métier qui utilise l’interface web pour examiner les résultats et valider les rapprochements. La logique algorithmique du pipeline (entonnoir exact → flou → sémantique) est décrite en détail dans la note méthodologique (§ 8)."
-  },
-  {
-    "objectID": "guide_utilisateur.html#configurer-le-pipeline",
-    "href": "guide_utilisateur.html#configurer-le-pipeline",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "3.1 Configurer le pipeline",
-    "text": "3.1 Configurer le pipeline\nQuatre champs paramètrent le run :\n\n\n\n\n\n\n\nChamp\nRôle\n\n\n\n\nChemin source DDI (XML)\nURL S3 ou chemin local vers le fichier DDI à analyser.\n\n\nDossier de sortie\nEmplacement où sera écrit le registre de doublons.\n\n\nRegistre nettoyé (optionnel)\nChemin vers un cleaned_codelists.json préexistant. Les CodeLists maîtres de ce registre sont injectées comme candidates prioritaires ; les doublons déjà validés sont exclus de la détection.\n\n\nExécuter les phases LLM / embeddings\nDécocher pour un run rapide (exact + flou uniquement, sans embeddings ni juge LLM).\n\n\nMode verbeux\nAfficher les détails d’exécution (étapes d’embeddings, messages LLM …) dans les logs.\n\n\n\n\n\n\nFormulaire de configuration du pipeline"
-  },
-  {
-    "objectID": "guide_utilisateur.html#exécuter-le-pipeline",
-    "href": "guide_utilisateur.html#exécuter-le-pipeline",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "3.2 Exécuter le pipeline",
-    "text": "3.2 Exécuter le pipeline\nAprès avoir complété les champs, cliquez sur 🚀 Lancer le pipeline.\nLa barre de progression apparaît et avance en temps réel :\n\nPourcentage : progression globale (0 % → 100 %)\nTexte de phase : indique l’étape en cours, par exemple Phase 5/9 — Détection exacte\nLogs d’exécution : panneau rétractable affichant la sortie détaillée du pipeline\n\nCliquez sur le bouton 📋 Logs d’exécution pour déplier le texte brut de l’exécution : timestamps, messages de chaque phase, noms des CodeLists traitées, résultats des comparaisons.\n\n\n\nProgression du pipeline et logs d’exécution\n\n\n\nTemps d’exécution estimé : quelques secondes pour un petit fichier (&lt; 500 Ko), 1–3 minutes pour un fichier standard. La phase LLM (embeddings + juge) peut ajouter plusieurs minutes supplémentaires."
-  },
-  {
-    "objectID": "guide_utilisateur.html#résultat",
-    "href": "guide_utilisateur.html#résultat",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "3.3 Résultat",
-    "text": "3.3 Résultat\nEn fin d’exécution, une alerte verte affiche :\n\nLe nombre de CodeLists traitées\nLe nombre de paires de doublons détectées\nLe chemin du fichier produit\nUn bouton pour aller directement à l’onglet Validation des doublons"
-  },
-  {
-    "objectID": "guide_utilisateur.html#charger-le-registre",
-    "href": "guide_utilisateur.html#charger-le-registre",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "4.1 Charger le registre",
-    "text": "4.1 Charger le registre\nSi un pipeline n’a pas été lancé depuis l’interface, chargez un registre préexistant :\n\nSaisissez le chemin (S3 ou local) vers le fichier de sortie du pipeline, par exemple s3://projet-metadonnees-rmes/scrubber_output/codelist_duplicates.json\nCliquez sur 📂 Charger le registre\nLes résultats s’affichent alors sous forme de cartes"
-  },
-  {
-    "objectID": "guide_utilisateur.html#vue-densemble",
-    "href": "guide_utilisateur.html#vue-densemble",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "4.2 Vue d’ensemble",
-    "text": "4.2 Vue d’ensemble\nQuatre indicateurs en haut de page résument l’état du registre :\n\n\n\n\n\n\n\nIndicateur\nSignification\n\n\n\n\nCodeLists\nNombre total de CodeLists dans le fichier analysé\n\n\nDoublons\nNombre de CodeLists marquées comme potentiellement redondantes\n\n\nApprouvés\nPairs pour lesquelles l’expert a validé le rapprochement\n\n\nEn attente\nPaires n’ayant pas encore été examinées\n\n\n\nChaque CodeListe est présentée sous forme de carte comportant :\n\nLe nom de la CodeListe et un bouton Voir à côté (pour la comparaison)\nLe nombre de codes\nLe score de confiance (0–100 %)\nLe badge de décision : 🟡 en attente, 🟢 approuvé, 🔴 rejeté\nLes signaux de détection : exact, flou, usage, synonyme, semantic\nUn bouton 📋 Détails affichant une liste (valeur → libellé) pour chaque CodeListe du groupe\n\n\n\n\nVue en cartes du registre avec indicateurs"
-  },
-  {
-    "objectID": "guide_utilisateur.html#comparer-côte-à-côte",
-    "href": "guide_utilisateur.html#comparer-côte-à-côte",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "4.3 Comparer côte à côte",
-    "text": "4.3 Comparer côte à côte\nCliquez sur Voir (à côté du nom de la CodeListe) pour ouvrir le panneau de comparaison en deux colonnes :\n\nColonne gauche : la CodeListe maître (la plus récente, ou celle retenue)\nColonne droite : la CodeListe candidate détectée comme redondante\nLignes colorées : les lignes où les valeurs ou libellés diffèrent entre les deux listes (mise en évidence rouge)\nLes codes communs (valeur + libellé identiques) ne sont pas colorés\n\n\n\n\nComparaison côte à côte de deux CodeLists\n\n\nCette vue permet de juger rapidement si la différence entre les deux listes est un simple artefact (casse, accent, ordre des codes) ou un changement réel de contenu."
-  },
-  {
-    "objectID": "guide_utilisateur.html#décisions-par-paire",
-    "href": "guide_utilisateur.html#décisions-par-paire",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "4.4 Décisions par paire",
-    "text": "4.4 Décisions par paire\nSous chaque paire de CodeLists, trois boutons permettent de prendre une décision :\n\n✅ Approuver — les listes sont redondantes, la candidate doit être remplacée\n❌ Rejeter — les listes sont distinctes, le rapprochement est incorrect\n🔄 En attente — la décision est remise à plus tard (état par défaut)\n\nChaque changement de décision met à jour le badge coloré de la carte."
-  },
-  {
-    "objectID": "guide_utilisateur.html#actions-de-masse",
-    "href": "guide_utilisateur.html#actions-de-masse",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "4.5 Actions de masse",
-    "text": "4.5 Actions de masse\nQuatre boutons en haut de la page permettent d’appliquer des décisions à plusieurs paires simultanément :\n\n\n\n\n\n\n\nBouton\nEffet\n\n\n\n\n✅ Valider exactes\nApplique Approuver à toutes les paires détectées par correspondance exacte (100 % de confiance automatique)\n\n\n✅ Valider ≥ 0.95\nApplique Approuver à toutes les paires avec un score de confiance supérieur ou égal à 95 %\n\n\n❌ Tout rejeter\nApplique Rejeter à toutes les paires restées en attente\n\n\n🔄 Tout remettre en attente\nRemet toutes les décisions en état En attente (permet de reprendre le parcours)"
-  },
-  {
-    "objectID": "guide_utilisateur.html#filtres",
-    "href": "guide_utilisateur.html#filtres",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "4.6 Filtres",
-    "text": "4.6 Filtres\nPour se concentrer sur un sous-ensemble de CodeLists :\n\nFiltre décision : Toutes / En attente / Approuvés / Rejetés / Sans doublon\nFiltre origine : Toutes / Registre uniquement (uniquement les CodeLists qui sont des maîtres d’un registre existant)\nRecherche : champ texte — recherche par nom de la CodeListe\nAfficher : 20 / 50 / 100 éléments par page"
-  },
-  {
-    "objectID": "guide_utilisateur.html#sauvegarder-les-décisions",
-    "href": "guide_utilisateur.html#sauvegarder-les-décisions",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "4.7 Sauvegarder les décisions",
-    "text": "4.7 Sauvegarder les décisions\nAprès examen, cliquez sur 💾 sauvegarder. L’interface :\n\nMet à jour les états decision dans le registre codelist_duplicates.json\nGénère ou met à jour le registre nettoyé cleaned_codelists.json\n\nUne notification (toast) verte apparaît en confirmation :\n\n\n\nNotification de sauvegarde\n\n\n\nCe que la sauvegarde produit : cleaned_codelists.json ne contient que les CodeLists maîtres — celles qui ont été approuvées et celles marquées “sans doublon”. Chaque maître possède un champ replaces[] listant les CodeLists redondantes qu’il remplace. Ce fichier est un input pour les runs suivants (workflow itératif, § 6.2)."
-  },
-  {
-    "objectID": "guide_utilisateur.html#ajouter-une-codeliste-au-registre",
-    "href": "guide_utilisateur.html#ajouter-une-codeliste-au-registre",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "4.8 Ajouter une CodeListe au registre",
-    "text": "4.8 Ajouter une CodeListe au registre\nLorsqu’une CodeListe n’a aucun doublon détecté, l’expert peut décider tout de même de l’ajouter au registre épuré :\n\nCliquez sur le bouton ➕ Ajouter au registre (en haut de la carte de la CodeListe concernée, accessible via le bouton 📋 Détails ou dans la vue comparée)\nLa CodeListe apparaît alors comme maître dans le registre nettoyé\nLa sauvegarde (💾 sauvegarder) écrit cette entrée dans cleaned_codelists.json\n\n\nÀ utiliser pour les CodeLists uniques mais importantes qu’on souhaite conserver comme référence dans le registre propre."
-  },
-  {
-    "objectID": "guide_utilisateur.html#charger-le-registre-1",
-    "href": "guide_utilisateur.html#charger-le-registre-1",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "5.1 Charger le registre",
-    "text": "5.1 Charger le registre\n\nSaisissez le chemin vers le fichier cleaned_codelists.json\nCliquez sur 📂 Charger\n\nL’interface affiche alors la liste des CodeLists maîtres avec leurs remplaçants.\n\n\n\nRegistre nettoyé chargé"
-  },
-  {
-    "objectID": "guide_utilisateur.html#contenu-dune-entrée",
-    "href": "guide_utilisateur.html#contenu-dune-entrée",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "5.2 Contenu d’une entrée",
-    "text": "5.2 Contenu d’une entrée\nChaque carte de CodeListe maître contient :\n\nNom et label (libellé)\nNombre de codes\nCodes : liste de paires (valeur → libellé) dans un bloc copiable\nVariables référentes : noms des variables DDI qui référencent cette CodeListe\nReplace : badge indiquant le nombre de CodeLists redondantes remplacées (cliquable, affiche la liste détaillée des remplaçants — nom, type de détection, score de confiance)"
-  },
-  {
-    "objectID": "guide_utilisateur.html#édition",
-    "href": "guide_utilisateur.html#édition",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "5.3 Édition",
-    "text": "5.3 Édition\nLes champs Nom et Label de chaque entrée sont modifiables directement dans le navigateur. Les champs Codes et Variables sont en lecture seule.\nLe dirty tracking est signalé par un badge orange en haut de la page : modifications non sauvegardées. Les modifications restent locales jusqu’au clic sur 💾 Sauvegarder."
-  },
-  {
-    "objectID": "guide_utilisateur.html#sauvegarder-et-télécharger",
-    "href": "guide_utilisateur.html#sauvegarder-et-télécharger",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "5.4 Sauvegarder et télécharger",
-    "text": "5.4 Sauvegarder et télécharger\n\n\n\n\n\n\n\nBouton\nEffet\n\n\n\n\n💾 Sauvegarder\nÉcrit l’état actuel du registre vers le chemin S3 ou local spécifié\n\n\n⬇️ Télécharger\nTélécharge le registre en tant que fichier JSON dans le navigateur\n\n\n\nLe bouton 📂 Charger permet de recharger le registre à tout moment (utile pour reprendre une session ou charger une version mise à jour)."
-  },
-  {
-    "objectID": "guide_utilisateur.html#un-run-complet",
-    "href": "guide_utilisateur.html#un-run-complet",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "6.1 Un run complet",
-    "text": "6.1 Un run complet\nLe circuit se décompose en 5 étapes :\n\nExécuter le pipeline (§ 3) — configurez le chemin source et lancez le pipeline. Le résultat est un fichier de doublons.\nExaminer les cartes (§ 4.1–4.2) — passez à l’onglet Validation, chargez le registre si nécessaire, et parcourrez les cartes. Les cartes sont triées par nombre de codes par défaut, mais vous pouvez les filtrer par décision, origine ou recherche textuelle.\nComparer par paire (§ 4.3) — pour chaque paire douteuse, cliquez sur Voir pour comparer les deux CodeLists côte à côte. Les lignes colorées en rouge indiquent les différences de contenu.\nPrendre des décisions (§ 4.4–4.5) — pour chaque paire, cliquez sur ✅ Approuver (les listes sont redondantes) ou ❌ Rejeter (les listes sont distinctes). Les actions de masse (§ 4.5) permettent de accélérer le traitement des paires à fort score de confiance.\nSauvegarder (§ 4.7) — une fois toutes les décisions prises (ou avant de reprendre plus tard), cliquez sur 💾 sauvegarder. Ceci met à jour le registre codelist_duplicates.json et écrit le registre nettoyé cleaned_codelists.json.\n\n\nBonnes pratiques : sauvegardez régulièrement, même partiellement. Un clic sur 💾 sauvegarder peut être fait à tout moment — les décisions validées sont conservées. Le bouton 🔄 Tout remettre en attente permet de reprendre le parcours depuis le début sans perdre les modifications intermédiaires."
-  },
-  {
-    "objectID": "guide_utilisateur.html#workflow-itératif",
-    "href": "guide_utilisateur.html#workflow-itératif",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "6.2 Workflow itératif",
-    "text": "6.2 Workflow itératif\nLes runs successifs s’enrichissent mutuellement grâce au registre propre :\nStep 1 — Analyser BTS\n  Pipeline → examiner → décider → sauvegarder\n  ↓\n  cleaned_codelists.json = maîtres BTS + leurs replaces\n\nStep 2 — Analyser BPE\n  Chemin source → BPE.xml\n  Registre nettoyé → cleaned_codelists.json (issu de BTS)\n  Pipeline → examiner → décider → sauvegarder\n  ↓\n  cleaned_codelists.json = maîtres BTS + maîtres BPE + leurs replaces\nPourquoi c’est utile :\n\nLes doublons déjà validés (ex. N_NAF_6) sont exclus de la détection : on ne les redécouvre pas dans des runs ultérieurs.\nLes nouveaux doublons sont détectés par rapport aux maîtres cumulés : une CodeListe BPE peut être reconnue comme doublon d’une CodeListe BTS, même si aucune des deux ne figure dans le même fichier.\nLe registre propre croît à chaque run et constitue une référence transversale sur tout le projet.\n\nDans l’interface : saisissez simplement le chemin cleaned_codelists.json dans le champ Registre nettoyé de l’onglet Pipeline avant de lancer le nouveau run."
-  },
-  {
-    "objectID": "guide_utilisateur.html#ajouter-des-listes-sans-doublon",
-    "href": "guide_utilisateur.html#ajouter-des-listes-sans-doublon",
-    "title": "Guide d’Utilisation — Metadata Scrubber",
-    "section": "6.3 Ajouter des listes sans doublon",
-    "text": "6.3 Ajouter des listes sans doublon\nLorsqu’une CodeListe n’est détectée comme doublon de personne par le pipeline (ex. L_QUALITE_ZONAGE_2023 dans l’exemple BPE_demo), vous pouvez la ajouter manuellement au registre propre :\n\nConsultez la CodeListe dans l’onglet Validation (ou via son détail)\nCliquez sur ➕ Ajouter au registre\nSauvegardez (💾 sauvegarder) — la liste apparaît dans cleaned_codelists.json comme maître sans remplacent.\n\n\nCette fonctionnalité est particulièrement utile pour les CodeLists uniques mais essentielles, ou lorsque vous souhaitez créer une référence maître pour un nouveau concept métier avant d’identifier ses variantes."
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Accueil — Metadata Scrubber",
-    "section": "",
-    "text": "Pipeline de dédoublonnage des CodeLists DDI 3.3 / 6.0.\nIl analyse un fichier de métadonnées au format DDI, identifie les listes de codes redondantes via un entonnoir de quatre méthodes (exact, flou, embeddings, usage) et propose une interface de validation interactive pour que l’expert métier puisse examiner, approuver ou rejeter chaque paire détectée.\nLe résultat est un registre épuré (cleaned_codelists.json) qui ne conserve qu’une CodeListe maître par groupe de redondances — injectable de manière itérative via l’option --registry pour traiter les fichiers suivants.\n\n\n\n\n\n\nDocument\nDescription\n\n\n\n\nGuide Utilisateur\nComment utiliser l’interface web : lancer le pipeline, examiner les paires, prendre des décisions, sauvegarder le registre.\n\n\nNote Méthodologique\nAlgorithme de détection en trois niveaux, walkthrough avec les datasets démo, schéma du registre v2."
-  },
-  {
-    "objectID": "index.html#metadata-scrubber",
-    "href": "index.html#metadata-scrubber",
-    "title": "Accueil — Metadata Scrubber",
-    "section": "",
-    "text": "Pipeline de dédoublonnage des CodeLists DDI 3.3 / 6.0.\nIl analyse un fichier de métadonnées au format DDI, identifie les listes de codes redondantes via un entonnoir de quatre méthodes (exact, flou, embeddings, usage) et propose une interface de validation interactive pour que l’expert métier puisse examiner, approuver ou rejeter chaque paire détectée.\nLe résultat est un registre épuré (cleaned_codelists.json) qui ne conserve qu’une CodeListe maître par groupe de redondances — injectable de manière itérative via l’option --registry pour traiter les fichiers suivants.\n\n\n\n\n\n\nDocument\nDescription\n\n\n\n\nGuide Utilisateur\nComment utiliser l’interface web : lancer le pipeline, examiner les paires, prendre des décisions, sauvegarder le registre.\n\n\nNote Méthodologique\nAlgorithme de détection en trois niveaux, walkthrough avec les datasets démo, schéma du registre v2."
   }
 ]
