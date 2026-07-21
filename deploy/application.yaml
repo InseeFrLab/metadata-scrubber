@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metadata-scrubber
+  namespace: projet-metadonnees-rmes
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/inseefrlab/metadata-scrubber.git
+    targetRevision: main
+    path: deploy
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: projet-metadonnees-rmes
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

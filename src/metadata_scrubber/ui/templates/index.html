@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metadata Scrubber — Pipeline de dédoublonnage DDI</title>
+    <!-- Bootstrap 5 for layout -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="static/css/style.css">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">🔍 Metadata Scrubber</a>
+            <span class="navbar-text ms-3 text-light small">Pipeline de dédoublonnage CodeLists DDI 3.3/6.0</span>
+            <span id="health-status" class="navbar-text ms-auto text-success small">● En ligne</span>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-3">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pipeline-tab" data-bs-toggle="tab" data-bs-target="#pipeline"
+                    type="button" role="tab" aria-controls="pipeline" aria-selected="true">
+                    🚀 Pipeline
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="validation-tab" data-bs-toggle="tab" data-bs-target="#validation"
+                    type="button" role="tab" aria-controls="validation" aria-selected="false">
+                    🔍 Validation des doublons
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="cleaned-tab" data-bs-toggle="tab" data-bs-target="#cleaned"
+                    type="button" role="tab" aria-controls="cleaned" aria-selected="false">
+                    🧹 Registre nettoyé
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="mainTabsContent">
+            <!-- ================================================================
+                 TAB 1: PIPELINE
+                 ================================================================ -->
+            <div class="tab-pane fade show active" id="pipeline" role="tabpanel" aria-labelledby="pipeline-tab">
+                <div class="card mt-3">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Configurer et lancer le pipeline</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="pipelineForm">
+                            <div class="mb-3">
+                                <label for="xmlSource" class="form-label">Chemin DDI (XML) — local ou S3</label>
+                                <input type="text" class="form-control" id="xmlSource"
+                                    value="s3://projet-metadonnees-rmes/BTS.xml"
+                                    placeholder="s3://<bucket>/data/input/dde-metadonnees.xml" required>
+                                <div class="form-text">URL S3 ou chemin local vers le fichier DDI à analyser.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="outputBase" class="form-label">Dossier de sortie — local ou S3</label>
+                                <input type="text" class="form-control" id="outputBase"
+                                    value="s3://projet-metadonnees-rmes/scrubber_output"
+                                    placeholder="s3://<bucket>/output/scrubber" required>
+                                <div class="form-text">S3 : écrit les outputs sur le bucket. Local : dossier temporaire.
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="pipelineRegistryPath" class="form-label">Registre nettoyé (optionnel)</label>
+                                <input type="text" class="form-control" id="pipelineRegistryPath"
+                                    value="s3://projet-metadonnees-rmes/scrubber_output/cleaned_codelists.json"
+                                    placeholder="s3://<bucket>/output/scrubber/cleaned_codelists.json">
+                                <div class="form-text">Les listes de ce registre sont prioritaires (masters) ;
+                                    les listes déjà remplacées sont exclues de la détection.
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="runLlm" checked>
+                                        <label class="form-check-label" for="runLlm">
+                                            Exécuter les phases LLM / embeddings
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="verbose">
+                                        <label class="form-check-label" for="verbose">
+                                            Mode verbeux
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="launchBtn">
+                                🚀 Lancer le pipeline
+                            </button>
+                        </form>
+
+                        <!-- Progress section -->
+                        <div id="progressSection" class="mt-4 d-none">
+                            <div class="progress mb-2" style="height: 25px;">
+                                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar" style="width: 0%">0%</div>
+                            </div>
+                            <p id="phaseLabel" class="text-muted">Phase : —</p>
+                            <div class="accordion" id="logsAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#logsCollapse">
+                                            📋 Logs d'exécution <span id="logCount">(0)</span>
+                                        </button>
+                                    </h2>
+                                    <div id="logsCollapse" class="accordion-collapse collapse"
+                                        data-bs-parent="#logsAccordion">
+                                        <div class="accordion-body">
+                                            <pre id="logsContainer" class="bg-black text-white p-3 rounded"
+                                                style="max-height: 400px; overflow-y: auto; font-size: 0.85rem;"></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Result section -->
+                        <div id="resultSection" class="mt-4 d-none">
+                            <div class="alert alert-success" id="resultAlert">
+                                <h5>✅ Pipeline terminé !</h5>
+                                <p>Durée : <span id="resultDuration">-</span></p>
+                                <div id="fileLinks"></div>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-outline-primary" id="goToValidationBtn">
+                                    🔍 Aller à l'onglet Validation
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================
+                 TAB 2: VALIDATION
+                 ================================================================ -->
+            <div class="tab-pane fade" id="validation" role="tabpanel" aria-labelledby="validation-tab">
+                <div class="card mt-3">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">Valider les doublons de CodeLists</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Load registry -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-8">
+                                <input type="text" class="form-control form-control-sm" id="registryPath"
+                                    value="s3://projet-metadonnees-rmes/scrubber_output/codelist_duplicates.json"
+                                    placeholder="s3://<bucket>/output/scrubber/codelist_duplicates.json">
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-sm btn-outline-primary w-100" id="loadRegistryBtn">
+                                    📂 Charger le registre
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div id="statsSection" class="d-none">
+                            <div class="row mb-3">
+                                <div class="col-sm-3 col-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center p-2">
+                                            <h6 class="mb-0 text-muted">CodeLists</h6>
+                                            <h4 class="mb-0" id="statTotalCL">0</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3 col-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center p-2">
+                                            <h6 class="mb-0 text-muted">Doublons</h6>
+                                            <h4 class="mb-0" id="statTotalDups">0</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3 col-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center p-2">
+                                            <h6 class="mb-0 text-muted">Approuvés</h6>
+                                            <h4 class="mb-0 text-success" id="statApproved">0</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3 col-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center p-2">
+                                            <h6 class="mb-0 text-muted">En attente</h6>
+                                            <h4 class="mb-0 text-warning" id="statPending">0</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bulk actions -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-6 col-md-3">
+                                    <button class="btn btn-sm btn-outline-success w-100" id="bulkApproveExact">
+                                        ✅ Approuver exactes
+                                    </button>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <button class="btn btn-sm btn-outline-success w-100" id="bulkApproveHighConf">
+                                        ✅ Approuver ≥0.95
+                                    </button>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <button class="btn btn-sm btn-outline-danger w-100" id="bulkRejectAll">
+                                        ❌ Tout rejeter
+                                    </button>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <button class="btn btn-sm btn-outline-secondary w-100" id="bulkPendingAll">
+                                        🔄 Tout remettre en attente
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Filters -->
+                            <div class="row g-2 mb-3 align-items-end">
+                                <div class="col-md-2">
+                                    <label class="form-label small">Filtre décision</label>
+                                    <select class="form-select form-select-sm" id="decisionFilter">
+                                        <option value="approve,reject,pending" selected>Toutes</option>
+                                        <option value="pending">En attente uniquement</option>
+                                        <option value="approve">Approuvés uniquement</option>
+                                        <option value="reject">Rejetés uniquement</option>
+                                        <option value="none">Sans doublon</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small">Origine</label>
+                                    <select class="form-select form-select-sm" id="originFilter">
+                                        <option value="all" selected>Toutes</option>
+                                        <option value="registry">Registre uniquement</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small">Recherche</label>
+                                    <input type="text" class="form-control form-control-sm" id="searchFilter"
+                                        placeholder="Nom de la CodeList...">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small">Afficher</label>
+                                    <select class="form-select form-select-sm" id="pageSize">
+                                        <option value="20">20</option>
+                                        <option value="50" selected>50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-sm btn-secondary w-100" id="applyFilters">
+                                        🔍 Filtrer
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Pagination -->
+                            <nav aria-label="Pagination">
+                                <ul class="pagination pagination-sm" id="pagination"></ul>
+                            </nav>
+
+                            <!-- Codelist list -->
+                            <div id="codelistContainer" class="mb-3">
+                                <!-- Will be filled by JS -->
+                            </div>
+
+                            <!-- Save/Download -->
+                            <div class="row g-2 mt-3">
+                                <div class="col-md-4">
+                                    <button class="btn btn-outline-secondary w-100" id="downloadBtn">
+                                        ⬇️ Télécharger JSON
+                                    </button>
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-outline-success w-100" id="downloadCleanedBtn">
+                                        ⬇️ Registre nettoyé
+                                    </button>
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-outline-primary w-100" id="saveBtn">
+                                        💾 Sauvegarder
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empty state -->
+                        <div id="emptyState">
+                            <div class="text-center py-5">
+                                <p class="text-muted">
+                                    👈 Chargez le registre via le formulaire ci-dessus
+                                    ou lancez un pipeline depuis l'onglet Pipeline.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================
+                 TAB 3: REGISTRE NETTOYÉ
+                 ================================================================ -->
+            <div class="tab-pane fade" id="cleaned" role="tabpanel" aria-labelledby="cleaned-tab">
+                <div class="card mt-3">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Registre des CodeLists nettoyées</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Chemin + actions -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <input type="text" class="form-control form-control-sm" id="cleanedPath"
+                                    value="s3://projet-metadonnees-rmes/scrubber_output/cleaned_codelists.json"
+                                    placeholder="s3://<bucket>/output/scrubber/cleaned_codelists.json">
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-sm btn-outline-primary w-100" id="loadCleanedBtn">
+                                    📂 Charger
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-sm btn-outline-success w-100" id="saveCleanedBtn">
+                                    💾 Sauvegarder
+                                </button>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-sm btn-outline-secondary w-100" id="downloadCleanedFileBtn">
+                                    ⬇️ Télécharger
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Infos + recherche -->
+                        <div class="row g-2 mb-3 align-items-center d-none" id="cleanedToolbar">
+                            <div class="col-md-4">
+                                <span class="badge bg-success" id="cleanedCount">0 entrées</span>
+                                <span class="badge bg-warning text-dark d-none" id="cleanedDirty">modifications non sauvegardées</span>
+                            </div>
+                            <div class="col-md-8">
+                                <input type="text" class="form-control form-control-sm" id="cleanedSearch"
+                                    placeholder="Rechercher (nom, libellé, id)...">
+                            </div>
+                        </div>
+
+                        <!-- Entrées -->
+                        <div id="cleanedContainer"></div>
+
+                        <!-- État vide -->
+                        <div id="cleanedEmptyState">
+                            <div class="text-center py-5">
+                                <p class="text-muted">
+                                    👈 Chargez un registre nettoyé, ou validez des doublons
+                                    puis sauvegardez depuis l'onglet Validation.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toastContainer" class="toast-container" style="position: fixed; top: 16px; left: 16px; right: 16px; z-index: 9999;"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <!-- App scripts -->
+    <script src="static/js/config.js"></script>
+    <script src="static/js/main.js"></script>
+    <script src="static/js/pipeline.js"></script>
+    <script src="static/js/registry.js"></script>
+    <script src="static/js/cleaned.js"></script>
+</body>
+
+</html>

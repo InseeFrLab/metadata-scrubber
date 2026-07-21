@@ -1,0 +1,2561 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ddi:FragmentInstance xmlns:ddi="ddi:instance:3_3" xmlns:r="ddi:reusable:3_3"><ddi:Fragment>
+    <CodeList xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:83e7cfd6-238a-4fc9-a8d2-31509d6eae36:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>83e7cfd6-238a-4fc9-a8d2-31509d6eae36</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CodeListName>
+        <r:String xml:lang="fr-FR">N_NAF_6</r:String>
+      </CodeListName>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Nomenclature d'activité économique NAF rév. 2 sur 6 positions.</r:Content>
+      </r:Description>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:f845010c-46f3-4c8f-9ceb-2abda9653595:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>f845010c-46f3-4c8f-9ceb-2abda9653595</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES-1</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>f22d23d1-f300-4247-94e2-beecab73f4b6</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>AZ</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:e202948a-3e31-4f45-8a6c-41c55e4818b0:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>e202948a-3e31-4f45-8a6c-41c55e4818b0</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES-2</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>16d29806-59b3-47d2-be8d-5a7bf56827ec</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>BE</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:ff6e2744-e14f-4118-9412-d2f502ede3cd:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>ff6e2744-e14f-4118-9412-d2f502ede3cd</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES-3</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>75dbae8c-8ade-4273-b13c-c2dc49b91128</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>FZ</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:d300d5fa-70cd-437e-9880-f188cf0f558e:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>d300d5fa-70cd-437e-9880-f188cf0f558e</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES-4</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>328df8f6-e0b1-4bf3-97af-e8a68de12821</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>GI</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:a05bef64-e5b3-4de0-8c17-09b1a96d500e:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>a05bef64-e5b3-4de0-8c17-09b1a96d500e</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES-5</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>11682e18-3538-40b0-ad26-aa8a50f580df</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>JU</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:f95bd250-9a35-4029-a16f-121748717519:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>f95bd250-9a35-4029-a16f-121748717519</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES-6</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>968ed54c-4c25-4ea1-bb5e-8c768b1b3a9e</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>OQ</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:635772e4-2ec4-4042-9778-4cb3e5c5b777:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>635772e4-2ec4-4042-9778-4cb3e5c5b777</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES-0</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>f6344191-d457-419e-99fa-fb744d7798d8</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>Vide</r:Value>
+      </Code>
+    </CodeList>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:f22d23d1-f300-4247-94e2-beecab73f4b6:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>f22d23d1-f300-4247-94e2-beecab73f4b6</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-N-ACTIVITE-FRANCAISE-6-POSTES-1</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">N_NAF_6-AZ</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Agriculture, sylviculture et pêche</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:16d29806-59b3-47d2-be8d-5a7bf56827ec:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>16d29806-59b3-47d2-be8d-5a7bf56827ec</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-N-ACTIVITE-FRANCAISE-6-POSTES-2</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">N_NAF_6-BE</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Industrie manufacturière, industries extractives et autres</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:75dbae8c-8ade-4273-b13c-c2dc49b91128:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>75dbae8c-8ade-4273-b13c-c2dc49b91128</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-N-ACTIVITE-FRANCAISE-6-POSTES-3</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">N_NAF_6-FZ</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Construction</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:328df8f6-e0b1-4bf3-97af-e8a68de12821:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>328df8f6-e0b1-4bf3-97af-e8a68de12821</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-N-ACTIVITE-FRANCAISE-6-POSTES-4</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">N_NAF_6-GI</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Commerce de gros et de détail, transports, hébergement et restauration</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:11682e18-3538-40b0-ad26-aa8a50f580df:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>11682e18-3538-40b0-ad26-aa8a50f580df</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-N-ACTIVITE-FRANCAISE-6-POSTES-5</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">N_NAF_6-JU</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Services divers</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:968ed54c-4c25-4ea1-bb5e-8c768b1b3a9e:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>968ed54c-4c25-4ea1-bb5e-8c768b1b3a9e</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-N-ACTIVITE-FRANCAISE-6-POSTES-6</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">N_NAF_6-OQ</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Administration publique, enseignement, santé et action sociale</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:f6344191-d457-419e-99fa-fb744d7798d8:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>f6344191-d457-419e-99fa-fb744d7798d8</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-N-ACTIVITE-FRANCAISE-6-POSTES-0</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">N_NAF_6-Vide</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Non renseigné</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <CodeList xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2021-07-12T14:12:09.2078099Z">
+      <r:URN>urn:ddi:fr.insee:659fb0d2-c282-42bb-8926-a253930275e1:3</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>659fb0d2-c282-42bb-8926-a253930275e1</r:ID>
+      <r:Version>3</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES</r:UserID>
+      <CodeListName>
+        <r:String xml:lang="fr-FR">N-ACTIVITE-FRANCAISE-6-POSTES</r:String>
+      </CodeListName>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:f692bf90-3590-4109-8180-b40ec84ba033:3</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>f692bf90-3590-4109-8180-b40ec84ba033</r:ID>
+        <r:Version>3</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES-0</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>f528f07b-40d1-45ef-9046-46777bf0f145</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>Vide</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:e06028d2-489e-403b-81a1-84320b3d92fd:3</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>e06028d2-489e-403b-81a1-84320b3d92fd</r:ID>
+        <r:Version>3</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES-1</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>47434341-b090-456e-889b-a3dea84ca733</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>AZ</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:1bd55fd4-229c-4b80-ad62-b000f229e0da:3</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>1bd55fd4-229c-4b80-ad62-b000f229e0da</r:ID>
+        <r:Version>3</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES-2</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>60adb766-f783-44a4-8d88-291cb762502f</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>BE</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:916c3501-ba8e-4405-945c-5e68d84ed0b8:3</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>916c3501-ba8e-4405-945c-5e68d84ed0b8</r:ID>
+        <r:Version>3</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES-3</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>083597d2-2e1f-4faa-a540-e7d3e787a7dd</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>FZ</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:5f3ea9d2-0841-4204-8c65-d504daeaed1e:3</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>5f3ea9d2-0841-4204-8c65-d504daeaed1e</r:ID>
+        <r:Version>3</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES-4</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>b4101a85-4a3c-4a2c-858a-4971ec3ce51b</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>GI</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:97b07d8c-c2f9-42e8-8cbc-4951cf878be1:3</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>97b07d8c-c2f9-42e8-8cbc-4951cf878be1</r:ID>
+        <r:Version>3</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES-5</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>3169d3bf-ce23-41ba-abb2-597080f730db</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>JU</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:1a1f1612-315e-4e78-b4b2-9537867b3bc2:3</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>1a1f1612-315e-4e78-b4b2-9537867b3bc2</r:ID>
+        <r:Version>3</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-N-ACTIVITE-FRANCAISE-6-POSTES-6</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>5f210874-0cee-4b1a-9295-6a86018f8f41</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>OQ</r:Value>
+      </Code>
+    </CodeList>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2021-07-12T14:12:09.2078099Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:f528f07b-40d1-45ef-9046-46777bf0f145:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>f528f07b-40d1-45ef-9046-46777bf0f145</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-N-ACTIVITE-FRANCAISE-6-POSTES-0</r:UserID>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">N-ACTIVITE-FRANCAISE-6-POSTES-0</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Non renseigné</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2019-04-18T09:21:33.4712244Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:47434341-b090-456e-889b-a3dea84ca733:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>47434341-b090-456e-889b-a3dea84ca733</r:ID>
+      <r:Version>1</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-N-ACTIVITE-FRANCAISE-6-POSTES-1</r:UserID>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">N-ACTIVITE-FRANCAISE-6-POSTES-1</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Agriculture, sylviculture et pêche</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2019-04-18T09:21:33.4712244Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:60adb766-f783-44a4-8d88-291cb762502f:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>60adb766-f783-44a4-8d88-291cb762502f</r:ID>
+      <r:Version>1</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-N-ACTIVITE-FRANCAISE-6-POSTES-2</r:UserID>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">N-ACTIVITE-FRANCAISE-6-POSTES-2</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Industrie manufacturière, industries extractives et autres</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2019-04-18T09:21:33.4722245Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:083597d2-2e1f-4faa-a540-e7d3e787a7dd:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>083597d2-2e1f-4faa-a540-e7d3e787a7dd</r:ID>
+      <r:Version>1</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-N-ACTIVITE-FRANCAISE-6-POSTES-3</r:UserID>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">N-ACTIVITE-FRANCAISE-6-POSTES-3</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Construction</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2019-04-18T09:21:33.4722245Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:b4101a85-4a3c-4a2c-858a-4971ec3ce51b:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>b4101a85-4a3c-4a2c-858a-4971ec3ce51b</r:ID>
+      <r:Version>1</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-N-ACTIVITE-FRANCAISE-6-POSTES-4</r:UserID>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">N-ACTIVITE-FRANCAISE-6-POSTES-4</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Commerce de gros et de détail, transports, hébergement et restauration</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2019-04-18T09:21:33.4722245Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:3169d3bf-ce23-41ba-abb2-597080f730db:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>3169d3bf-ce23-41ba-abb2-597080f730db</r:ID>
+      <r:Version>1</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-N-ACTIVITE-FRANCAISE-6-POSTES-5</r:UserID>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">N-ACTIVITE-FRANCAISE-6-POSTES-5</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Services divers</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2019-04-18T09:21:33.4722245Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:5f210874-0cee-4b1a-9295-6a86018f8f41:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>5f210874-0cee-4b1a-9295-6a86018f8f41</r:ID>
+      <r:Version>1</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-N-ACTIVITE-FRANCAISE-6-POSTES-6</r:UserID>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">N-ACTIVITE-FRANCAISE-6-POSTES-6</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Administration publique, enseignement, santé et action sociale</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <CodeList xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:e8150570-6553-449f-be7d-279f37cf24e6:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>e8150570-6553-449f-be7d-279f37cf24e6</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-NAT_ETAB</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CodeListName>
+        <r:String xml:lang="fr-FR">N_nat_etab_23</r:String>
+      </CodeListName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">N_nat_etab_23</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Modalités de la variable nat_etab, à partir du millésime 2023.</r:Content>
+      </r:Description>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:b43e7c6d-fca4-4edb-9544-47284f0c2a33:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>b43e7c6d-fca4-4edb-9544-47284f0c2a33</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-NAT_ETAB-0</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>6ba877c9-71de-4938-b1ed-db364a42d951</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>CCP</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:32f914d8-f009-4791-97f5-6a0b32a9a486:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>32f914d8-f009-4791-97f5-6a0b32a9a486</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-NAT_ETAB-1</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>35730eb1-8f09-45bf-a650-dd1c976efc9d</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>COM</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:3b08299d-caf7-424f-b679-7e76154abf04:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>3b08299d-caf7-424f-b679-7e76154abf04</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-NAT_ETAB-2</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>b600a130-72fe-4741-af9f-9d21fde111c3</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>STD</r:Value>
+      </Code>
+    </CodeList>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:6ba877c9-71de-4938-b1ed-db364a42d951:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>6ba877c9-71de-4938-b1ed-db364a42d951</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-NAT_ETAB-0</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">nat_etab-CCP</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Caisse de Congés Payés</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:35730eb1-8f09-45bf-a650-dd1c976efc9d:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>35730eb1-8f09-45bf-a650-dd1c976efc9d</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-NAT_ETAB-1</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">nat_etab-COM</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Comité d'œuvres sociales</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:b600a130-72fe-4741-af9f-9d21fde111c3:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>b600a130-72fe-4741-af9f-9d21fde111c3</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-NAT_ETAB-2</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">nat_etab-STD</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Standard (cas le plus fréquent)</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <CodeList xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2024-09-12T09:34:38.5529575Z">
+      <r:URN>urn:ddi:fr.insee:35ce90ea-452d-48a0-a2f6-85e9801ac744:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>35ce90ea-452d-48a0-a2f6-85e9801ac744</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-NAT_ETAB</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout de la validité 2022 (version finale)</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <r:BasedOnObject>
+        <r:BasedOnReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>611cd707-cc52-49f3-bfa8-46097153e158</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>CodeList</r:TypeOfObject>
+        </r:BasedOnReference>
+        <r:BasedOnRationaleCode controlledVocabularyVersionID="1.0">BranchItem</r:BasedOnRationaleCode>
+      </r:BasedOnObject>
+      <CodeListName>
+        <r:String xml:lang="fr-FR">NAT_ETAB</r:String>
+      </CodeListName>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:6926a35b-bf17-4472-9495-aaab8a4c3e28:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>6926a35b-bf17-4472-9495-aaab8a4c3e28</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-NAT_ETAB-0</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>5850649d-710d-4283-a134-ec70db40cab9</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>CCP</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:d31289ad-d0cf-41e3-96f5-4fc85fd81551:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>d31289ad-d0cf-41e3-96f5-4fc85fd81551</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-NAT_ETAB-1</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>6fab6a01-7fe8-4ce1-b5a5-0f1f48c103ff</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>COM</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:0b53dea3-52db-4fd6-810b-b70469dca329:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>0b53dea3-52db-4fd6-810b-b70469dca329</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-NAT_ETAB-2</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>57faa2f1-0dc7-4bb4-bd8b-a6639211eff4</r:ID>
+          <r:Version>3</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>STD</r:Value>
+      </Code>
+    </CodeList>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2024-09-12T09:34:38.5529575Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:5850649d-710d-4283-a134-ec70db40cab9:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>5850649d-710d-4283-a134-ec70db40cab9</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-NAT_ETAB-0</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout de la validité 2022 (version finale)</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">NAT_ETAB-0</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Caisse de Congés Payés</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2024-09-12T09:34:38.5529575Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:6fab6a01-7fe8-4ce1-b5a5-0f1f48c103ff:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>6fab6a01-7fe8-4ce1-b5a5-0f1f48c103ff</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-NAT_ETAB-1</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout de la validité 2022 (version finale)</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">NAT_ETAB-1</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Comités d'Oeuvres Sociales</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2024-09-12T09:34:38.5529575Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:57faa2f1-0dc7-4bb4-bd8b-a6639211eff4:3</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>57faa2f1-0dc7-4bb4-bd8b-a6639211eff4</r:ID>
+      <r:Version>3</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-NAT_ETAB-2</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout de la validité 2022 (version finale)</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">NAT_ETAB-2</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Standard (cas le plus fréquent)</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <CodeList xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:7354587f-a35f-40fc-b5cf-e73cc5e67730:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>7354587f-a35f-40fc-b5cf-e73cc5e67730</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CodeListName>
+        <r:String xml:lang="fr-FR">N_champ_23</r:String>
+      </CodeListName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">N_champ_23</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Modalités de la variable champ, à partir du millésime 2023.</r:Content>
+      </r:Description>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:23aaab8c-3990-4790-9351-ffcf898265ff:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>23aaab8c-3990-4790-9351-ffcf898265ff</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>b1ba5753-f2a3-4767-a2d9-db96c22d9f55</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>DADS</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:4e30f18b-f03f-4bae-996e-27a7d60c6c9f:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>4e30f18b-f03f-4bae-996e-27a7d60c6c9f</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>9747cecb-7d41-4eb6-8957-fa50a55c8bf2</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>DADS-PUBLIC</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:3cf82d4b-a20b-4fcc-8687-b73231a2d661:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>3cf82d4b-a20b-4fcc-8687-b73231a2d661</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>6e7b4244-efd5-46ae-a0e5-497db1353eac</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>DSN</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:99c48ad9-eff9-420a-a4ab-138c14741549:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>99c48ad9-eff9-420a-a4ab-138c14741549</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>5ada3851-f585-45d7-8082-b2b345cec155</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>DSN-PUBLIC</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:0c02f7b8-cf02-42b3-803f-2a8295ab8418:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>0c02f7b8-cf02-42b3-803f-2a8295ab8418</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>39b007fc-e5c1-43d7-bb6c-0333f226fa59</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>PE</r:Value>
+      </Code>
+    </CodeList>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:b1ba5753-f2a3-4767-a2d9-db96c22d9f55:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>b1ba5753-f2a3-4767-a2d9-db96c22d9f55</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">champ-DADS</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Déclaration Annuelle de Données Sociales – privé</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:9747cecb-7d41-4eb6-8957-fa50a55c8bf2:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>9747cecb-7d41-4eb6-8957-fa50a55c8bf2</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">champ-DADS-PUBLIC</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Déclaration Annuelle de Données Sociales – public</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:6e7b4244-efd5-46ae-a0e5-497db1353eac:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>6e7b4244-efd5-46ae-a0e5-497db1353eac</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">champ-DSN</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Déclaration Sociale Nominative – privé</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:5ada3851-f585-45d7-8082-b2b345cec155:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>5ada3851-f585-45d7-8082-b2b345cec155</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">champ-DSN-PUBLIC</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Déclaration Sociale Nominative – public</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:39b007fc-e5c1-43d7-bb6c-0333f226fa59:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>39b007fc-e5c1-43d7-bb6c-0333f226fa59</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">champ-PE</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Particuliers Employeurs</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <CodeList xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2024-09-12T09:34:38.5529575Z">
+      <r:URN>urn:ddi:fr.insee:5e7f9d52-0865-4059-8f01-cd756a784934:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>5e7f9d52-0865-4059-8f01-cd756a784934</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout de la validité 2022 (version finale)</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CodeListName>
+        <r:String xml:lang="fr-FR">N_CHAMP_2022</r:String>
+      </CodeListName>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Modalités associées à la variable CHAMP, à partir du millésime 2022</r:Content>
+      </r:Description>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:2a6c764b-9ef9-4af2-bd24-18d73f41d5ee:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>2a6c764b-9ef9-4af2-bd24-18d73f41d5ee</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>55feaf5a-f21e-421c-8276-669fde066373</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>DADS</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:756b4bea-4af2-421a-ad81-ae989c7b3b63:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>756b4bea-4af2-421a-ad81-ae989c7b3b63</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>4f4d4ad7-ff5b-4d58-bf76-e2a178a2f75d</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>DADS-PUBLIC</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:576e81c2-26ab-4aa6-9005-b87c8b9e2ca2:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>576e81c2-26ab-4aa6-9005-b87c8b9e2ca2</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>654a398f-c7e0-4adb-8b50-e8c1c10deb98</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>DSN</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:0491c99c-cf54-4345-adea-af7a3e0b19ff:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>0491c99c-cf54-4345-adea-af7a3e0b19ff</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>047b722f-f2e7-4302-8e56-6cbe6eca8a58</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>DSN-PUBLIC</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:5a5a26bb-8d93-4b7d-b39b-cdd70a4a69ff:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>5a5a26bb-8d93-4b7d-b39b-cdd70a4a69ff</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>ef1f162b-6601-4143-b776-8e56144c710d</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>PE</r:Value>
+      </Code>
+    </CodeList>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2024-09-12T09:34:38.5529575Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:55feaf5a-f21e-421c-8276-669fde066373:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>55feaf5a-f21e-421c-8276-669fde066373</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout de la validité 2022 (version finale)</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Déclaration Annuelle de Données Sociales - privé</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2024-09-12T09:34:38.5529575Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:4f4d4ad7-ff5b-4d58-bf76-e2a178a2f75d:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>4f4d4ad7-ff5b-4d58-bf76-e2a178a2f75d</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout de la validité 2022 (version finale)</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Déclaration Annuelle de Données Sociales - public</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2024-09-12T09:34:38.5529575Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:654a398f-c7e0-4adb-8b50-e8c1c10deb98:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>654a398f-c7e0-4adb-8b50-e8c1c10deb98</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout de la validité 2022 (version finale)</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Déclaration Sociale Nominative - privé</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2024-09-12T09:34:38.5529575Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:047b722f-f2e7-4302-8e56-6cbe6eca8a58:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>047b722f-f2e7-4302-8e56-6cbe6eca8a58</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout de la validité 2022 (version finale)</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Déclaration Sociale Nominative - public</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2024-09-12T09:34:38.5529575Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:ef1f162b-6601-4143-b776-8e56144c710d:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>ef1f162b-6601-4143-b776-8e56144c710d</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout de la validité 2022 (version finale)</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Particuliers Employeurs</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <CodeList xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:44938100-e3db-4a1b-a802-14fc02aa2c33:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>44938100-e3db-4a1b-a802-14fc02aa2c33</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CodeListName>
+        <r:String xml:lang="fr-FR">N_etat_23</r:String>
+      </CodeListName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">N_etat_23</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Modalités des variables etat et etat_et, à partir du millésime 2023.</r:Content>
+      </r:Description>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:819687fb-f293-48db-bc5a-8830491f1967:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>819687fb-f293-48db-bc5a-8830491f1967</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>e3c1b084-f526-4506-90fe-6b401c895732</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>0</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:e599009e-d0d3-4045-b1b0-bfa380641aae:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>e599009e-d0d3-4045-b1b0-bfa380641aae</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>0df19e4b-6564-4cff-8411-e1f8e079eda1</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>1</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:be2072c8-1675-42e2-804a-b8bcd4ced337:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>be2072c8-1675-42e2-804a-b8bcd4ced337</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>aaa2b5f7-2519-440d-8e6d-a806b7217c14</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>3</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:8dff3fdb-dd59-47d6-8c56-3c92404b04ef:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>8dff3fdb-dd59-47d6-8c56-3c92404b04ef</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>0abb718a-c8fc-45c2-82e3-0f6531cf6c97</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>4</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:a13a11fa-5805-4313-b5c8-b66aa88c65b1:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>a13a11fa-5805-4313-b5c8-b66aa88c65b1</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>1c94e96e-a958-4327-951b-efca10c25d80</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>9</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:2e484802-5050-4cfa-996a-f6f06e1631c1:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>2e484802-5050-4cfa-996a-f6f06e1631c1</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>0dc5ff09-ed80-49e2-9760-3faf0b0ff28e</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>Vide</r:Value>
+      </Code>
+    </CodeList>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:e3c1b084-f526-4506-90fe-6b401c895732:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>e3c1b084-f526-4506-90fe-6b401c895732</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">etat-0</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Unité inscrite sans activité</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:0df19e4b-6564-4cff-8411-e1f8e079eda1:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>0df19e4b-6564-4cff-8411-e1f8e079eda1</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">etat-1</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Unité active</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:aaa2b5f7-2519-440d-8e6d-a806b7217c14:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>aaa2b5f7-2519-440d-8e6d-a806b7217c14</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">etat-3</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Unité en cessation économique</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:0abb718a-c8fc-45c2-82e3-0f6531cf6c97:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>0abb718a-c8fc-45c2-82e3-0f6531cf6c97</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">etat-4</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Unité en cessation juridique</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:1c94e96e-a958-4327-951b-efca10c25d80:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>1c94e96e-a958-4327-951b-efca10c25d80</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">etat-9</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Unité en cessation statistique</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:0dc5ff09-ed80-49e2-9760-3faf0b0ff28e:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>0dc5ff09-ed80-49e2-9760-3faf0b0ff28e</r:ID>
+      <r:Version>2</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">etat-Vide</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Non renseigné</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <CodeList xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2021-06-23T08:40:24.3489661Z">
+      <r:URN>urn:ddi:fr.insee:3191589c-b2ff-4326-a185-83ecaceb86bb:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>3191589c-b2ff-4326-a185-83ecaceb86bb</r:ID>
+      <r:Version>1</r:Version>
+      <CodeListName>
+        <r:String xml:lang="fr-FR">Etat_2020</r:String>
+      </CodeListName>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:ff9772c8-24c3-4bcd-9727-ee4e0ea99754:1</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>ff9772c8-24c3-4bcd-9727-ee4e0ea99754</r:ID>
+        <r:Version>1</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>fcc8a238-cd5d-4f82-8108-39f5620fe218</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>0</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:616620ae-37a8-41f9-b862-7fb38db46351:1</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>616620ae-37a8-41f9-b862-7fb38db46351</r:ID>
+        <r:Version>1</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>e3fbd5ed-8cb0-46fd-a5dd-6c824980d5ee</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>1</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:ae90f0f2-50c6-4ff5-a71a-6debada285cc:1</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>ae90f0f2-50c6-4ff5-a71a-6debada285cc</r:ID>
+        <r:Version>1</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>4f757ec4-b6f6-467c-822a-c36a53cdc002</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>3</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:179b61ab-59f5-41c1-9ac1-d3a4fdbac98c:1</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>179b61ab-59f5-41c1-9ac1-d3a4fdbac98c</r:ID>
+        <r:Version>1</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>a2333cf5-f5c8-4198-88ab-7895cd42d1d1</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>4</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:91715e6c-f150-43b4-9451-77e31589e992:1</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>91715e6c-f150-43b4-9451-77e31589e992</r:ID>
+        <r:Version>1</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>e37faab7-a14e-4570-bec7-0a18286b3413</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>9</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:6cf5fd42-27e9-42d9-ad72-551a61e586ae:1</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>6cf5fd42-27e9-42d9-ad72-551a61e586ae</r:ID>
+        <r:Version>1</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>350ddf6e-feac-4f22-9c49-83dc2a0816e7</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>vide</r:Value>
+      </Code>
+    </CodeList>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2021-06-23T08:40:24.3489661Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:fcc8a238-cd5d-4f82-8108-39f5620fe218:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>fcc8a238-cd5d-4f82-8108-39f5620fe218</r:ID>
+      <r:Version>1</r:Version>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Inscrite sans activité</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2021-06-23T08:40:24.3489661Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:e3fbd5ed-8cb0-46fd-a5dd-6c824980d5ee:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>e3fbd5ed-8cb0-46fd-a5dd-6c824980d5ee</r:ID>
+      <r:Version>1</r:Version>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Active</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2021-06-23T08:40:24.3489661Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:4f757ec4-b6f6-467c-822a-c36a53cdc002:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>4f757ec4-b6f6-467c-822a-c36a53cdc002</r:ID>
+      <r:Version>1</r:Version>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Unité en cessation économique</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2021-06-23T08:40:24.3489661Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:a2333cf5-f5c8-4198-88ab-7895cd42d1d1:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>a2333cf5-f5c8-4198-88ab-7895cd42d1d1</r:ID>
+      <r:Version>1</r:Version>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Unité en cessation juridique</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2021-06-23T08:40:24.3489661Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:e37faab7-a14e-4570-bec7-0a18286b3413:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>e37faab7-a14e-4570-bec7-0a18286b3413</r:ID>
+      <r:Version>1</r:Version>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Unité en cessation statistique</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2021-07-12T08:24:32.9472777Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:350ddf6e-feac-4f22-9c49-83dc2a0816e7:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>350ddf6e-feac-4f22-9c49-83dc2a0816e7</r:ID>
+      <r:Version>1</r:Version>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">non renseigné</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <CodeList xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:921f991a-593f-48fd-9bf1-afce137b0721:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>921f991a-593f-48fd-9bf1-afce137b0721</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-EXPL</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CodeListName>
+        <r:String xml:lang="fr-FR">N_expl_23</r:String>
+      </CodeListName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">N_expl_23</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Modalités des variables expl et expl_et, à partir du millésime 2023.</r:Content>
+      </r:Description>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:ef57d4df-d535-46dd-be67-343d064cd7ba:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>ef57d4df-d535-46dd-be67-343d064cd7ba</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-EXPL-0</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>e9523d68-a70c-4603-8987-0384d16feb1c</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>O</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:60219a30-e807-4b4d-8e41-82f156294a73:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>60219a30-e807-4b4d-8e41-82f156294a73</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-EXPL-1</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>717ae0d9-dda7-45d3-9e42-531d89520b18</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>N</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:3ea8787a-49a9-48f2-9510-804169acf3e6:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>3ea8787a-49a9-48f2-9510-804169acf3e6</r:ID>
+        <r:Version>2</r:Version>
+        <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CL-EXPL-2</r:UserID>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>264edbf8-8f6a-4d22-98d5-51d433e35ef5</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>X</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:aa9fecdf-e943-44f7-a372-81d1e56aa6f8:2</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>aa9fecdf-e943-44f7-a372-81d1e56aa6f8</r:ID>
+        <r:Version>2</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>43c00f51-a038-48e5-86c1-a69c5f35c4b1</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>Vide</r:Value>
+      </Code>
+    </CodeList>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:e9523d68-a70c-4603-8987-0384d16feb1c:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>e9523d68-a70c-4603-8987-0384d16feb1c</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-EXPL-0</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">expl-0</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Exploitant</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:717ae0d9-dda7-45d3-9e42-531d89520b18:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>717ae0d9-dda7-45d3-9e42-531d89520b18</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-EXPL-1</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">expl-N</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Non exploitant participant au système productif</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:264edbf8-8f6a-4d22-98d5-51d433e35ef5:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>264edbf8-8f6a-4d22-98d5-51d433e35ef5</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-CA-EXPL-2</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">expl-X</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Non exploitant ne participant pas au système productif</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:43c00f51-a038-48e5-86c1-a69c5f35c4b1:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>43c00f51-a038-48e5-86c1-a69c5f35c4b1</r:ID>
+      <r:Version>1</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">expl-Vide</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Non renseigné</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <CodeList xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:56e15d75-2579-4b08-8a78-ec1bea46169f:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>56e15d75-2579-4b08-8a78-ec1bea46169f</r:ID>
+      <r:Version>1</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CodeListName>
+        <r:String xml:lang="fr-FR">N_distance_dom_trav_23</r:String>
+      </CodeListName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">N_distance_dom_trav_23</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Modalités de la variable distance_dom_trav, à partir du millésime 2023.</r:Content>
+      </r:Description>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:fd338123-367b-41a1-b2f2-89fc11074cee:1</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>fd338123-367b-41a1-b2f2-89fc11074cee</r:ID>
+        <r:Version>1</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>81c99d40-2c43-48a4-bc69-d5b45b87822f</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>1A</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:8b97dbd3-e787-4884-93a9-3f9ae06faf0a:1</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>8b97dbd3-e787-4884-93a9-3f9ae06faf0a</r:ID>
+        <r:Version>1</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>b6738e7c-1446-4ddb-a6d5-4f01822f01db</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>1B</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:f0e13aa0-39b6-45a9-b614-c24b7642c22e:1</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>f0e13aa0-39b6-45a9-b614-c24b7642c22e</r:ID>
+        <r:Version>1</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>d5ee9cc9-426d-4f7c-8584-54482dffe40c</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>1C</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:0d2b8419-5fe7-4dd8-97b6-1122beb5f8d5:1</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>0d2b8419-5fe7-4dd8-97b6-1122beb5f8d5</r:ID>
+        <r:Version>1</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>9e95e050-3c03-48b2-8a5e-551a4d716dfc</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>2</r:Value>
+      </Code>
+      <Code isUniversallyUnique="true">
+        <r:URN>urn:ddi:fr.insee:adb2db96-357c-497a-96aa-68c1e9a15d70:1</r:URN>
+        <r:Agency>fr.insee</r:Agency>
+        <r:ID>adb2db96-357c-497a-96aa-68c1e9a15d70</r:ID>
+        <r:Version>1</r:Version>
+        <r:CategoryReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>c94bbb31-d241-47f7-b242-57446379c8c5</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>Category</r:TypeOfObject>
+        </r:CategoryReference>
+        <r:Value>Vide</r:Value>
+      </Code>
+    </CodeList>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:81c99d40-2c43-48a4-bc69-d5b45b87822f:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>81c99d40-2c43-48a4-bc69-d5b45b87822f</r:ID>
+      <r:Version>1</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">distance_dom_trav-1A</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Moins de 20 minutes</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:b6738e7c-1446-4ddb-a6d5-4f01822f01db:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>b6738e7c-1446-4ddb-a6d5-4f01822f01db</r:ID>
+      <r:Version>1</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">distance_dom_trav-1B</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Entre 20 et 40 minutes</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:d5ee9cc9-426d-4f7c-8584-54482dffe40c:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>d5ee9cc9-426d-4f7c-8584-54482dffe40c</r:ID>
+      <r:Version>1</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">distance_dom_trav-1C</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Entre 40 minutes et 1 heure</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:9e95e050-3c03-48b2-8a5e-551a4d716dfc:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>9e95e050-3c03-48b2-8a5e-551a4d716dfc</r:ID>
+      <r:Version>1</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">distance_dom_trav-2</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Entre 1 et 2 heures</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Category xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z" isMissing="false">
+      <r:URN>urn:ddi:fr.insee:c94bbb31-d241-47f7-b242-57446379c8c5:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>c94bbb31-d241-47f7-b242-57446379c8c5</r:ID>
+      <r:Version>1</r:Version>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <CategoryName>
+        <r:String xml:lang="fr-FR">distance_dom_trav-Vide</r:String>
+      </CategoryName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Plus de 2 heures ou données indisponibles</r:Content>
+      </r:Label>
+    </Category>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Variable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:82cc8a38-b5a0-4afb-89af-58efe56459c3:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>82cc8a38-b5a0-4afb-89af-58efe56459c3</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-A6</r:UserID>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForValidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForInvalidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <VariableName>
+        <r:String xml:lang="fr-FR">a6</r:String>
+      </VariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Activité principale de l'entreprise (NAF rév. 2) en nomenclature agrégée (6 postes)</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Activité de l'entreprise.</r:Content>
+      </r:Description>
+      <VariableRepresentation>
+        <r:CodeRepresentation blankIsMissingValue="false">
+          <r:CodeListReference>
+            <r:Agency>fr.insee</r:Agency>
+            <r:ID>83e7cfd6-238a-4fc9-a8d2-31509d6eae36</r:ID>
+            <r:Version>2</r:Version>
+            <r:TypeOfObject>CodeList</r:TypeOfObject>
+          </r:CodeListReference>
+        </r:CodeRepresentation>
+      </VariableRepresentation>
+    </Variable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Variable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:601b38d7-a021-4932-8c95-6cbad2f85da9:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>601b38d7-a021-4932-8c95-6cbad2f85da9</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-ETAT</r:UserID>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForValidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForInvalidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <VariableName>
+        <r:String xml:lang="fr-FR">etat</r:String>
+      </VariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Caractère actif de l'entreprise</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Donnée issue du répertoire Sirus.</r:Content>
+      </r:Description>
+      <VariableRepresentation>
+        <r:CodeRepresentation blankIsMissingValue="false">
+          <r:CodeListReference>
+            <r:Agency>fr.insee</r:Agency>
+            <r:ID>44938100-e3db-4a1b-a802-14fc02aa2c33</r:ID>
+            <r:Version>2</r:Version>
+            <r:TypeOfObject>CodeList</r:TypeOfObject>
+          </r:CodeListReference>
+        </r:CodeRepresentation>
+      </VariableRepresentation>
+    </Variable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Variable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:8e27461a-b404-4395-b9e1-784560dd18fa:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>8e27461a-b404-4395-b9e1-784560dd18fa</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-EXPL</r:UserID>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForValidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForInvalidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <VariableName>
+        <r:String xml:lang="fr-FR">expl</r:String>
+      </VariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Caractère exploitant de l'entreprise</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Donnée issue du répertoire Sirus.</r:Content>
+      </r:Description>
+      <VariableRepresentation>
+        <r:CodeRepresentation blankIsMissingValue="false">
+          <r:CodeListReference>
+            <r:Agency>fr.insee</r:Agency>
+            <r:ID>921f991a-593f-48fd-9bf1-afce137b0721</r:ID>
+            <r:Version>2</r:Version>
+            <r:TypeOfObject>CodeList</r:TypeOfObject>
+          </r:CodeListReference>
+        </r:CodeRepresentation>
+      </VariableRepresentation>
+    </Variable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Variable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:06326c10-2670-4aec-ae24-36beece3aa15:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>06326c10-2670-4aec-ae24-36beece3aa15</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-A6</r:UserID>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForValidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForInvalidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <VariableName>
+        <r:String xml:lang="fr-FR">a6</r:String>
+      </VariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Activité principale de l'établissement (NAF rév. 2) en nomenclature agrégée (6 postes)</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Activité de l'établissement - lieu de travail.</r:Content>
+      </r:Description>
+      <VariableRepresentation>
+        <r:CodeRepresentation blankIsMissingValue="false">
+          <r:CodeListReference>
+            <r:Agency>fr.insee</r:Agency>
+            <r:ID>83e7cfd6-238a-4fc9-a8d2-31509d6eae36</r:ID>
+            <r:Version>2</r:Version>
+            <r:TypeOfObject>CodeList</r:TypeOfObject>
+          </r:CodeListReference>
+        </r:CodeRepresentation>
+      </VariableRepresentation>
+    </Variable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Variable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:2a2e6d13-506a-496c-ad3a-3e301c0bc18d:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>2a2e6d13-506a-496c-ad3a-3e301c0bc18d</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-ETAT_ET</r:UserID>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForValidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForInvalidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <VariableName>
+        <r:String xml:lang="fr-FR">etat_et</r:String>
+      </VariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Caractère actif de l'établissement</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Donnée issue du répertoire Sirus.</r:Content>
+      </r:Description>
+      <VariableRepresentation>
+        <r:CodeRepresentation blankIsMissingValue="false">
+          <r:CodeListReference>
+            <r:Agency>fr.insee</r:Agency>
+            <r:ID>44938100-e3db-4a1b-a802-14fc02aa2c33</r:ID>
+            <r:Version>2</r:Version>
+            <r:TypeOfObject>CodeList</r:TypeOfObject>
+          </r:CodeListReference>
+        </r:CodeRepresentation>
+      </VariableRepresentation>
+    </Variable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Variable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:331c2bf1-0b85-4b36-8457-dd9da614c5d3:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>331c2bf1-0b85-4b36-8457-dd9da614c5d3</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-EXPL_ET</r:UserID>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForValidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForInvalidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <VariableName>
+        <r:String xml:lang="fr-FR">expl_et</r:String>
+      </VariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Caractère exploitant de l'établissement</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Donnée issue du répertoire Sirus.</r:Content>
+      </r:Description>
+      <VariableRepresentation>
+        <r:CodeRepresentation blankIsMissingValue="false">
+          <r:CodeListReference>
+            <r:Agency>fr.insee</r:Agency>
+            <r:ID>921f991a-593f-48fd-9bf1-afce137b0721</r:ID>
+            <r:Version>2</r:Version>
+            <r:TypeOfObject>CodeList</r:TypeOfObject>
+          </r:CodeListReference>
+        </r:CodeRepresentation>
+      </VariableRepresentation>
+    </Variable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Variable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:58498ed3-e3b8-4a1f-b62f-18918eefce47:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>58498ed3-e3b8-4a1f-b62f-18918eefce47</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-NAT_ETAB</r:UserID>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForValidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForInvalidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <VariableName>
+        <r:String xml:lang="fr-FR">nat_etab</r:String>
+      </VariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Nature de l'établissement</r:Content>
+      </r:Label>
+      <VariableRepresentation>
+        <r:CodeRepresentation blankIsMissingValue="false">
+          <r:CodeListReference>
+            <r:Agency>fr.insee</r:Agency>
+            <r:ID>e8150570-6553-449f-be7d-279f37cf24e6</r:ID>
+            <r:Version>2</r:Version>
+            <r:TypeOfObject>CodeList</r:TypeOfObject>
+          </r:CodeListReference>
+        </r:CodeRepresentation>
+      </VariableRepresentation>
+    </Variable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Variable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:a06f43b4-b669-489c-949b-275f09ac38bc:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>a06f43b4-b669-489c-949b-275f09ac38bc</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForValidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForInvalidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <VariableName>
+        <r:String xml:lang="fr-FR">champ</r:String>
+      </VariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Champ d’origine de la donnée</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Cette variable est un regroupement de modalités de la variable origine.</r:Content>
+      </r:Description>
+      <VariableRepresentation>
+        <r:CodeRepresentation blankIsMissingValue="false">
+          <r:CodeListReference>
+            <r:Agency>fr.insee</r:Agency>
+            <r:ID>7354587f-a35f-40fc-b5cf-e73cc5e67730</r:ID>
+            <r:Version>2</r:Version>
+            <r:TypeOfObject>CodeList</r:TypeOfObject>
+          </r:CodeListReference>
+        </r:CodeRepresentation>
+      </VariableRepresentation>
+    </Variable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <Variable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-05-19T13:51:12.9878017Z">
+      <r:URN>urn:ddi:fr.insee:61eccd53-0528-4d9b-9a9b-313d6620d7c0:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>61eccd53-0528-4d9b-9a9b-313d6620d7c0</r:ID>
+      <r:Version>1</r:Version>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForValidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:UserAttributePair>
+        <r:AttributeKey>extension:ShouldCalculateFrequenciesForInvalidValues</r:AttributeKey>
+        <r:AttributeValue>True</r:AttributeValue>
+      </r:UserAttributePair>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout opération BTS 2023 version définitive</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <VariableName>
+        <r:String xml:lang="fr-FR">distance_dom_trav</r:String>
+      </VariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Distance domicile – travail, en temps de trajet</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Le temps de trajet est calculé par la route, entre les centres de communes de résidence et de travail, dans des conditions de circulation standard.</r:Content>
+      </r:Description>
+      <VariableRepresentation>
+        <r:CodeRepresentation blankIsMissingValue="false">
+          <r:CodeListReference>
+            <r:Agency>fr.insee</r:Agency>
+            <r:ID>56e15d75-2579-4b08-8a78-ec1bea46169f</r:ID>
+            <r:Version>1</r:Version>
+            <r:TypeOfObject>CodeList</r:TypeOfObject>
+          </r:CodeListReference>
+        </r:CodeRepresentation>
+      </VariableRepresentation>
+    </Variable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <RepresentedVariable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-04-07T13:38:25.740433Z">
+      <r:URN>urn:ddi:fr.insee:bcef9f84-f1ae-41a1-adec-1605021b849c:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>bcef9f84-f1ae-41a1-adec-1605021b849c</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-A6</r:UserID>
+      <r:VersionResponsibility>AD\ACY5R8</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">passage en minuscule des representedvariablename , premiere étape d'initialisation pour millésime 2023</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <r:BasedOnObject>
+        <r:BasedOnReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>be9ed5d5-9b5e-44cc-b2c0-e31795923f80</r:ID>
+          <r:Version>5</r:Version>
+          <r:TypeOfObject>RepresentedVariable</r:TypeOfObject>
+        </r:BasedOnReference>
+        <r:BasedOnRationaleCode controlledVocabularyVersionID="1.0">BranchItem</r:BasedOnRationaleCode>
+      </r:BasedOnObject>
+      <RepresentedVariableName>
+        <r:String xml:lang="fr-FR">a6</r:String>
+      </RepresentedVariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Activité principale de l'entreprise (NAF rév. 2) en nomenclature agrégée (6 postes) </r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Activité de l'entreprise.</r:Content>
+      </r:Description>
+      <r:CodeRepresentation blankIsMissingValue="false">
+        <r:CodeListReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>659fb0d2-c282-42bb-8926-a253930275e1</r:ID>
+          <r:Version>3</r:Version>
+          <r:TypeOfObject>CodeList</r:TypeOfObject>
+        </r:CodeListReference>
+      </r:CodeRepresentation>
+    </RepresentedVariable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <RepresentedVariable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-04-07T13:38:25.740433Z">
+      <r:URN>urn:ddi:fr.insee:48de6764-9cbb-4600-b5bd-6218a00192bf:2</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>48de6764-9cbb-4600-b5bd-6218a00192bf</r:ID>
+      <r:Version>2</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-ETAT</r:UserID>
+      <r:VersionResponsibility>AD\ACY5R8</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">passage en minuscule des representedvariablename , premiere étape d'initialisation pour millésime 2023</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <r:BasedOnObject>
+        <r:BasedOnReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>17fec05e-f56d-4dff-a108-ee42dc9d8382</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>RepresentedVariable</r:TypeOfObject>
+        </r:BasedOnReference>
+        <r:BasedOnRationaleCode controlledVocabularyVersionID="1.0">BranchItem</r:BasedOnRationaleCode>
+      </r:BasedOnObject>
+      <RepresentedVariableName>
+        <r:String xml:lang="fr-FR">etat</r:String>
+      </RepresentedVariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Caractère actif de l'entreprise</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Données issues du répertoire Sirus</r:Content>
+      </r:Description>
+      <r:CodeRepresentation blankIsMissingValue="false">
+        <r:CodeListReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>3191589c-b2ff-4326-a185-83ecaceb86bb</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>CodeList</r:TypeOfObject>
+        </r:CodeListReference>
+      </r:CodeRepresentation>
+    </RepresentedVariable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <RepresentedVariable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-04-07T13:38:25.740433Z">
+      <r:URN>urn:ddi:fr.insee:be9ed5d5-9b5e-44cc-b2c0-e31795923f80:6</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>be9ed5d5-9b5e-44cc-b2c0-e31795923f80</r:ID>
+      <r:Version>6</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-A6</r:UserID>
+      <r:VersionResponsibility>AD\ACY5R8</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">passage en minuscule des representedvariablename , premiere étape d'initialisation pour millésime 2023</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <RepresentedVariableName>
+        <r:String xml:lang="fr-FR">a6</r:String>
+      </RepresentedVariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Activité principale de l'établissement (NAF rév. 2) en nomenclature agrégée (6 postes) </r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Activité de l'établissement - lieu de travail.</r:Content>
+      </r:Description>
+      <r:CodeRepresentation blankIsMissingValue="false">
+        <r:CodeListReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>659fb0d2-c282-42bb-8926-a253930275e1</r:ID>
+          <r:Version>3</r:Version>
+          <r:TypeOfObject>CodeList</r:TypeOfObject>
+        </r:CodeListReference>
+      </r:CodeRepresentation>
+    </RepresentedVariable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <RepresentedVariable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-04-07T13:38:25.740433Z">
+      <r:URN>urn:ddi:fr.insee:8e2ad963-0c5d-4be5-83f4-795ab8b6e520:4</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>8e2ad963-0c5d-4be5-83f4-795ab8b6e520</r:ID>
+      <r:Version>4</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-NAT_ETAB</r:UserID>
+      <r:VersionResponsibility>AD\ACY5R8</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">passage en minuscule des representedvariablename , premiere étape d'initialisation pour millésime 2023</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <RepresentedVariableName>
+        <r:String xml:lang="fr-FR">nat_etab</r:String>
+      </RepresentedVariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Nature de l'établissement</r:Content>
+      </r:Label>
+      <r:CodeRepresentation blankIsMissingValue="false">
+        <r:CodeListReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>35ce90ea-452d-48a0-a2f6-85e9801ac744</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>CodeList</r:TypeOfObject>
+        </r:CodeListReference>
+      </r:CodeRepresentation>
+    </RepresentedVariable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <RepresentedVariable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2021-07-21T08:38:13.6848996Z">
+      <r:URN>urn:ddi:fr.insee:bcef9f84-f1ae-41a1-adec-1605021b849c:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>bcef9f84-f1ae-41a1-adec-1605021b849c</r:ID>
+      <r:Version>1</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-A6</r:UserID>
+      <r:BasedOnObject>
+        <r:BasedOnReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>be9ed5d5-9b5e-44cc-b2c0-e31795923f80</r:ID>
+          <r:Version>5</r:Version>
+          <r:TypeOfObject>RepresentedVariable</r:TypeOfObject>
+        </r:BasedOnReference>
+        <r:BasedOnRationaleCode controlledVocabularyVersionID="1.0">BranchItem</r:BasedOnRationaleCode>
+      </r:BasedOnObject>
+      <RepresentedVariableName>
+        <r:String xml:lang="fr-FR">A6</r:String>
+      </RepresentedVariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Activité principale de l'entreprise (NAF rév. 2) en nomenclature agrégée (6 postes) </r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Activité de l'entreprise.</r:Content>
+      </r:Description>
+      <r:CodeRepresentation blankIsMissingValue="false">
+        <r:CodeListReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>659fb0d2-c282-42bb-8926-a253930275e1</r:ID>
+          <r:Version>3</r:Version>
+          <r:TypeOfObject>CodeList</r:TypeOfObject>
+        </r:CodeListReference>
+      </r:CodeRepresentation>
+    </RepresentedVariable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <RepresentedVariable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2021-07-21T08:38:56.3172439Z">
+      <r:URN>urn:ddi:fr.insee:a0708e55-8b25-45bf-8b0e-5f81ca453945:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>a0708e55-8b25-45bf-8b0e-5f81ca453945</r:ID>
+      <r:Version>1</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-A6_1</r:UserID>
+      <r:BasedOnObject>
+        <r:BasedOnReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>91014c64-13ab-4fc3-80c4-a4f38799d0e9</r:ID>
+          <r:Version>5</r:Version>
+          <r:TypeOfObject>RepresentedVariable</r:TypeOfObject>
+        </r:BasedOnReference>
+        <r:BasedOnRationaleCode controlledVocabularyVersionID="1.0">BranchItem</r:BasedOnRationaleCode>
+      </r:BasedOnObject>
+      <RepresentedVariableName>
+        <r:String xml:lang="fr-FR">A6_1</r:String>
+      </RepresentedVariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Activité principale de l'entreprise (NAF rév. 2) en nomenclature agrégée (6 postes) (N-1)</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Activité de l'entreprise.</r:Content>
+      </r:Description>
+      <r:CodeRepresentation blankIsMissingValue="false">
+        <r:CodeListReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>659fb0d2-c282-42bb-8926-a253930275e1</r:ID>
+          <r:Version>3</r:Version>
+          <r:TypeOfObject>CodeList</r:TypeOfObject>
+        </r:CodeListReference>
+      </r:CodeRepresentation>
+    </RepresentedVariable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <RepresentedVariable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2021-06-23T08:42:04.6352125Z">
+      <r:URN>urn:ddi:fr.insee:48de6764-9cbb-4600-b5bd-6218a00192bf:1</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>48de6764-9cbb-4600-b5bd-6218a00192bf</r:ID>
+      <r:Version>1</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-ETAT</r:UserID>
+      <r:BasedOnObject>
+        <r:BasedOnReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>17fec05e-f56d-4dff-a108-ee42dc9d8382</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>RepresentedVariable</r:TypeOfObject>
+        </r:BasedOnReference>
+        <r:BasedOnRationaleCode controlledVocabularyVersionID="1.0">BranchItem</r:BasedOnRationaleCode>
+      </r:BasedOnObject>
+      <RepresentedVariableName>
+        <r:String xml:lang="fr-FR">ETAT</r:String>
+      </RepresentedVariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Caractère actif de l'entreprise</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Données issues du répertoire Sirus</r:Content>
+      </r:Description>
+      <r:CodeRepresentation blankIsMissingValue="false">
+        <r:CodeListReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>3191589c-b2ff-4326-a185-83ecaceb86bb</r:ID>
+          <r:Version>1</r:Version>
+          <r:TypeOfObject>CodeList</r:TypeOfObject>
+        </r:CodeListReference>
+      </r:CodeRepresentation>
+    </RepresentedVariable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <RepresentedVariable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2021-07-21T08:47:05.6819071Z">
+      <r:URN>urn:ddi:fr.insee:be9ed5d5-9b5e-44cc-b2c0-e31795923f80:5</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>be9ed5d5-9b5e-44cc-b2c0-e31795923f80</r:ID>
+      <r:Version>5</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-A6</r:UserID>
+      <RepresentedVariableName>
+        <r:String xml:lang="fr-FR">A6</r:String>
+      </RepresentedVariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Activité principale de l'établissement (NAF rév. 2) en nomenclature agrégée (6 postes) </r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Activité de l'établissement - lieu de travail.</r:Content>
+      </r:Description>
+      <r:CodeRepresentation blankIsMissingValue="false">
+        <r:CodeListReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>659fb0d2-c282-42bb-8926-a253930275e1</r:ID>
+          <r:Version>3</r:Version>
+          <r:TypeOfObject>CodeList</r:TypeOfObject>
+        </r:CodeListReference>
+      </r:CodeRepresentation>
+    </RepresentedVariable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <RepresentedVariable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2021-07-21T08:47:27.8778839Z">
+      <r:URN>urn:ddi:fr.insee:91014c64-13ab-4fc3-80c4-a4f38799d0e9:5</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>91014c64-13ab-4fc3-80c4-a4f38799d0e9</r:ID>
+      <r:Version>5</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-A6_1</r:UserID>
+      <RepresentedVariableName>
+        <r:String xml:lang="fr-FR">A6_1</r:String>
+      </RepresentedVariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Activité principale de l'établissement (NAF rév. 2) en nomenclature agrégée (6 postes) (N-1)</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Activité de l'établissement - lieu de travail.</r:Content>
+      </r:Description>
+      <r:CodeRepresentation blankIsMissingValue="false">
+        <r:CodeListReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>659fb0d2-c282-42bb-8926-a253930275e1</r:ID>
+          <r:Version>3</r:Version>
+          <r:TypeOfObject>CodeList</r:TypeOfObject>
+        </r:CodeListReference>
+      </r:CodeRepresentation>
+    </RepresentedVariable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <RepresentedVariable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2024-09-12T09:34:38.5529575Z">
+      <r:URN>urn:ddi:fr.insee:8e2ad963-0c5d-4be5-83f4-795ab8b6e520:3</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>8e2ad963-0c5d-4be5-83f4-795ab8b6e520</r:ID>
+      <r:Version>3</r:Version>
+      <r:UserID typeOfUserID="colectica:sourceId">INSEE-DADS-RVR-NAT_ETAB</r:UserID>
+      <r:VersionResponsibility>AD\T60XAJ</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">Ajout de la validité 2022 (version finale)</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <RepresentedVariableName>
+        <r:String xml:lang="fr-FR">NAT_ETAB</r:String>
+      </RepresentedVariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Nature de l'établissement</r:Content>
+      </r:Label>
+      <r:CodeRepresentation blankIsMissingValue="false">
+        <r:CodeListReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>35ce90ea-452d-48a0-a2f6-85e9801ac744</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>CodeList</r:TypeOfObject>
+        </r:CodeListReference>
+      </r:CodeRepresentation>
+    </RepresentedVariable>
+  </ddi:Fragment>
+  <ddi:Fragment>
+    <RepresentedVariable xmlns="ddi:logicalproduct:3_3" isUniversallyUnique="true" versionDate="2025-04-07T13:38:25.740433Z">
+      <r:URN>urn:ddi:fr.insee:7bc8fde5-2989-487d-af9e-080011cb19f1:3</r:URN>
+      <r:Agency>fr.insee</r:Agency>
+      <r:ID>7bc8fde5-2989-487d-af9e-080011cb19f1</r:ID>
+      <r:Version>3</r:Version>
+      <r:VersionResponsibility>AD\ACY5R8</r:VersionResponsibility>
+      <r:VersionRationale>
+        <r:RationaleDescription>
+          <r:String xml:lang="fr-FR">passage en minuscule des representedvariablename , premiere étape d'initialisation pour millésime 2023</r:String>
+        </r:RationaleDescription>
+      </r:VersionRationale>
+      <RepresentedVariableName>
+        <r:String xml:lang="fr-FR">champ</r:String>
+      </RepresentedVariableName>
+      <r:Label>
+        <r:Content xml:lang="fr-FR">Champ d’origine de la donnée</r:Content>
+      </r:Label>
+      <r:Description>
+        <r:Content xml:lang="fr-FR">Cette variable est un regroupement de modalités de la variable ORIGINE</r:Content>
+      </r:Description>
+      <r:CodeRepresentation blankIsMissingValue="false">
+        <r:CodeListReference>
+          <r:Agency>fr.insee</r:Agency>
+          <r:ID>5e7f9d52-0865-4059-8f01-cd756a784934</r:ID>
+          <r:Version>2</r:Version>
+          <r:TypeOfObject>CodeList</r:TypeOfObject>
+        </r:CodeListReference>
+      </r:CodeRepresentation>
+    </RepresentedVariable>
+  </ddi:Fragment>
+  </ddi:FragmentInstance>

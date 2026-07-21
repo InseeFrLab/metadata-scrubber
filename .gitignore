@@ -1,0 +1,51 @@
+# Données (elles vivent sur S3, skill onyxia-storage-s3)
+data/
+*.parquet
+*.csv
+
+# Environnements (reconstruits depuis les lockfiles)
+.venv/
+.venv/**/*
+
+# Caches re-générables
+__pycache__/
+*.py[cod]
+$py.class
+.ruff_cache/
+.ruff/
+.pytest_cache/
+.ruff_version.lock
+
+# Sorties de pipeline re-générables (non suivies)
+audit/*.html
+doc/*.html
+doc/*_files/
+exploration/output/
+
+# Sorties intermédiaires de dédoublonnage historique
+archives/dedoub_deterministe/*_out.xml
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE / éditeur
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets et configuration locale (jamais commités)
+.env
+.env.local
+*.env
+
+# Agents skills
+.agents/
+.claude/
+skills-lock.json
