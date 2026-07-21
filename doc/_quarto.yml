@@ -1,0 +1,25 @@
+project:  
+  type: website
+
+website:
+  title: "Metadata Scrubber"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Accueil
+      - href: guide_utilisateur.qmd
+        text: Guide Utilisateur
+      - href: note_methodologique_dedoublonnage.qmd
+        text: Note Méthodologique
+  page-footer:
+    left: "Insee — SSP Cloud / Onyxia"
+    right:
+      - icon: github
+        href: https://github.com/inseefrlab/metadata-scrubber
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
