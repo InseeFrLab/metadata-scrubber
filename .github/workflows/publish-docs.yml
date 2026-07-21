@@ -10,8 +10,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'doc/**'
-      - '.github/workflows/publish-docs.yml'
+      - "doc/**"
+      - ".github/workflows/publish-docs.yml"
   workflow_dispatch:
 
 jobs:
@@ -28,9 +28,3 @@ jobs:
         uses: quarto-dev/quarto-actions/render@v2
         with:
           target: doc
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: doc/_site
