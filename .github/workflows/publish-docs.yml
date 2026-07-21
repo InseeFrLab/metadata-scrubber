@@ -1,10 +1,8 @@
 # Publish Documentation to GitHub Pages
-
-# IMPORTANT: Before the first run, execute locally from the repo root:
-#   quarto publish gh-pages
-# Make sure the _publish.yml is generated (it points to the doc/ project).
-# Also ensure GitHub Settings > Actions > "Workflow permissions"
-# is set to "Read and write permissions".
+#
+# After first push:
+# 1. Go to repo Settings > Pages > Source → choose `gh-pages` branch
+# 2. (Optional) set Workflow permissions to "Read and write"
 
 name: Publish Documentation
 
@@ -16,23 +14,23 @@ on:
       - '.github/workflows/publish-docs.yml'
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  build-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Render and Publish
-        uses: quarto-dev/quarto-actions/publish@v2
+      - name: Render
+        uses: quarto-dev/quarto-actions/render@v2
         with:
-          target: gh-pages
-          path: doc
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          target: doc
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: doc/_site
