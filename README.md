@@ -436,7 +436,7 @@ kubectl create secret generic scrubber-config \
   --from-literal=AWS_SESSION_TOKEN="zzz" \
   --from-literal=AWS_S3_ENDPOINT="minio.lab.sspcloud.fr" \
   --from-literal=AWS_DEFAULT_REGION="us-east-1" \
-  --from-literal=SCRUBBER_AUTH_PASSWORD="m9n_p4s5" \
+  --from-literal=SCRUBBER_AUTH_PASSWORD="********" \
   -n projet-metadonnees-rmes \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
