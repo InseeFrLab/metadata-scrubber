@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Insee — SSP Cloud / Onyxia">
+<meta name="dcterms.date" content="2026-07-21">
+
+<title>Guide d’Utilisation — Metadata Scrubber – Metadata Scrubber</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-0efca1fc80fbaa19430da101cd0e8dd0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Metadata Scrubber</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Accueil</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./guide_utilisateur.html" aria-current="page"> 
+<span class="menu-text">Guide Utilisateur</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./note_methodologique_dedoublonnage.html"> 
+<span class="menu-text">Note Méthodologique</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">1</span> Introduction</a></li>
+  <li><a href="#prérequis" id="toc-prérequis" class="nav-link" data-scroll-target="#prérequis"><span class="header-section-number">2</span> Prérequis</a></li>
+  <li><a href="#lancer-le-pipeline" id="toc-lancer-le-pipeline" class="nav-link" data-scroll-target="#lancer-le-pipeline"><span class="header-section-number">3</span> Lancer le pipeline</a>
+  <ul class="collapse">
+  <li><a href="#configurer-le-pipeline" id="toc-configurer-le-pipeline" class="nav-link" data-scroll-target="#configurer-le-pipeline"><span class="header-section-number">3.1</span> Configurer le pipeline</a></li>
+  <li><a href="#exécuter-le-pipeline" id="toc-exécuter-le-pipeline" class="nav-link" data-scroll-target="#exécuter-le-pipeline"><span class="header-section-number">3.2</span> Exécuter le pipeline</a></li>
+  <li><a href="#résultat" id="toc-résultat" class="nav-link" data-scroll-target="#résultat"><span class="header-section-number">3.3</span> Résultat</a></li>
+  </ul></li>
+  <li><a href="#examiner-et-valider-les-doublons" id="toc-examiner-et-valider-les-doublons" class="nav-link" data-scroll-target="#examiner-et-valider-les-doublons"><span class="header-section-number">4</span> Examiner et valider les doublons</a>
+  <ul class="collapse">
+  <li><a href="#charger-le-registre" id="toc-charger-le-registre" class="nav-link" data-scroll-target="#charger-le-registre"><span class="header-section-number">4.1</span> Charger le registre</a></li>
+  <li><a href="#vue-densemble" id="toc-vue-densemble" class="nav-link" data-scroll-target="#vue-densemble"><span class="header-section-number">4.2</span> Vue d’ensemble</a></li>
+  <li><a href="#comparer-côte-à-côte" id="toc-comparer-côte-à-côte" class="nav-link" data-scroll-target="#comparer-côte-à-côte"><span class="header-section-number">4.3</span> Comparer côte à côte</a></li>
+  <li><a href="#décisions-par-paire" id="toc-décisions-par-paire" class="nav-link" data-scroll-target="#décisions-par-paire"><span class="header-section-number">4.4</span> Décisions par paire</a></li>
+  <li><a href="#actions-de-masse" id="toc-actions-de-masse" class="nav-link" data-scroll-target="#actions-de-masse"><span class="header-section-number">4.5</span> Actions de masse</a></li>
+  <li><a href="#filtres" id="toc-filtres" class="nav-link" data-scroll-target="#filtres"><span class="header-section-number">4.6</span> Filtres</a></li>
+  <li><a href="#sauvegarder-les-décisions" id="toc-sauvegarder-les-décisions" class="nav-link" data-scroll-target="#sauvegarder-les-décisions"><span class="header-section-number">4.7</span> Sauvegarder les décisions</a></li>
+  <li><a href="#ajouter-une-codeliste-au-registre" id="toc-ajouter-une-codeliste-au-registre" class="nav-link" data-scroll-target="#ajouter-une-codeliste-au-registre"><span class="header-section-number">4.8</span> Ajouter une CodeListe au registre</a></li>
+  </ul></li>
+  <li><a href="#registre-nettoyé" id="toc-registre-nettoyé" class="nav-link" data-scroll-target="#registre-nettoyé"><span class="header-section-number">5</span> Registre nettoyé</a>
+  <ul class="collapse">
+  <li><a href="#charger-le-registre-1" id="toc-charger-le-registre-1" class="nav-link" data-scroll-target="#charger-le-registre-1"><span class="header-section-number">5.1</span> Charger le registre</a></li>
+  <li><a href="#contenu-dune-entrée" id="toc-contenu-dune-entrée" class="nav-link" data-scroll-target="#contenu-dune-entrée"><span class="header-section-number">5.2</span> Contenu d’une entrée</a></li>
+  <li><a href="#édition" id="toc-édition" class="nav-link" data-scroll-target="#édition"><span class="header-section-number">5.3</span> Édition</a></li>
+  <li><a href="#sauvegarder-et-télécharger" id="toc-sauvegarder-et-télécharger" class="nav-link" data-scroll-target="#sauvegarder-et-télécharger"><span class="header-section-number">5.4</span> Sauvegarder et télécharger</a></li>
+  </ul></li>
+  <li><a href="#workflow-de-validation" id="toc-workflow-de-validation" class="nav-link" data-scroll-target="#workflow-de-validation"><span class="header-section-number">6</span> Workflow de validation</a>
+  <ul class="collapse">
+  <li><a href="#un-run-complet" id="toc-un-run-complet" class="nav-link" data-scroll-target="#un-run-complet"><span class="header-section-number">6.1</span> Un run complet</a></li>
+  <li><a href="#workflow-itératif" id="toc-workflow-itératif" class="nav-link" data-scroll-target="#workflow-itératif"><span class="header-section-number">6.2</span> Workflow itératif</a></li>
+  <li><a href="#ajouter-des-listes-sans-doublon" id="toc-ajouter-des-listes-sans-doublon" class="nav-link" data-scroll-target="#ajouter-des-listes-sans-doublon"><span class="header-section-number">6.3</span> Ajouter des listes sans doublon</a></li>
+  </ul></li>
+  <li><a href="#astuces-pratiques" id="toc-astuces-pratiques" class="nav-link" data-scroll-target="#astuces-pratiques"><span class="header-section-number">7</span> Astuces pratiques</a></li>
+  <li><a href="#note-méthodologique" id="toc-note-méthodologique" class="nav-link" data-scroll-target="#note-méthodologique"><span class="header-section-number">8</span> Note méthodologique</a></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="guide_utilisateur.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Guide d’Utilisation — Metadata Scrubber</h1>
+<p class="subtitle lead">Pipeline de dédoublonnage des CodeLists DDI 3.3 / 6.0</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Insee — SSP Cloud / Onyxia </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">July 21, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Introduction</h1>
+<p>Le <strong>Metadata Scrubber</strong> est un outil qui identifie les listes de codes (<code>CodeList</code>) redondantes au sein d’un fichier de métadonnées au format DDI (Data Dictionary Interface). Il propose deux modes d’utilisation complémentaires :</p>
+<ul>
+<li><strong>Exécution automatique</strong> — analyse le fichier XML DDI et génère un registre de paires de CodeLists détectées comme potentiellement redondantes.</li>
+<li><strong>Interface de validation interactive</strong> — permet d’examiner chaque paire, prendre des décisions (consolider ou rejeter), et produire en sortie un registre épuré ne conservant qu’une CodeListe maîtresse par groupe de redondances.</li>
+</ul>
+<p>Ce document s’adresse à l’<strong>expert métier</strong> qui utilise l’interface web pour examiner les résultats et valider les rapprochements. La logique algorithmique du pipeline (entonnoir exact → flou → sémantique) est décrite en détail dans la <a href="./note_methodologique_dedoublonnage.html">note méthodologique</a> (§ 8).</p>
+<hr>
+</section>
+<section id="prérequis" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Prérequis</h1>
+<p>Le serveur du Metadata Scrubber doit être en cours d’exécution. Sur SSP Cloud / Onyxia, il est déployé sous le hostname <code>metadata-scrubber.lab.sspcloud.fr</code> avec un accès protégé par Basic Auth.</p>
+<p>Au premier chargement, un formulaire de navigateur demande :</p>
+<ul>
+<li><strong>Identifiant</strong> — votre nom d’utilisateur ou identifiant SSP Cloud</li>
+<li><strong>Mot de passe</strong> — le mot de passe partagé fourni dans la configuration du projet</li>
+</ul>
+<blockquote class="blockquote">
+<p>L’interface est également accessible en local après avoir lancé le serveur : <code>uv run scrubber-web</code>, puis ouvrez <code>http://localhost:8000</code>.</p>
+</blockquote>
+<hr>
+</section>
+<section id="lancer-le-pipeline" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Lancer le pipeline</h1>
+<p>Le premier onglet de l’interface (<strong>🚀 Pipeline</strong>) sert à configurer et lancer l’exécution automatique du dédoublonnage sur un fichier DDI.</p>
+<section id="configurer-le-pipeline" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="configurer-le-pipeline"><span class="header-section-number">3.1</span> Configurer le pipeline</h2>
+<p>Quatre champs paramètrent le run :</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Champ</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Chemin source DDI (XML)</strong></td>
+<td>URL S3 ou chemin local vers le fichier DDI à analyser.</td>
+</tr>
+<tr class="even">
+<td><strong>Dossier de sortie</strong></td>
+<td>Emplacement où sera écrit le registre de doublons.</td>
+</tr>
+<tr class="odd">
+<td><strong>Registre nettoyé</strong> (optionnel)</td>
+<td>Chemin vers un <code>cleaned_codelists.json</code> préexistant. Les CodeLists maîtres de ce registre sont injectées comme candidates prioritaires ; les doublons déjà validés sont exclus de la détection.</td>
+</tr>
+<tr class="even">
+<td><strong>Exécuter les phases LLM / embeddings</strong></td>
+<td>Décocher pour un run rapide (exact + flou uniquement, sans embeddings ni juge LLM).</td>
+</tr>
+<tr class="odd">
+<td><strong>Mode verbeux</strong></td>
+<td>Afficher les détails d’exécution (étapes d’embeddings, messages LLM …) dans les logs.</td>
+</tr>
+</tbody>
+</table>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="img/app_lancer_pipeline.png" class="img-fluid figure-img" width="700"></p>
+<figcaption>Formulaire de configuration du pipeline</figcaption>
+</figure>
+</div>
+</section>
+<section id="exécuter-le-pipeline" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="exécuter-le-pipeline"><span class="header-section-number">3.2</span> Exécuter le pipeline</h2>
+<p>Après avoir complété les champs, cliquez sur <strong>🚀 Lancer le pipeline</strong>.</p>
+<p>La barre de progression apparaît et avance en temps réel :</p>
+<ul>
+<li><strong>Pourcentage</strong> : progression globale (0 % → 100 %)</li>
+<li><strong>Texte de phase</strong> : indique l’étape en cours, par exemple <code>Phase 5/9 — Détection exacte</code></li>
+<li><strong>Logs d’exécution</strong> : panneau rétractable affichant la sortie détaillée du pipeline</li>
+</ul>
+<p>Cliquez sur le bouton <strong>📋 Logs d’exécution</strong> pour déplier le texte brut de l’exécution : timestamps, messages de chaque phase, noms des CodeLists traitées, résultats des comparaisons.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="img/app_logs_pipeline.png" class="img-fluid figure-img" width="700"></p>
+<figcaption>Progression du pipeline et logs d’exécution</figcaption>
+</figure>
+</div>
+<blockquote class="blockquote">
+<p><strong>Temps d’exécution estimé</strong> : quelques secondes pour un petit fichier (&lt; 500 Ko), 1–3 minutes pour un fichier standard. La phase LLM (embeddings + juge) peut ajouter plusieurs minutes supplémentaires.</p>
+</blockquote>
+</section>
+<section id="résultat" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="résultat"><span class="header-section-number">3.3</span> Résultat</h2>
+<p>En fin d’exécution, une alerte verte affiche :</p>
+<ul>
+<li>Le nombre de CodeLists traitées</li>
+<li>Le nombre de paires de doublons détectées</li>
+<li>Le chemin du fichier produit</li>
+<li>Un bouton pour aller directement à l’onglet <strong>Validation des doublons</strong></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="examiner-et-valider-les-doublons" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Examiner et valider les doublons</h1>
+<p>Le deuxième onglet (<strong>🔍 Validation des doublons</strong>) est au cœur du travail de l’expert. Il présente le registre des paires de CodeLists détectées comme potentiellement redondantes sous forme de cartes, avec des filtres, des actions par paire et des actions de masse.</p>
+<section id="charger-le-registre" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="charger-le-registre"><span class="header-section-number">4.1</span> Charger le registre</h2>
+<p>Si un pipeline n’a pas été lancé depuis l’interface, chargez un registre préexistant :</p>
+<ol type="1">
+<li>Saisissez le chemin (S3 ou local) vers le fichier de sortie du pipeline, par exemple <code>s3://projet-metadonnees-rmes/scrubber_output/codelist_duplicates.json</code></li>
+<li>Cliquez sur <strong>📂 Charger le registre</strong></li>
+<li>Les résultats s’affichent alors sous forme de cartes</li>
+</ol>
+</section>
+<section id="vue-densemble" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="vue-densemble"><span class="header-section-number">4.2</span> Vue d’ensemble</h2>
+<p>Quatre indicateurs en haut de page résument l’état du registre :</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Indicateur</th>
+<th>Signification</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>CodeLists</strong></td>
+<td>Nombre total de CodeLists dans le fichier analysé</td>
+</tr>
+<tr class="even">
+<td><strong>Doublons</strong></td>
+<td>Nombre de CodeLists marquées comme potentiellement redondantes</td>
+</tr>
+<tr class="odd">
+<td><strong>Approuvés</strong></td>
+<td>Pairs pour lesquelles l’expert a validé le rapprochement</td>
+</tr>
+<tr class="even">
+<td><strong>En attente</strong></td>
+<td>Paires n’ayant pas encore été examinées</td>
+</tr>
+</tbody>
+</table>
+<p>Chaque CodeListe est présentée sous forme de <strong>carte</strong> comportant :</p>
+<ul>
+<li>Le <strong>nom</strong> de la CodeListe et un bouton <strong>Voir</strong> à côté (pour la comparaison)</li>
+<li>Le <strong>nombre de codes</strong></li>
+<li>Le <strong>score de confiance</strong> (0–100 %)</li>
+<li>Le <strong>badge de décision</strong> : 🟡 en attente, 🟢 approuvé, 🔴 rejeté</li>
+<li>Les <strong>signaux de détection</strong> : <em>exact</em>, <em>flou</em>, <em>usage</em>, <em>synonyme</em>, <em>semantic</em></li>
+<li>Un bouton <strong>📋 Détails</strong> affichant une liste <code>(valeur → libellé)</code> pour chaque CodeListe du groupe</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="img/app_view_duplicates.png" class="img-fluid figure-img" width="700"></p>
+<figcaption>Vue en cartes du registre avec indicateurs</figcaption>
+</figure>
+</div>
+</section>
+<section id="comparer-côte-à-côte" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="comparer-côte-à-côte"><span class="header-section-number">4.3</span> Comparer côte à côte</h2>
+<p>Cliquez sur <strong>Voir</strong> (à côté du nom de la CodeListe) pour ouvrir le panneau de comparaison en deux colonnes :</p>
+<ul>
+<li><strong>Colonne gauche</strong> : la CodeListe maître (la plus récente, ou celle retenue)</li>
+<li><strong>Colonne droite</strong> : la CodeListe candidate détectée comme redondante</li>
+<li><strong>Lignes colorées</strong> : les lignes où les valeurs ou libellés diffèrent entre les deux listes (mise en évidence rouge)</li>
+<li>Les <strong>codes communs</strong> (valeur + libellé identiques) ne sont pas colorés</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="img/app_view_difference_codelist.png" class="img-fluid figure-img" width="700"></p>
+<figcaption>Comparaison côte à côte de deux CodeLists</figcaption>
+</figure>
+</div>
+<p>Cette vue permet de juger rapidement si la différence entre les deux listes est un simple artefact (casse, accent, ordre des codes) ou un changement réel de contenu.</p>
+</section>
+<section id="décisions-par-paire" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="décisions-par-paire"><span class="header-section-number">4.4</span> Décisions par paire</h2>
+<p>Sous chaque paire de CodeLists, trois boutons permettent de prendre une décision :</p>
+<ul>
+<li><strong>✅ Approuver</strong> — les listes sont redondantes, la candidate doit être remplacée</li>
+<li><strong>❌ Rejeter</strong> — les listes sont distinctes, le rapprochement est incorrect</li>
+<li><strong>🔄 En attente</strong> — la décision est remise à plus tard (état par défaut)</li>
+</ul>
+<p>Chaque changement de décision met à jour le badge coloré de la carte.</p>
+</section>
+<section id="actions-de-masse" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="actions-de-masse"><span class="header-section-number">4.5</span> Actions de masse</h2>
+<p>Quatre boutons en haut de la page permettent d’appliquer des décisions à plusieurs paires simultanément :</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Bouton</th>
+<th>Effet</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>✅ Valider exactes</strong></td>
+<td>Applique <em>Approuver</em> à toutes les paires détectées par correspondance <strong>exacte</strong> (100 % de confiance automatique)</td>
+</tr>
+<tr class="even">
+<td><strong>✅ Valider ≥ 0.95</strong></td>
+<td>Applique <em>Approuver</em> à toutes les paires avec un score de confiance supérieur ou égal à 95 %</td>
+</tr>
+<tr class="odd">
+<td><strong>❌ Tout rejeter</strong></td>
+<td>Applique <em>Rejeter</em> à toutes les paires restées en attente</td>
+</tr>
+<tr class="even">
+<td><strong>🔄 Tout remettre en attente</strong></td>
+<td>Remet toutes les décisions en état <em>En attente</em> (permet de reprendre le parcours)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="filtres" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="filtres"><span class="header-section-number">4.6</span> Filtres</h2>
+<p>Pour se concentrer sur un sous-ensemble de CodeLists :</p>
+<ul>
+<li><strong>Filtre décision</strong> : <em>Toutes</em> / <em>En attente</em> / <em>Approuvés</em> / <em>Rejetés</em> / <em>Sans doublon</em></li>
+<li><strong>Filtre origine</strong> : <em>Toutes</em> / <em>Registre uniquement</em> (uniquement les CodeLists qui sont des maîtres d’un registre existant)</li>
+<li><strong>Recherche</strong> : champ texte — recherche par nom de la CodeListe</li>
+<li><strong>Afficher</strong> : 20 / 50 / 100 éléments par page</li>
+</ul>
+</section>
+<section id="sauvegarder-les-décisions" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="sauvegarder-les-décisions"><span class="header-section-number">4.7</span> Sauvegarder les décisions</h2>
+<p>Après examen, cliquez sur <strong>💾 sauvegarder</strong>. L’interface :</p>
+<ol type="1">
+<li>Met à jour les états <code>decision</code> dans le registre <code>codelist_duplicates.json</code></li>
+<li>Génère ou met à jour le <strong>registre nettoyé</strong> <code>cleaned_codelists.json</code></li>
+</ol>
+<p>Une notification (toast) verte apparaît en confirmation :</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="img/app_sauvegarde.png" class="img-fluid figure-img" width="500"></p>
+<figcaption>Notification de sauvegarde</figcaption>
+</figure>
+</div>
+<blockquote class="blockquote">
+<p><strong>Ce que la sauvegarde produit</strong> : <code>cleaned_codelists.json</code> ne contient que les CodeLists maîtres — celles qui ont été approuvées et celles marquées “sans doublon”. Chaque maître possède un champ <code>replaces[]</code> listant les CodeLists redondantes qu’il remplace. Ce fichier est un input pour les runs suivants (workflow itératif, § 6.2).</p>
+</blockquote>
+</section>
+<section id="ajouter-une-codeliste-au-registre" class="level2" data-number="4.8">
+<h2 data-number="4.8" class="anchored" data-anchor-id="ajouter-une-codeliste-au-registre"><span class="header-section-number">4.8</span> Ajouter une CodeListe au registre</h2>
+<p>Lorsqu’une CodeListe n’a aucun doublon détecté, l’expert peut décider tout de même de l’ajouter au registre épuré :</p>
+<ol type="1">
+<li>Cliquez sur le bouton <strong>➕ Ajouter au registre</strong> (en haut de la carte de la CodeListe concernée, accessible via le bouton <strong>📋 Détails</strong> ou dans la vue comparée)</li>
+<li>La CodeListe apparaît alors comme maître dans le registre nettoyé</li>
+<li>La sauvegarde (<strong>💾 sauvegarder</strong>) écrit cette entrée dans <code>cleaned_codelists.json</code></li>
+</ol>
+<blockquote class="blockquote">
+<p>À utiliser pour les CodeLists uniques mais importantes qu’on souhaite conserver comme référence dans le registre propre.</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="registre-nettoyé" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Registre nettoyé</h1>
+<p>Le troisième onglet (<strong>🧹 Registre nettoyé</strong>) permet de consulter, éditer et sauvegarder le registre épuré — la base de connaissances cumulée des CodeLists validées.</p>
+<section id="charger-le-registre-1" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="charger-le-registre-1"><span class="header-section-number">5.1</span> Charger le registre</h2>
+<ol type="1">
+<li>Saisissez le chemin vers le fichier <code>cleaned_codelists.json</code></li>
+<li>Cliquez sur <strong>📂 Charger</strong></li>
+</ol>
+<p>L’interface affiche alors la liste des CodeLists maîtres avec leurs remplaçants.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="img/app_manage_registry.png" class="img-fluid figure-img" width="700"></p>
+<figcaption>Registre nettoyé chargé</figcaption>
+</figure>
+</div>
+</section>
+<section id="contenu-dune-entrée" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="contenu-dune-entrée"><span class="header-section-number">5.2</span> Contenu d’une entrée</h2>
+<p>Chaque carte de CodeListe maître contient :</p>
+<ul>
+<li><strong>Nom</strong> et <strong>label</strong> (libellé)</li>
+<li><strong>Nombre de codes</strong></li>
+<li><strong>Codes</strong> : liste de paires <code>(valeur → libellé)</code> dans un bloc copiable</li>
+<li><strong>Variables référentes</strong> : noms des variables DDI qui référencent cette CodeListe</li>
+<li><strong>Replace</strong> : badge indiquant le nombre de CodeLists redondantes remplacées (cliquable, affiche la liste détaillée des remplaçants — nom, type de détection, score de confiance)</li>
+</ul>
+</section>
+<section id="édition" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="édition"><span class="header-section-number">5.3</span> Édition</h2>
+<p>Les champs <strong>Nom</strong> et <strong>Label</strong> de chaque entrée sont modifiables directement dans le navigateur. Les champs <strong>Codes</strong> et <strong>Variables</strong> sont en lecture seule.</p>
+<p>Le dirty tracking est signalé par un <strong>badge orange</strong> en haut de la page : <em>modifications non sauvegardées</em>. Les modifications restent locales jusqu’au clic sur <strong>💾 Sauvegarder</strong>.</p>
+</section>
+<section id="sauvegarder-et-télécharger" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="sauvegarder-et-télécharger"><span class="header-section-number">5.4</span> Sauvegarder et télécharger</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Bouton</th>
+<th>Effet</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>💾 Sauvegarder</strong></td>
+<td>Écrit l’état actuel du registre vers le chemin S3 ou local spécifié</td>
+</tr>
+<tr class="even">
+<td><strong>⬇️ Télécharger</strong></td>
+<td>Télécharge le registre en tant que fichier JSON dans le navigateur</td>
+</tr>
+</tbody>
+</table>
+<p>Le bouton <strong>📂 Charger</strong> permet de recharger le registre à tout moment (utile pour reprendre une session ou charger une version mise à jour).</p>
+<hr>
+</section>
+</section>
+<section id="workflow-de-validation" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Workflow de validation</h1>
+<p>Cette section décrit le parcours typique d’un expert, de l’exécution du pipeline à l’obtention d’un registre épuré, en passant par l’examen et la validation des paires détectées.</p>
+<section id="un-run-complet" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="un-run-complet"><span class="header-section-number">6.1</span> Un run complet</h2>
+<p>Le circuit se décompose en 5 étapes :</p>
+<ol type="1">
+<li><p><strong>Exécuter le pipeline</strong> (§ 3) — configurez le chemin source et lancez le pipeline. Le résultat est un fichier de doublons.</p></li>
+<li><p><strong>Examiner les cartes</strong> (§ 4.1–4.2) — passez à l’onglet <strong>Validation</strong>, chargez le registre si nécessaire, et parcourrez les cartes. Les cartes sont triées par nombre de codes par défaut, mais vous pouvez les filtrer par décision, origine ou recherche textuelle.</p></li>
+<li><p><strong>Comparer par paire</strong> (§ 4.3) — pour chaque paire douteuse, cliquez sur <strong>Voir</strong> pour comparer les deux CodeLists côte à côte. Les lignes colorées en rouge indiquent les différences de contenu.</p></li>
+<li><p><strong>Prendre des décisions</strong> (§ 4.4–4.5) — pour chaque paire, cliquez sur <strong>✅ Approuver</strong> (les listes sont redondantes) ou <strong>❌ Rejeter</strong> (les listes sont distinctes). Les actions de masse (§ 4.5) permettent de accélérer le traitement des paires à fort score de confiance.</p></li>
+<li><p><strong>Sauvegarder</strong> (§ 4.7) — une fois toutes les décisions prises (ou avant de reprendre plus tard), cliquez sur <strong>💾 sauvegarder</strong>. Ceci met à jour le registre <code>codelist_duplicates.json</code> et écrit le registre nettoyé <code>cleaned_codelists.json</code>.</p></li>
+</ol>
+<blockquote class="blockquote">
+<p><strong>Bonnes pratiques</strong> : sauvegardez régulièrement, même partiellement. Un clic sur <strong>💾 sauvegarder</strong> peut être fait à tout moment — les décisions validées sont conservées. Le bouton <strong>🔄 Tout remettre en attente</strong> permet de reprendre le parcours depuis le début sans perdre les modifications intermédiaires.</p>
+</blockquote>
+</section>
+<section id="workflow-itératif" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="workflow-itératif"><span class="header-section-number">6.2</span> Workflow itératif</h2>
+<p>Les runs successifs s’enrichissent mutuellement grâce au registre propre :</p>
+<pre><code>Step 1 — Analyser BTS
+  Pipeline → examiner → décider → sauvegarder
+  ↓
+  cleaned_codelists.json = maîtres BTS + leurs replaces
+
+Step 2 — Analyser BPE
+  Chemin source → BPE.xml
+  Registre nettoyé → cleaned_codelists.json (issu de BTS)
+  Pipeline → examiner → décider → sauvegarder
+  ↓
+  cleaned_codelists.json = maîtres BTS + maîtres BPE + leurs replaces</code></pre>
+<p><strong>Pourquoi c’est utile :</strong></p>
+<ul>
+<li>Les doublons déjà validés (ex. <code>N_NAF_6</code>) sont <strong>exclus de la détection</strong> : on ne les redécouvre pas dans des runs ultérieurs.</li>
+<li>Les nouveaux doublons sont détectés <strong>par rapport aux maîtres cumulés</strong> : une CodeListe BPE peut être reconnue comme doublon d’une CodeListe BTS, même si aucune des deux ne figure dans le même fichier.</li>
+<li>Le registre propre <strong>croît</strong> à chaque run et constitue une référence transversale sur tout le projet.</li>
+</ul>
+<p><strong>Dans l’interface</strong> : saisissez simplement le chemin <code>cleaned_codelists.json</code> dans le champ <strong>Registre nettoyé</strong> de l’onglet Pipeline avant de lancer le nouveau run.</p>
+</section>
+<section id="ajouter-des-listes-sans-doublon" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="ajouter-des-listes-sans-doublon"><span class="header-section-number">6.3</span> Ajouter des listes sans doublon</h2>
+<p>Lorsqu’une CodeListe n’est détectée comme doublon de personne par le pipeline (ex. <code>L_QUALITE_ZONAGE_2023</code> dans l’exemple BPE_demo), vous pouvez la <strong>ajouter manuellement</strong> au registre propre :</p>
+<ol type="1">
+<li>Consultez la CodeListe dans l’onglet <strong>Validation</strong> (ou via son détail)</li>
+<li>Cliquez sur <strong>➕ Ajouter au registre</strong></li>
+<li>Sauvegardez (<strong>💾 sauvegarder</strong>) — la liste apparaît dans <code>cleaned_codelists.json</code> comme maître sans remplacent.</li>
+</ol>
+<blockquote class="blockquote">
+<p>Cette fonctionnalité est particulièrement utile pour les CodeLists uniques mais essentielles, ou lorsque vous souhaitez créer une référence maître pour un nouveau concept métier avant d’identifier ses variantes.</p>
+</blockquote>
+<hr>
+</section>
+</section>
+<section id="astuces-pratiques" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Astuces pratiques</h1>
+<p><strong>Run rapide (prototype)</strong> — décochez <strong>Exécuter les phases LLM / embeddings</strong> pour un run 5 à 10 × plus rapide. Le pipeline se contente des phases exacte et floue ; la phase sémantique (embeddings + juge LLM) est omise.</p>
+<p><strong>Sauvegarder régulièrement</strong> — les décisions ne sont pas persistées automatiquement. Un clic sur <strong>💾 sauvegarder</strong> est nécessaire après chaque session de travail pour que les décisions et le registre propre soient écrits.</p>
+<p><strong>Reprendre une session</strong> — recharger le registre avec <strong>📂 Charger</strong> (onglet Validation ou Registre nettoyé) restaure les décisions précédentes. Tout est conservé dans le fichier JSON.</p>
+<p><strong>Documentation API automatique</strong> — la documentation OpenAPI complète de l’API REST est disponible à l’URL <code>/docs</code> (Swagger UI) et <code>/redoc</code>. Elle liste tous les endpoints, leurs paramètres et leurs réponses.</p>
+<hr>
+</section>
+<section id="note-méthodologique" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Note méthodologique</h1>
+<p>Un entonnoir en trois niveaux — <strong>exact</strong> (signature identique) → <strong>flou</strong> (Similarity ≥ 0.90) → <strong>sémantique</strong> (embeddings + juge LLM) — permet de couvrir toutes les formes de redondance : copies conformes, variantes mineures (casse, accents, ordre), synonymes conceptuels, et doublons cross-fichier.</p>
+<p>Le signal d’usage (<code>var_sig</code> — variables qui référencent les CodeLists) et le registre propre (<code>cleaned_codelists.json</code>) complètent cette approche pour obtenir un dédoublonnage transversal, cumulatif et reproductible.</p>
+<p>Pour le détail complet de l’algorithme et des résultats sur BTS.xml (156 CodeLists, 29 groupes de doublons, 54 CodeLists redondantes), consultez la <a href="./note_methodologique_dedoublonnage.html">note méthodologique</a>. (source : note méthodologique, § 2).</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Insee — SSP Cloud / Onyxia</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/inseefrlab/metadata-scrubber">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
