@@ -1,7 +1,5 @@
 ---
 title: "Guide d'Utilisation — Metadata Scrubber"
-subtitle: "Pipeline de dédoublonnage des CodeLists DDI 3.3 / 6.0"
-author: "Insee — SSP Cloud / Onyxia"
 format:
   html:
     theme: cosmo

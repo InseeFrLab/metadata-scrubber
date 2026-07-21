@@ -1,6 +1,5 @@
 ---
 title: "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)"
-author: "Agent de Data Science — SSP Cloud / Onyxia"
 format:
   html:
     theme: cosmo
