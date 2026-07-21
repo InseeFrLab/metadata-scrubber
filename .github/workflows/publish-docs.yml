@@ -1,5 +1,11 @@
 # Publish Documentation to GitHub Pages
 
+# IMPORTANT: Before the first run, execute locally from the repo root:
+#   quarto publish gh-pages
+# Make sure the _publish.yml is generated (it points to the doc/ project).
+# Also ensure GitHub Settings > Actions > "Workflow permissions"
+# is set to "Read and write permissions".
+
 name: Publish Documentation
 
 on:
@@ -11,38 +17,22 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
+  contents: write
 
 jobs:
-  build:
+  build-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install Quarto
-        env:
-          QUARTO_VERSION: "1.6.57"
-        run: |
-          wget -qO- "https://github.com/quarto-dev/quarto-cli/releases/download/v${QUARTO_VERSION}/quarto-${QUARTO_VERSION}-linux-amd64.tar.gz" | tar -xz -C /usr/local --strip-components=1
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Render Quarto site
-        run: quarto render doc/ --to html
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Render and Publish
+        uses: quarto-dev/quarto-actions/publish@v2
         with:
-          path: doc/_site
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
+          target: gh-pages
+          path: doc
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
