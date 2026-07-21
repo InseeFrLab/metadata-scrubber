@@ -21,7 +21,6 @@ from starlette.responses import Response
 # En cas d'absence, le serveur refuse de démarrer avec un message clair.
 def _load_password() -> str:
     pwd: str = os.environ.get("SCRUBBER_AUTH_PASSWORD", "")
-    print(f"Loaded password : ***{pwd[:3]}")
     if not pwd:
         print(
             "SCRUBBER_AUTH_PASSWORD n'est pas défini dans l'environnement. Generating a new one ..."
