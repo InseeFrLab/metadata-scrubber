@@ -189,6 +189,16 @@ pre {
     color: #0d6efd;
     text-decoration: underline;
 }
+/* Duplicate IDs in registry */
+.dup-id {
+    font-size: 0.78rem;
+    background: #f0f2f5;
+    color: #333;
+    padding: 0.05em 0.3em;
+    border-radius: 3px;
+    font-family: 'Courier New', Courier, monospace;
+    word-break: break-all;
+}
 
 /* Smooth transitions */
 .tab-pane {
@@ -209,4 +219,92 @@ pre {
 
 .expander-content.expanded {
     max-height: 5000px;
+}
+
+/* Replace badges & collapsibles (cleaned registry) */
+.replace-badge {
+    display: inline-block;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.replace-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 123, 255, 0.35);
+}
+
+.replace-collapsible {
+    margin-top: 0.5rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    background-color: #f8f9fa;
+}
+
+.replace-summary {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #0d6efd;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 0.375rem 0.375rem 0 0;
+}
+
+.replace-summary::-webkit-details-marker {
+    display: none;
+}
+
+.replace-summary:hover {
+    background-color: #e9ecef;
+}
+
+.replace-collapsible[open] .replace-summary {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.replace-collapsible .replace-body {
+    padding: 0.5rem 0.75rem 0.75rem;
+}
+
+.replace-code-table {
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.replace-code-table td {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.replace-not-loaded {
+    padding: 1rem;
+    background-color: #fff3cd;
+    border-radius: 0.375rem;
+    font-size: 0.85rem;
+}
+
+.replace-loading {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.replace-codes-count {
+    font-weight: 400;
+    color: #6c757d;
+}
+
+/* Confidence badge on replaces */
+.confidence-tag {
+    font-size: 0.7rem;
+    padding: 0.15em 0.45em;
+    margin-left: 0.25rem;
+    border-radius: 0.25rem;
 }

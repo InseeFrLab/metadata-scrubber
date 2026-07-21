@@ -440,7 +440,7 @@ function renderDuplicateCard(cl, dup) {
     let html = `<div class="dup-card p-2 mb-1" style="border-left: 3px solid #ccc;">`;
     html += `<div class="d-flex justify-content-between align-items-start">`;
     html += `<div style="flex: 1;"><strong>${dup.name || 'Inconnu'}</strong>`;
-    html += ` <button class="btn btn-sm btn-link p-0 copy-id-btn" onclick="copyId('${escapeHtml(dup.id)}')" title="Copier l'ID">${escapeHtml(dup.id)}</button>`;
+    html += ` <code class="dup-id">${escapeHtml(dup.id)}</code> <button class="btn btn-link p-0 copy-id-btn" onclick="copyId('${escapeHtml(dup.id)}')" title="Copier l'ID">📋</button>`;
     if (dup.origin === 'registry') html += ` <span class="badge bg-primary">📘 registre</span>`;
     if (dup.label) html += `<br><small class="text-muted">${dup.label}</small>`;
 

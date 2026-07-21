@@ -110,6 +110,9 @@ function renderCleaned() {
     toolbar.classList.remove('d-none');
     emptyState.classList.add('d-none');
 
+    // Pré-charge les codes de replace depuis registryData
+    _preloadReplaceCaches();
+
     const entries = Object.values(cleanedDoc.codelists || {});
     document.getElementById('cleanedCount').textContent =
         `${entries.length} entrée${entries.length > 1 ? 's' : ''}`;
@@ -132,6 +135,15 @@ function renderCleaned() {
     container.innerHTML = shown.map(renderCleanedEntry).join('');
 }
 
+function _confidenceTag(confidence) {
+    if (confidence == null) return '';
+    const pct = Math.round(confidence * 100);
+    const cls = confidence >= 0.8 ? 'confidence-high'
+              : confidence >= 0.5 ? 'confidence-medium'
+              : 'confidence-low';
+    return `<span class="confidence-tag badge ${cls}">${pct}%</span>`;
+}
+
 function renderCleanedEntry(entry) {
     const id = escapeHtml(entry.id);
     const replaces = entry.replaces || [];
@@ -151,18 +163,57 @@ function renderCleanedEntry(entry) {
     html += `<button class="btn btn-sm btn-outline-danger ms-1" data-action="delete-entry" title="Supprimer l'entrée">🗑️</button>`;
     html += `</div></div></div>`;
 
+    // ID complet (copiable) — directement sous le header
+    html += `<div class="px-3 pb-2 small"><span class="text-muted">ID : </span>`;
+    html += `<code class="font-monospace small">${id}</code>`;
+    html += ` <a class="copy-id-btn" onclick="copyId('${id}')" title="Copier l'ID">📋</a></div>`;
+
     html += `<div class="card-body py-2">`;
 
-    // Replaces (lecture seule)
+    // Replaces pliables (lecture seule, contenu injecté au render)
     if (replaces.length) {
-        html += `<div class="small text-muted mb-2">Remplace : `;
-        for (const r of replaces) {
-            const rid = escapeHtml(r.id || '');
-            const rname = escapeHtml(r.name || rid.substring(0, 12));
-            html += `<span class="badge bg-primary me-1" style="cursor:pointer" `;
-            html += `onclick="copyId('${rid}')" title="${rid}">📘 ${rname}</span>`;
+        html += '<div class="mb-2">';
+        for (let r = 0; r < replaces.length; r++) {
+            const rep = replaces[r];
+            const rid = (rep.id || '').replace(/'/g, "\\'");
+            const ridEsc = escapeHtml(rep.id || '');
+            const rname = escapeHtml(rep.name || '');
+            const rnameShort = rname.length > 20
+                ? rname.slice(0, 20) + '…'
+                : rname;
+            const collapsibleId = `replace-detail-cl-${rep.id}`;
+            const codes = _replacedCache[rep.id];
+            const tableHTML = _buildReplaceTableHTML(codes, rep.id);
+            const summaryLabel = tableHTML
+                ? `${rnameShort} — <span class="replace-codes-count">${(codes || []).length} codes</span>`
+                : `${rnameShort} — <span class="replace-codes-count">non disponible</span>`;
+
+            html += `<div class="replace-badge badge bg-primary text-white me-1 mb-1" `;
+            html += `data-replace-id="${ridEsc}" role="button" tabindex="0" `;
+            html += `title="${ridEsc}" `;
+            html += `onclick="toggleReplaceCodes('${rid}', '${collapsibleId}')">`;
+            html += `📘 ${rnameShort}`;
+            html += _confidenceTag(rep.confidence);
+            html += '</div>';
+
+            // Collapsible : fermé par défaut, contenu déjà injecté
+            html += `<details class="replace-collapsible" id="${collapsibleId}" `;
+            html += `data-replace-id="${ridEsc}">`;
+            html += `<summary class="replace-summary" data-replace-id="${ridEsc}">`;
+            html += `<span>${summaryLabel}</span></summary>`;
+            html += '<div class="replace-body">';
+            if (tableHTML) {
+                html += `<div class="replace-content">${tableHTML}</div>`;
+            } else {
+                html += '<div class="replace-not-loaded">';
+                html += '<p>Ce registre n\'a pas été chargé depuis l\'onglet Validation.</p>';
+                html += '<button class="btn btn-sm btn-warning js-switch-to-validation" ';
+                html += 'title="Aller à l\'onglet Validation">➡️ Aller à Validation</button>';
+                html += '</div>';
+            }
+            html += '</div></details>';
         }
-        html += `</div>`;
+        html += '</div>';
     }
 
     // Table de codes éditable
@@ -219,10 +270,29 @@ function handleCleanedInput(ev) {
 
 function handleCleanedClick(ev) {
     const btn = ev.target.closest('[data-action]');
-    if (!btn) return;
-    const [clId, entry] = _cleanedEntryFromEvent(ev);
-    if (!entry) return;
+    if (btn) {
+        const [clId, entry] = _cleanedEntryFromEvent(ev);
+        if (!entry) return;
+        return _handleCleanedAction(btn, clId, entry);
+    }
+    // Boutons copy-replace-codes (dans les collapsibles)
+    const copyBtn = ev.target.closest('.copy-replace-codes');
+    if (copyBtn) {
+        ev.preventDefault();
+        const rid = copyBtn.dataset.replaceId;
+        if (rid) copyReplaceCodes(rid);
+        return;
+    }
+    // Bouton switch-to-validation (fallback)
+    const switchBtn = ev.target.closest('.js-switch-to-validation');
+    if (switchBtn) {
+        ev.preventDefault();
+        document.getElementById('validationTab').click();
+        return;
+    }
+}
 
+function _handleCleanedAction(btn, clId, entry) {
     const action = btn.dataset.action;
     if (action === 'delete-entry') {
         if (!confirm(`Supprimer l'entrée « ${entry.name || clId} » du registre nettoyé ?`)) return;
@@ -239,6 +309,108 @@ function handleCleanedClick(ev) {
         entry.codes.splice(idx, 1);
         setCleanedDirty(true);
         renderCleaned();
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Cache & index de lookup des remplacements
+/* ------------------------------------------------------------------ */
+
+/**
+ * Cache { [rid]: Array<[value, label]> } construit au chargement du registre.
+ */
+let _replacedCache = {};
+
+/** Index O(1) ID → objet duplicate depuis registryData. */
+let _dupIndex = null;
+
+function _resetCache() { _replacedCache = {}; _dupIndex = null; }
+
+/** Construit (si nécessaire) un index ID → duplicate complet depuis registryData. */
+function _ensureDupIndex() {
+    if (_dupIndex) return _dupIndex;
+    _dupIndex = new Map();
+    if (registryData) {
+        for (const _pid in registryData) {
+            const parent = registryData[_pid];
+            const dups = parent && parent.duplicates ? parent.duplicates : [];
+            for (let i = 0; i < dups.length; i++) {
+                const dup = dups[i];
+                if (dup && dup.id) _dupIndex.set(dup.id, dup);
+            }
+        }
+    }
+    return _dupIndex;
+}
+
+/** Cherche un duplicate depuis registryData par son ID. */
+function _findInRegistry(rid) {
+    if (!registryData || typeof registryData !== 'object') return null;
+    const idx = _ensureDupIndex();
+    return idx.get(rid) || null;
+}
+
+/** Pré-charge TOUS les codes de replace depuis registryData. */
+function _preloadReplaceCaches() {
+    _resetCache();
+    if (!cleanedDoc || !cleanedDoc.codelists) return;
+    for (const _key in cleanedDoc.codelists) {
+        const entry = cleanedDoc.codelists[_key];
+        const replaces = entry.replaces || [];
+        for (let r = 0; r < replaces.length; r++) {
+            const rid = replaces[r].id;
+            if (!rid || _replacedCache[rid]) continue;
+            const dup = _findInRegistry(rid);
+            if (dup && dup.codes) _replacedCache[rid] = dup.codes;
+        }
+    }
+}
+
+/** Génère le HTML d'une table de codes readonly. Retourne null si aucun code. */
+function _buildReplaceTableHTML(codes, rid) {
+    if (!codes || codes.length === 0) return null;
+    let rows = '';
+    for (let i = 0; i < codes.length; i++) {
+        const pair = codes[i];
+        rows += `<tr>`;
+        rows += `<td title="${escapeHtml(pair[0] ?? '')}">${escapeHtml(pair[0] ?? '')}</td>`;
+        rows += `<td title="${escapeHtml(pair[1] ?? '')}">${escapeHtml(pair[1] ?? '')}</td>`;
+        rows += `</tr>`;
+    }
+    return (
+        `<table class="table table-sm table-bordered replace-code-table mb-2">` +
+        `<thead><tr><th style="width:30%">Valeur</th><th>Libellé</th></tr></thead>` +
+        `<tbody>${rows}</tbody></table>` +
+        `<button class="btn btn-sm btn-outline-secondary copy-replace-codes" ` +
+        `data-replace-id="${escapeHtml(rid)}" title="Copier tous les codes">` +
+        `📋 Copier tous les codes</button>`
+    );
+}
+
+function copyReplaceCodes(rid) {
+    const codes = _replacedCache[rid];
+    if (!codes || codes.length === 0) return;
+    const text = codes.map(([val, label]) => {
+        return `${val}: ${label || ''}`;
+    }).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('✅ Codes copiés dans le presse-papier', 'success');
+    }).catch(() => {
+        showToast('Erreur lors de la copie.', 'danger');
+    });
+}
+
+/* ------------------------------------------------------------------ */
+/* Toggle des collapsibles (simple — contenu déjà en DOM au render)
+/* ------------------------------------------------------------------ */
+
+function toggleReplaceCodes(rid, collapsibleId) {
+    const el = document.getElementById(collapsibleId);
+    if (!el) return;
+    if (el.hasAttribute('open')) {
+        el.removeAttribute('open');
+    } else {
+        el.setAttribute('open', '');
     }
 }
 
