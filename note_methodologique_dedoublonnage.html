@@ -2,21 +2,24 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-07-21">
+<meta name="dcterms.date" content="2026-07-30">
 
 <title>Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0) – Metadata Scrubber</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -75,10 +78,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-c98d9d0b3b0a085d3ddf71e6e91476d8.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-6ac2aec46ad7f46b16024ee4409aa65c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -108,7 +111,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 }</script>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 const typesetMath = (el) => {
@@ -184,80 +187,84 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">1</span> Introduction</a></li>
-  <li><a href="#modèle-de-données-ddi-et-extraction" id="toc-modèle-de-données-ddi-et-extraction" class="nav-link" data-scroll-target="#modèle-de-données-ddi-et-extraction"><span class="header-section-number">2</span> 1. Modèle de Données DDI et Extraction</a>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#modèle-de-données-ddi-et-extraction" id="toc-modèle-de-données-ddi-et-extraction" class="nav-link" data-scroll-target="#modèle-de-données-ddi-et-extraction"><span class="header-section-number">1</span> Modèle de Données DDI et Extraction</a>
   <ul class="collapse">
-  <li><a href="#structure-du-fichier-ddi" id="toc-structure-du-fichier-ddi" class="nav-link" data-scroll-target="#structure-du-fichier-ddi"><span class="header-section-number">2.1</span> 1.1. Structure du fichier DDI</a>
+  <li><a href="#structure-du-fichier-ddi" id="toc-structure-du-fichier-ddi" class="nav-link" data-scroll-target="#structure-du-fichier-ddi"><span class="header-section-number">1.1</span> Structure du fichier DDI</a>
   <ul class="collapse">
-  <li><a href="#structure-xml-code" id="toc-structure-xml-code" class="nav-link" data-scroll-target="#structure-xml-code"><span class="header-section-number">2.1.1</span> Structure XML : <code>&lt;Code&gt;</code></a></li>
-  <li><a href="#structure-xml-category" id="toc-structure-xml-category" class="nav-link" data-scroll-target="#structure-xml-category"><span class="header-section-number">2.1.2</span> Structure XML : <code>&lt;Category&gt;</code></a></li>
-  <li><a href="#structure-xml-variable-référençant-une-codelist" id="toc-structure-xml-variable-référençant-une-codelist" class="nav-link" data-scroll-target="#structure-xml-variable-référençant-une-codelist"><span class="header-section-number">2.1.3</span> Structure XML : <code>&lt;Variable&gt;</code> référençant une <code>CodeList</code></a></li>
+  <li><a href="#structure-xml-code" id="toc-structure-xml-code" class="nav-link" data-scroll-target="#structure-xml-code"><span class="header-section-number">1.1.1</span> Structure XML : <code>&lt;Code&gt;</code></a></li>
+  <li><a href="#structure-xml-category" id="toc-structure-xml-category" class="nav-link" data-scroll-target="#structure-xml-category"><span class="header-section-number">1.1.2</span> Structure XML : <code>&lt;Category&gt;</code></a></li>
+  <li><a href="#structure-xml-variable-référençant-une-codelist" id="toc-structure-xml-variable-référençant-une-codelist" class="nav-link" data-scroll-target="#structure-xml-variable-référençant-une-codelist"><span class="header-section-number">1.1.3</span> Structure XML : <code>&lt;Variable&gt;</code> référençant une <code>CodeList</code></a></li>
   </ul></li>
-  <li><a href="#pipeline-dextraction-4-phases" id="toc-pipeline-dextraction-4-phases" class="nav-link" data-scroll-target="#pipeline-dextraction-4-phases"><span class="header-section-number">2.2</span> 1.2. Pipeline d’extraction (4 phases)</a></li>
+  <li><a href="#pipeline-dextraction-4-phases" id="toc-pipeline-dextraction-4-phases" class="nav-link" data-scroll-target="#pipeline-dextraction-4-phases"><span class="header-section-number">1.2</span> Pipeline d’extraction (4 phases)</a></li>
   </ul></li>
-  <li><a href="#lentonnoir-de-détection" id="toc-lentonnoir-de-détection" class="nav-link" data-scroll-target="#lentonnoir-de-détection"><span class="header-section-number">3</span> 2. L’Entonnoir de Détection</a>
+  <li><a href="#lentonnoir-de-détection" id="toc-lentonnoir-de-détection" class="nav-link" data-scroll-target="#lentonnoir-de-détection"><span class="header-section-number">2</span> L’Entonnoir de Détection</a>
   <ul class="collapse">
-  <li><a href="#phase-1-doublons-exact" id="toc-phase-1-doublons-exact" class="nav-link" data-scroll-target="#phase-1-doublons-exact"><span class="header-section-number">3.1</span> 2.1. Phase 1 — Doublons Exact</a>
+  <li><a href="#phase-1-doublons-exact" id="toc-phase-1-doublons-exact" class="nav-link" data-scroll-target="#phase-1-doublons-exact"><span class="header-section-number">2.1</span> Phase 1 — Doublons Exact</a>
   <ul class="collapse">
-  <li><a href="#exemple-18-listes-à-1-code" id="toc-exemple-18-listes-à-1-code" class="nav-link" data-scroll-target="#exemple-18-listes-à-1-code"><span class="header-section-number">3.1.1</span> Exemple : 18 listes à 1 code</a></li>
-  <li><a href="#caractéristiques" id="toc-caractéristiques" class="nav-link" data-scroll-target="#caractéristiques"><span class="header-section-number">3.1.2</span> Caractéristiques</a></li>
+  <li><a href="#exemple-18-listes-à-1-code" id="toc-exemple-18-listes-à-1-code" class="nav-link" data-scroll-target="#exemple-18-listes-à-1-code"><span class="header-section-number">2.1.1</span> Exemple : 18 listes à 1 code</a></li>
+  <li><a href="#caractéristiques" id="toc-caractéristiques" class="nav-link" data-scroll-target="#caractéristiques"><span class="header-section-number">2.1.2</span> Caractéristiques</a></li>
   </ul></li>
-  <li><a href="#phase-1-bis-quasi-doublons-similarité-floue" id="toc-phase-1-bis-quasi-doublons-similarité-floue" class="nav-link" data-scroll-target="#phase-1-bis-quasi-doublons-similarité-floue"><span class="header-section-number">3.2</span> 2.2. Phase 1 bis — Quasi-Doublons (Similarité Floue)</a>
+  <li><a href="#phase-1-bis-quasi-doublons-similarité-floue" id="toc-phase-1-bis-quasi-doublons-similarité-floue" class="nav-link" data-scroll-target="#phase-1-bis-quasi-doublons-similarité-floue"><span class="header-section-number">2.2</span> Phase 1 bis — Quasi-Doublons (Similarité Floue)</a>
   <ul class="collapse">
-  <li><a href="#exemples-bts.xml" id="toc-exemples-bts.xml" class="nav-link" data-scroll-target="#exemples-bts.xml"><span class="header-section-number">3.2.1</span> Exemples BTS.xml</a></li>
-  <li><a href="#caractéristiques-1" id="toc-caractéristiques-1" class="nav-link" data-scroll-target="#caractéristiques-1"><span class="header-section-number">3.2.2</span> Caractéristiques</a></li>
+  <li><a href="#exemples-bts.xml" id="toc-exemples-bts.xml" class="nav-link" data-scroll-target="#exemples-bts.xml"><span class="header-section-number">2.2.1</span> Exemples BTS.xml</a></li>
+  <li><a href="#caractéristiques-1" id="toc-caractéristiques-1" class="nav-link" data-scroll-target="#caractéristiques-1"><span class="header-section-number">2.2.2</span> Caractéristiques</a></li>
   </ul></li>
-  <li><a href="#phase-2-doublons-sémantiques-embeddings-llm" id="toc-phase-2-doublons-sémantiques-embeddings-llm" class="nav-link" data-scroll-target="#phase-2-doublons-sémantiques-embeddings-llm"><span class="header-section-number">3.3</span> 2.3. Phase 2 — Doublons Sémantiques (Embeddings + LLM)</a>
+  <li><a href="#phase-2-doublons-sémantiques-embeddings-llm" id="toc-phase-2-doublons-sémantiques-embeddings-llm" class="nav-link" data-scroll-target="#phase-2-doublons-sémantiques-embeddings-llm"><span class="header-section-number">2.3</span> Phase 2 — Doublons Sémantiques (Embeddings + LLM)</a>
   <ul class="collapse">
-  <li><a href="#embeddings-de-codelists" id="toc-embeddings-de-codelists" class="nav-link" data-scroll-target="#embeddings-de-codelists"><span class="header-section-number">3.3.1</span> 2.3.1. Embeddings de CodeLists</a></li>
-  <li><a href="#embeddings-de-variables-usage" id="toc-embeddings-de-variables-usage" class="nav-link" data-scroll-target="#embeddings-de-variables-usage"><span class="header-section-number">3.3.2</span> 2.3.2. Embeddings de Variables (usage)</a></li>
-  <li><a href="#caractéristiques-2" id="toc-caractéristiques-2" class="nav-link" data-scroll-target="#caractéristiques-2"><span class="header-section-number">3.3.3</span> Caractéristiques</a></li>
-  </ul></li>
-  </ul></li>
-  <li><a href="#signaux-de-renforcement-var_sig" id="toc-signaux-de-renforcement-var_sig" class="nav-link" data-scroll-target="#signaux-de-renforcement-var_sig"><span class="header-section-number">4</span> 3. Signaux de Renforcement : <code>var_sig</code></a>
-  <ul class="collapse">
-  <li><a href="#types-de-recoupement" id="toc-types-de-recoupement" class="nav-link" data-scroll-target="#types-de-recoupement"><span class="header-section-number">4.1</span> 3.1. Types de recoupement</a></li>
-  <li><a href="#exemples-bts.xml-1" id="toc-exemples-bts.xml-1" class="nav-link" data-scroll-target="#exemples-bts.xml-1"><span class="header-section-number">4.2</span> 3.2. Exemples BTS.xml</a>
-  <ul class="collapse">
-  <li><a href="#groupe-a-var_sig-identique-contenu-identique-doublon-exact-confirmé" id="toc-groupe-a-var_sig-identique-contenu-identique-doublon-exact-confirmé" class="nav-link" data-scroll-target="#groupe-a-var_sig-identique-contenu-identique-doublon-exact-confirmé"><span class="header-section-number">4.2.1</span> Groupe A : <code>var_sig</code> identique + contenu identique → doublon exact confirmé</a></li>
-  <li><a href="#groupe-b-var_sig-identique-contenu-différent-à-vérifier" id="toc-groupe-b-var_sig-identique-contenu-différent-à-vérifier" class="nav-link" data-scroll-target="#groupe-b-var_sig-identique-contenu-différent-à-vérifier"><span class="header-section-number">4.2.2</span> Groupe B : <code>var_sig</code> identique + contenu différent → à vérifier</a></li>
-  <li><a href="#groupe-c-var_sig-disjoints-contenu-identique-à-consolider" id="toc-groupe-c-var_sig-disjoints-contenu-identique-à-consolider" class="nav-link" data-scroll-target="#groupe-c-var_sig-disjoints-contenu-identique-à-consolider"><span class="header-section-number">4.2.3</span> Groupe C : <code>var_sig</code> disjoints + contenu identique → à consolider</a></li>
+  <li><a href="#embeddings-de-codelists" id="toc-embeddings-de-codelists" class="nav-link" data-scroll-target="#embeddings-de-codelists"><span class="header-section-number">2.3.1</span> Embeddings de CodeLists</a></li>
+  <li><a href="#embeddings-de-variables-usage" id="toc-embeddings-de-variables-usage" class="nav-link" data-scroll-target="#embeddings-de-variables-usage"><span class="header-section-number">2.3.2</span> Embeddings de Variables (usage)</a></li>
+  <li><a href="#caractéristiques-2" id="toc-caractéristiques-2" class="nav-link" data-scroll-target="#caractéristiques-2"><span class="header-section-number">2.3.3</span> Caractéristiques</a></li>
   </ul></li>
   </ul></li>
-  <li><a href="#le-flag---registry-dédoublonnage-transversal-itératif" id="toc-le-flag---registry-dédoublonnage-transversal-itératif" class="nav-link" data-scroll-target="#le-flag---registry-dédoublonnage-transversal-itératif"><span class="header-section-number">5</span> 4. Le Flag <code>--registry</code> : Dédoublonnage Transversal Itératif</a>
+  <li><a href="#signaux-de-renforcement-var_sig" id="toc-signaux-de-renforcement-var_sig" class="nav-link" data-scroll-target="#signaux-de-renforcement-var_sig"><span class="header-section-number">3</span> Signaux de Renforcement : <code>var_sig</code></a>
   <ul class="collapse">
-  <li><a href="#pourquoi---registry" id="toc-pourquoi---registry" class="nav-link" data-scroll-target="#pourquoi---registry"><span class="header-section-number">5.1</span> 4.1. Pourquoi <code>--registry</code> ?</a></li>
-  <li><a href="#flux-transversal" id="toc-flux-transversal" class="nav-link" data-scroll-target="#flux-transversal"><span class="header-section-number">5.2</span> 4.2. Flux transversal</a></li>
-  <li><a href="#ce-que-fait---registry-dans-le-pipeline-main.py-2-bis" id="toc-ce-que-fait---registry-dans-le-pipeline-main.py-2-bis" class="nav-link" data-scroll-target="#ce-que-fait---registry-dans-le-pipeline-main.py-2-bis"><span class="header-section-number">5.3</span> 4.3. Ce que fait <code>--registry</code> dans le pipeline (main.py, §2 bis)</a></li>
-  <li><a href="#schéma-du-registre-nettoyé-v2" id="toc-schéma-du-registre-nettoyé-v2" class="nav-link" data-scroll-target="#schéma-du-registre-nettoyé-v2"><span class="header-section-number">5.4</span> 4.4. Schéma du registre nettoyé (v2)</a></li>
-  <li><a href="#sync-incrémental-sync_cleaned_registry" id="toc-sync-incrémental-sync_cleaned_registry" class="nav-link" data-scroll-target="#sync-incrémental-sync_cleaned_registry"><span class="header-section-number">5.5</span> 4.5. Sync incrémental (<code>sync_cleaned_registry</code>)</a></li>
-  </ul></li>
-  <li><a href="#walkthrough-exemples-avec-les-datasets-demo" id="toc-walkthrough-exemples-avec-les-datasets-demo" class="nav-link" data-scroll-target="#walkthrough-exemples-avec-les-datasets-demo"><span class="header-section-number">6</span> 5. Walkthrough : Exemples avec les Datasets Demo</a>
+  <li><a href="#types-de-recoupement" id="toc-types-de-recoupement" class="nav-link" data-scroll-target="#types-de-recoupement"><span class="header-section-number">3.1</span> Types de recoupement</a></li>
+  <li><a href="#exemples-bts.xml-1" id="toc-exemples-bts.xml-1" class="nav-link" data-scroll-target="#exemples-bts.xml-1"><span class="header-section-number">3.2</span> Exemples BTS.xml</a>
   <ul class="collapse">
-  <li><a href="#demobts_demo.xml-run-1-sans-registry" id="toc-demobts_demo.xml-run-1-sans-registry" class="nav-link" data-scroll-target="#demobts_demo.xml-run-1-sans-registry"><span class="header-section-number">6.1</span> 5.1. <code>demo/BTS_demo.xml</code> — Run 1 (sans registry)</a>
+  <li><a href="#groupe-a-var_sig-identique-contenu-identique-doublon-exact-confirmé" id="toc-groupe-a-var_sig-identique-contenu-identique-doublon-exact-confirmé" class="nav-link" data-scroll-target="#groupe-a-var_sig-identique-contenu-identique-doublon-exact-confirmé"><span class="header-section-number">3.2.1</span> Groupe A : <code>var_sig</code> identique + contenu identique → doublon exact confirmé</a></li>
+  <li><a href="#groupe-b-var_sig-identique-contenu-différent-à-vérifier" id="toc-groupe-b-var_sig-identique-contenu-différent-à-vérifier" class="nav-link" data-scroll-target="#groupe-b-var_sig-identique-contenu-différent-à-vérifier"><span class="header-section-number">3.2.2</span> Groupe B : <code>var_sig</code> identique + contenu différent → à vérifier</a></li>
+  <li><a href="#groupe-b-bis-var_sig-identique-contenu-différent-cas-à-rejeter" id="toc-groupe-b-bis-var_sig-identique-contenu-différent-cas-à-rejeter" class="nav-link" data-scroll-target="#groupe-b-bis-var_sig-identique-contenu-différent-cas-à-rejeter"><span class="header-section-number">3.2.3</span> Groupe B bis : <code>var_sig</code> identique + contenu différent → cas à rejeter</a></li>
+  <li><a href="#groupe-c-var_sig-disjoints-contenu-identique-à-consolider" id="toc-groupe-c-var_sig-disjoints-contenu-identique-à-consolider" class="nav-link" data-scroll-target="#groupe-c-var_sig-disjoints-contenu-identique-à-consolider"><span class="header-section-number">3.2.4</span> Groupe C : <code>var_sig</code> disjoints + contenu identique → à consolider</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#le-flag---registry-dédoublonnage-transversal-itératif" id="toc-le-flag---registry-dédoublonnage-transversal-itératif" class="nav-link" data-scroll-target="#le-flag---registry-dédoublonnage-transversal-itératif"><span class="header-section-number">4</span> Le Flag <code>--registry</code> : Dédoublonnage Transversal Itératif</a>
   <ul class="collapse">
-  <li><a href="#paire-1-exact-n_naf_6-n-activite-francaise-6-postes" id="toc-paire-1-exact-n_naf_6-n-activite-francaise-6-postes" class="nav-link" data-scroll-target="#paire-1-exact-n_naf_6-n-activite-francaise-6-postes"><span class="header-section-number">6.1.1</span> Paire 1 — Exact : <code>N_NAF_6</code> ↔︎ <code>N-ACTIVITE-FRANCAISE-6-POSTES</code></a></li>
-  <li><a href="#paire-2-fuzzy-n_nat_etab_23-nat_etab" id="toc-paire-2-fuzzy-n_nat_etab_23-nat_etab" class="nav-link" data-scroll-target="#paire-2-fuzzy-n_nat_etab_23-nat_etab"><span class="header-section-number">6.1.2</span> Paire 2 — Fuzzy : <code>N_nat_etab_23</code> ↔︎ <code>NAT_ETAB</code></a></li>
-  <li><a href="#paire-3-fuzzy-n_champ_23-n_champ_2022" id="toc-paire-3-fuzzy-n_champ_23-n_champ_2022" class="nav-link" data-scroll-target="#paire-3-fuzzy-n_champ_23-n_champ_2022"><span class="header-section-number">6.1.3</span> Paire 3 — Fuzzy : <code>N_champ_23</code> ↔︎ <code>N_CHAMP_2022</code></a></li>
-  <li><a href="#paire-4-sémantique-llm-n_etat_23-etat_2020" id="toc-paire-4-sémantique-llm-n_etat_23-etat_2020" class="nav-link" data-scroll-target="#paire-4-sémantique-llm-n_etat_23-etat_2020"><span class="header-section-number">6.1.4</span> Paire 4 — Sémantique (LLM) : <code>N_etat_23</code> ↔︎ <code>Etat_2020</code></a></li>
+  <li><a href="#pourquoi---registry" id="toc-pourquoi---registry" class="nav-link" data-scroll-target="#pourquoi---registry"><span class="header-section-number">4.1</span> Pourquoi <code>--registry</code> ?</a></li>
+  <li><a href="#flux-transversal" id="toc-flux-transversal" class="nav-link" data-scroll-target="#flux-transversal"><span class="header-section-number">4.2</span> Flux transversal</a></li>
+  <li><a href="#ce-que-fait---registry-dans-le-pipeline-main.py-2-bis" id="toc-ce-que-fait---registry-dans-le-pipeline-main.py-2-bis" class="nav-link" data-scroll-target="#ce-que-fait---registry-dans-le-pipeline-main.py-2-bis"><span class="header-section-number">4.3</span> Ce que fait <code>--registry</code> dans le pipeline (main.py, §2 bis)</a></li>
+  <li><a href="#schéma-du-registre-nettoyé-v2" id="toc-schéma-du-registre-nettoyé-v2" class="nav-link" data-scroll-target="#schéma-du-registre-nettoyé-v2"><span class="header-section-number">4.4</span> Schéma du registre nettoyé (v2)</a></li>
+  <li><a href="#sync-incrémental-sync_cleaned_registry" id="toc-sync-incrémental-sync_cleaned_registry" class="nav-link" data-scroll-target="#sync-incrémental-sync_cleaned_registry"><span class="header-section-number">4.5</span> Sync incrémental (<code>sync_cleaned_registry</code>)</a></li>
   </ul></li>
-  <li><a href="#demobpe_demo.xml-run-2-avec---registry-cleaned_codelists.json" id="toc-demobpe_demo.xml-run-2-avec---registry-cleaned_codelists.json" class="nav-link" data-scroll-target="#demobpe_demo.xml-run-2-avec---registry-cleaned_codelists.json"><span class="header-section-number">6.2</span> 5.2. <code>demo/BPE_demo.xml</code> — Run 2 (avec <code>--registry cleaned_codelists.json</code>)</a>
+  <li><a href="#walkthrough-exemples-avec-les-datasets-demo" id="toc-walkthrough-exemples-avec-les-datasets-demo" class="nav-link" data-scroll-target="#walkthrough-exemples-avec-les-datasets-demo"><span class="header-section-number">5</span> Walkthrough : Exemples avec les Datasets Demo</a>
   <ul class="collapse">
-  <li><a href="#paires-intra-bpe-indépendantes-du-registre" id="toc-paires-intra-bpe-indépendantes-du-registre" class="nav-link" data-scroll-target="#paires-intra-bpe-indépendantes-du-registre"><span class="header-section-number">6.2.1</span> Paires intra-BPE (indépendantes du registre)</a></li>
-  <li><a href="#paires-cross-fichier-détectées-grâce-au-registry" id="toc-paires-cross-fichier-détectées-grâce-au-registry" class="nav-link" data-scroll-target="#paires-cross-fichier-détectées-grâce-au-registry"><span class="header-section-number">6.2.2</span> Paires cross-fichier (détectées GRÂCE AU REGISTRY)</a></li>
-  </ul></li>
-  <li><a href="#registre-après-opération-2-bpe" id="toc-registre-après-opération-2-bpe" class="nav-link" data-scroll-target="#registre-après-opération-2-bpe"><span class="header-section-number">6.3</span> 5.3. Registre après opération 2 (BPE)</a></li>
-  <li><a href="#ajout-manuel-l_qualite_zonage_2023" id="toc-ajout-manuel-l_qualite_zonage_2023" class="nav-link" data-scroll-target="#ajout-manuel-l_qualite_zonage_2023"><span class="header-section-number">6.4</span> 5.4. Ajout manuel : <code>L_QUALITE_ZONAGE_2023</code></a></li>
-  </ul></li>
-  <li><a href="#tableau-récapitulatif-dédoublonnage-bts.xml" id="toc-tableau-récapitulatif-dédoublonnage-bts.xml" class="nav-link" data-scroll-target="#tableau-récapitulatif-dédoublonnage-bts.xml"><span class="header-section-number">7</span> 6. Tableau Récapitulatif — Dédoublonnage BTS.xml</a></li>
-  <li><a href="#perspectives" id="toc-perspectives" class="nav-link" data-scroll-target="#perspectives"><span class="header-section-number">8</span> 7. Perspectives</a>
+  <li><a href="#demobts_demo.xml-run-1-sans-registry" id="toc-demobts_demo.xml-run-1-sans-registry" class="nav-link" data-scroll-target="#demobts_demo.xml-run-1-sans-registry"><span class="header-section-number">5.1</span> <code>demo/BTS_demo.xml</code> — Run 1 (sans registry)</a>
   <ul class="collapse">
-  <li><a href="#performance-à-grande-échelle" id="toc-performance-à-grande-échelle" class="nav-link" data-scroll-target="#performance-à-grande-échelle"><span class="header-section-number">8.1</span> 7.1. Performance à Grande Échelle</a></li>
-  <li><a href="#robustesse" id="toc-robustesse" class="nav-link" data-scroll-target="#robustesse"><span class="header-section-number">8.2</span> 7.2. Robustesse</a></li>
-  <li><a href="#pipeline-reproductible" id="toc-pipeline-reproductible" class="nav-link" data-scroll-target="#pipeline-reproductible"><span class="header-section-number">8.3</span> 7.3. Pipeline Reproductible</a></li>
-  <li><a href="#analyse-fine-de-lusage" id="toc-analyse-fine-de-lusage" class="nav-link" data-scroll-target="#analyse-fine-de-lusage"><span class="header-section-number">8.4</span> 7.4. Analyse Fine de l’Usage</a></li>
+  <li><a href="#paire-1-exact-n_naf_6-n-activite-francaise-6-postes" id="toc-paire-1-exact-n_naf_6-n-activite-francaise-6-postes" class="nav-link" data-scroll-target="#paire-1-exact-n_naf_6-n-activite-francaise-6-postes"><span class="header-section-number">5.1.1</span> Paire 1 — Exact : <code>N_NAF_6</code> ↔︎ <code>N-ACTIVITE-FRANCAISE-6-POSTES</code></a></li>
+  <li><a href="#paire-2-fuzzy-n_nat_etab_23-nat_etab" id="toc-paire-2-fuzzy-n_nat_etab_23-nat_etab" class="nav-link" data-scroll-target="#paire-2-fuzzy-n_nat_etab_23-nat_etab"><span class="header-section-number">5.1.2</span> Paire 2 — Fuzzy : <code>N_nat_etab_23</code> ↔︎ <code>NAT_ETAB</code></a></li>
+  <li><a href="#paire-3-fuzzy-n_champ_23-n_champ_2022" id="toc-paire-3-fuzzy-n_champ_23-n_champ_2022" class="nav-link" data-scroll-target="#paire-3-fuzzy-n_champ_23-n_champ_2022"><span class="header-section-number">5.1.3</span> Paire 3 — Fuzzy : <code>N_champ_23</code> ↔︎ <code>N_CHAMP_2022</code></a></li>
+  <li><a href="#paire-4-sémantique-llm-n_etat_23-etat_2020" id="toc-paire-4-sémantique-llm-n_etat_23-etat_2020" class="nav-link" data-scroll-target="#paire-4-sémantique-llm-n_etat_23-etat_2020"><span class="header-section-number">5.1.4</span> Paire 4 — Sémantique (LLM) : <code>N_etat_23</code> ↔︎ <code>Etat_2020</code></a></li>
   </ul></li>
-  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion"><span class="header-section-number">9</span> Conclusion</a></li>
+  <li><a href="#demobpe_demo.xml-run-2-avec---registry-cleaned_codelists.json" id="toc-demobpe_demo.xml-run-2-avec---registry-cleaned_codelists.json" class="nav-link" data-scroll-target="#demobpe_demo.xml-run-2-avec---registry-cleaned_codelists.json"><span class="header-section-number">5.2</span> <code>demo/BPE_demo.xml</code> — Run 2 (avec <code>--registry cleaned_codelists.json</code>)</a>
+  <ul class="collapse">
+  <li><a href="#paires-intra-bpe-indépendantes-du-registre" id="toc-paires-intra-bpe-indépendantes-du-registre" class="nav-link" data-scroll-target="#paires-intra-bpe-indépendantes-du-registre"><span class="header-section-number">5.2.1</span> Paires intra-BPE (indépendantes du registre)</a></li>
+  <li><a href="#paires-cross-fichier-détectées-grâce-au-registry" id="toc-paires-cross-fichier-détectées-grâce-au-registry" class="nav-link" data-scroll-target="#paires-cross-fichier-détectées-grâce-au-registry"><span class="header-section-number">5.2.2</span> Paires cross-fichier (détectées GRÂCE AU REGISTRY)</a></li>
+  </ul></li>
+  <li><a href="#registre-après-opération-2-bpe" id="toc-registre-après-opération-2-bpe" class="nav-link" data-scroll-target="#registre-après-opération-2-bpe"><span class="header-section-number">5.3</span> Registre après opération 2 (BPE)</a></li>
+  <li><a href="#ajout-manuel-l_qualite_zonage_2023" id="toc-ajout-manuel-l_qualite_zonage_2023" class="nav-link" data-scroll-target="#ajout-manuel-l_qualite_zonage_2023"><span class="header-section-number">5.4</span> Ajout manuel : <code>L_QUALITE_ZONAGE_2023</code></a>
+  <ul class="collapse">
+  <li><a href="#amorçage-du-registre-avec-les-nomenclatures-officielles-partagées" id="toc-amorçage-du-registre-avec-les-nomenclatures-officielles-partagées" class="nav-link" data-scroll-target="#amorçage-du-registre-avec-les-nomenclatures-officielles-partagées"><span class="header-section-number">5.4.1</span> Amorçage du registre avec les nomenclatures officielles partagées</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#tableau-récapitulatif-dédoublonnage-bts.xml" id="toc-tableau-récapitulatif-dédoublonnage-bts.xml" class="nav-link" data-scroll-target="#tableau-récapitulatif-dédoublonnage-bts.xml"><span class="header-section-number">6</span> Tableau Récapitulatif — Dédoublonnage BTS.xml</a></li>
+  <li><a href="#perspectives" id="toc-perspectives" class="nav-link" data-scroll-target="#perspectives"><span class="header-section-number">7</span> Perspectives</a>
+  <ul class="collapse">
+  <li><a href="#performance-à-grande-échelle" id="toc-performance-à-grande-échelle" class="nav-link" data-scroll-target="#performance-à-grande-échelle"><span class="header-section-number">7.1</span> Performance à Grande Échelle</a></li>
+  <li><a href="#robustesse" id="toc-robustesse" class="nav-link" data-scroll-target="#robustesse"><span class="header-section-number">7.2</span> Robustesse</a></li>
+  <li><a href="#pipeline-reproductible" id="toc-pipeline-reproductible" class="nav-link" data-scroll-target="#pipeline-reproductible"><span class="header-section-number">7.3</span> Pipeline Reproductible</a></li>
+  <li><a href="#analyse-fine-de-lusage" id="toc-analyse-fine-de-lusage" class="nav-link" data-scroll-target="#analyse-fine-de-lusage"><span class="header-section-number">7.4</span> Analyse Fine de l’Usage</a></li>
+  </ul></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
   </ul>
 </nav>
     </div>
@@ -277,7 +284,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 21, 2026</p>
+      <p class="date">July 30, 2026</p>
     </div>
   </div>
   
@@ -289,20 +296,20 @@ window.Quarto = {
 </header>
 
 
-<section id="introduction" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> Introduction</h1>
-<p>Cette note décrit la méthodologie implémentée dans le pipeline <code>metadata-scrubber</code> pour identifier les listes de codes (<code>CodeList</code>) redondantes au sein d’un fichier XML DDI (Data Dictionary Interface).</p>
+<section id="introduction" class="level1 unnumbered">
+<h1 class="unnumbered">Introduction</h1>
+<p>Cette note décrit la méthodologie implémentée dans le pipeline <code>metadata-scrubber</code> pour identifier les listes de codes (<code>CodeList</code>) redondantes au sein d’un fichier XML DDI (Data Documentation Initiative).</p>
 <blockquote class="blockquote">
 <p><strong>Scénario</strong> : un fichier de métadonnées peut contenir plusieurs définitions de <code>CodeList</code> qui, bien que nommées différemment ou légèrement variées, décrivent le même concept.</p>
 </blockquote>
 <p><strong>Référence</strong> : le fichier <strong>BTS.xml</strong> (réf. 4,7 Mo) — 156 CodeLists, 831 catégories, 503 références Variable → CodeList, 54 CodeLists redondantes dans 29 groupes.</p>
 <hr>
 </section>
-<section id="modèle-de-données-ddi-et-extraction" class="level1" data-number="2">
-<h1 data-number="2"><span class="header-section-number">2</span> 1. Modèle de Données DDI et Extraction</h1>
-<section id="structure-du-fichier-ddi" class="level2" data-number="2.1">
-<h2 data-number="2.1" class="anchored" data-anchor-id="structure-du-fichier-ddi"><span class="header-section-number">2.1</span> 1.1. Structure du fichier DDI</h2>
-<p>Un fichier DDI 3.3 est une suite d’objets enfermés dans des balises <code>&lt;Fragment&gt;</code> (~2 573 pour BTS.xml). Chaque <code>Fragment</code> contient <strong>exactement un objet</strong> :</p>
+<section id="modèle-de-données-ddi-et-extraction" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Modèle de Données DDI et Extraction</h1>
+<section id="structure-du-fichier-ddi" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="structure-du-fichier-ddi"><span class="header-section-number">1.1</span> Structure du fichier DDI</h2>
+<p>Un fichier DDI 3.3 est une suite d’objets enfermés dans des balises <code>&lt;Fragment&gt;</code> (~2 573 pour BTS.xml). Chaque <code>Fragment</code> contient <strong>exactement un objet identifiable, versionnable et maintenable</strong> :</p>
 <ul>
 <li><strong><code>CodeList</code></strong> : la liste de codes elle-même</li>
 <li><strong><code>Category</code></strong> : le libellé d’une valeur de code</li>
@@ -311,8 +318,8 @@ window.Quarto = {
 <blockquote class="blockquote">
 <p><strong>Ordre arbitraire</strong> : les <code>CodeList</code> peuvent apparaître avant les <code>Category</code> correspondantes → approche en <strong>deux passes</strong> obligatoire.</p>
 </blockquote>
-<section id="structure-xml-code" class="level3" data-number="2.1.1">
-<h3 data-number="2.1.1" class="anchored" data-anchor-id="structure-xml-code"><span class="header-section-number">2.1.1</span> Structure XML : <code>&lt;Code&gt;</code></h3>
+<section id="structure-xml-code" class="level3" data-number="1.1.1">
+<h3 data-number="1.1.1" class="anchored" data-anchor-id="structure-xml-code"><span class="header-section-number">1.1.1</span> Structure XML : <code>&lt;Code&gt;</code></h3>
 <p>Chaque <code>&lt;Code&gt;</code> ne contient pas le libellé directement :</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode xml code-with-copy"><code class="sourceCode xml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">Code</span>&gt;</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">r:ID</span>&gt;4dd22a77-9078-4417-9710-48699af3298a&lt;/<span class="kw">r:ID</span>&gt;</span>
@@ -326,8 +333,8 @@ window.Quarto = {
 <li><code>r:CategoryReference &gt; r:ID</code> : référence vers une <code>Category</code></li>
 </ul>
 </section>
-<section id="structure-xml-category" class="level3" data-number="2.1.2">
-<h3 data-number="2.1.2" class="anchored" data-anchor-id="structure-xml-category"><span class="header-section-number">2.1.2</span> Structure XML : <code>&lt;Category&gt;</code></h3>
+<section id="structure-xml-category" class="level3" data-number="1.1.2">
+<h3 data-number="1.1.2" class="anchored" data-anchor-id="structure-xml-category"><span class="header-section-number">1.1.2</span> Structure XML : <code>&lt;Category&gt;</code></h3>
 <p>Le libellé est stocké séparément :</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode xml code-with-copy"><code class="sourceCode xml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">Category</span>&gt;</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">r:ID</span>&gt;d72b4a6c-b668-46c9-98d9-7ba4663e7fa0&lt;/<span class="kw">r:ID</span>&gt;</span>
@@ -335,8 +342,8 @@ window.Quarto = {
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">CategoryName</span>&gt;domempl-4&lt;/<span class="kw">CategoryName</span>&gt;</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>&lt;/<span class="kw">Category</span>&gt;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="structure-xml-variable-référençant-une-codelist" class="level3" data-number="2.1.3">
-<h3 data-number="2.1.3" class="anchored" data-anchor-id="structure-xml-variable-référençant-une-codelist"><span class="header-section-number">2.1.3</span> Structure XML : <code>&lt;Variable&gt;</code> référençant une <code>CodeList</code></h3>
+<section id="structure-xml-variable-référençant-une-codelist" class="level3" data-number="1.1.3">
+<h3 data-number="1.1.3" class="anchored" data-anchor-id="structure-xml-variable-référençant-une-codelist"><span class="header-section-number">1.1.3</span> Structure XML : <code>&lt;Variable&gt;</code> référençant une <code>CodeList</code></h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode xml code-with-copy"><code class="sourceCode xml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">Variable</span>&gt;</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">r:ID</span>&gt;7686be9c-7849-4941-bccc-62206f764a12&lt;/<span class="kw">r:ID</span>&gt;</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">VariableName</span>&gt;&lt;<span class="kw">r:String</span> <span class="ot">xml:lang=</span><span class="st">"fr-FR"</span>&gt;domempl&lt;/<span class="kw">r:String</span>&gt;&lt;/<span class="kw">VariableName</span>&gt;</span>
@@ -351,8 +358,8 @@ window.Quarto = {
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>&lt;/<span class="kw">Variable</span>&gt;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
-<section id="pipeline-dextraction-4-phases" class="level2" data-number="2.2">
-<h2 data-number="2.2" class="anchored" data-anchor-id="pipeline-dextraction-4-phases"><span class="header-section-number">2.2</span> 1.2. Pipeline d’extraction (4 phases)</h2>
+<section id="pipeline-dextraction-4-phases" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="pipeline-dextraction-4-phases"><span class="header-section-number">1.2</span> Pipeline d’extraction (4 phases)</h2>
 <pre><code>┌───────────────────────────────────────────────────────┐
 │ 1. Lecture XML (lxml, namespaces ignorés)            │
 │    filtrer par local(frag) == "Fragment"              │
@@ -373,11 +380,11 @@ window.Quarto = {
 <hr>
 </section>
 </section>
-<section id="lentonnoir-de-détection" class="level1" data-number="3">
-<h1 data-number="3"><span class="header-section-number">3</span> 2. L’Entonnoir de Détection</h1>
+<section id="lentonnoir-de-détection" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> L’Entonnoir de Détection</h1>
 <p><strong>Principe</strong> : un entonnoir en trois niveaux, du plus simple au plus coûteux.</p>
-<section id="phase-1-doublons-exact" class="level2" data-number="3.1">
-<h2 data-number="3.1" class="anchored" data-anchor-id="phase-1-doublons-exact"><span class="header-section-number">3.1</span> 2.1. Phase 1 — Doublons Exact</h2>
+<section id="phase-1-doublons-exact" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="phase-1-doublons-exact"><span class="header-section-number">2.1</span> Phase 1 — Doublons Exact</h2>
 <p><strong>Méthode :</strong></p>
 <ol type="1">
 <li>Normalisation : Unicode NFC, minuscule, espaces multiples → unique</li>
@@ -387,8 +394,8 @@ window.Quarto = {
 <blockquote class="blockquote">
 <p><strong>Nom et identifiant volontairement exclus</strong> de la signature → deux listes identiques nommées différemment sont détectées.</p>
 </blockquote>
-<section id="exemple-18-listes-à-1-code" class="level3" data-number="3.1.1">
-<h3 data-number="3.1.1" class="anchored" data-anchor-id="exemple-18-listes-à-1-code"><span class="header-section-number">3.1.1</span> Exemple : 18 listes à 1 code</h3>
+<section id="exemple-18-listes-à-1-code" class="level3" data-number="2.1.1">
+<h3 data-number="2.1.1" class="anchored" data-anchor-id="exemple-18-listes-à-1-code"><span class="header-section-number">2.1.1</span> Exemple : 18 listes à 1 code</h3>
 <p>18 CodeLists nommées différentes (<code>N-categorie_juridique</code>, <code>N-region</code>, <code>N-conv_coll</code>, <code>N_DEpartements</code>, …).</p>
 <p>Chacune contient un seul code :</p>
 <table class="caption-top table">
@@ -405,10 +412,13 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-<p>Toutes 18 partagent <strong>exactement la même signature</strong> → doublons exacts. Probablement des <strong>codes génériques</strong> « consulter le dictionnaire » dupliqués par l’outil de modélisation (Collectica).</p>
+<p>Toutes 18 partagent <strong>exactement la même signature</strong> → doublons exacts. Probablement des <strong>codes génériques</strong> « consulter le dictionnaire » dupliqués par l’outil de modélisation (Colectica).</p>
+<blockquote class="blockquote">
+<p><strong>Limite connue</strong> : ce ne sont pas de vrais doublons conceptuels. Il s’agit d’un raccourci arbitraire du producteur, qui — au lieu de créer ou référencer les listes de codes spécifiques (existantes ou à créer) — a renvoyé vers un document statique unique censé toutes les regrouper. Cette pratique est désormais corrigée systématiquement à la validation de la documentation avant publication (référence directe vers la liste de codes spécifique). Le regroupement en doublon exact reste pertinent sur les données passées pour <strong>signaler l’anomalie</strong>, mais le choix d’une CodeList « maître » parmi les 18 est arbitraire/cosmétique — aucune n’est réellement correcte. La vraie correction (créer les 18 listes de codes spécifiques) reste un travail humain hors périmètre de l’outil.</p>
+</blockquote>
 </section>
-<section id="caractéristiques" class="level3" data-number="3.1.2">
-<h3 data-number="3.1.2" class="anchored" data-anchor-id="caractéristiques"><span class="header-section-number">3.1.2</span> Caractéristiques</h3>
+<section id="caractéristiques" class="level3" data-number="2.1.2">
+<h3 data-number="2.1.2" class="anchored" data-anchor-id="caractéristiques"><span class="header-section-number">2.1.2</span> Caractéristiques</h3>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 14%">
@@ -442,16 +452,16 @@ window.Quarto = {
 <p>Sur BTS.xml : <strong>29 groupes</strong> détectés, <strong>54</strong> CodeLists redondantes.</p>
 </section>
 </section>
-<section id="phase-1-bis-quasi-doublons-similarité-floue" class="level2" data-number="3.2">
-<h2 data-number="3.2" class="anchored" data-anchor-id="phase-1-bis-quasi-doublons-similarité-floue"><span class="header-section-number">3.2</span> 2.2. Phase 1 bis — Quasi-Doublons (Similarité Floue)</h2>
+<section id="phase-1-bis-quasi-doublons-similarité-floue" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="phase-1-bis-quasi-doublons-similarité-floue"><span class="header-section-number">2.2</span> Phase 1 bis — Quasi-Doublons (Similarité Floue)</h2>
 <p><strong>Méthode :</strong></p>
 <ol type="1">
 <li>À partir des uniques (une par groupe exact → ~102 pour BTS.xml), concaténer nom + paires <code>valeur:libellé</code> en une chaîne</li>
 <li>Comparer <strong>toutes les paires</strong> avec <code>difflib.SequenceMatcher</code></li>
 <li>Seuils : <strong>≥ 0.90</strong> = détecté ; <strong>≥ 0.80</strong> = flagged pour inspection</li>
 </ol>
-<section id="exemples-bts.xml" class="level3" data-number="3.2.1">
-<h3 data-number="3.2.1" class="anchored" data-anchor-id="exemples-bts.xml"><span class="header-section-number">3.2.1</span> Exemples BTS.xml</h3>
+<section id="exemples-bts.xml" class="level3" data-number="2.2.1">
+<h3 data-number="2.2.1" class="anchored" data-anchor-id="exemples-bts.xml"><span class="header-section-number">2.2.1</span> Exemples BTS.xml</h3>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 38%">
@@ -489,8 +499,8 @@ window.Quarto = {
 </tbody>
 </table>
 </section>
-<section id="caractéristiques-1" class="level3" data-number="3.2.2">
-<h3 data-number="3.2.2" class="anchored" data-anchor-id="caractéristiques-1"><span class="header-section-number">3.2.2</span> Caractéristiques</h3>
+<section id="caractéristiques-1" class="level3" data-number="2.2.2">
+<h3 data-number="2.2.2" class="anchored" data-anchor-id="caractéristiques-1"><span class="header-section-number">2.2.2</span> Caractéristiques</h3>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -515,11 +525,11 @@ window.Quarto = {
 </table>
 </section>
 </section>
-<section id="phase-2-doublons-sémantiques-embeddings-llm" class="level2" data-number="3.3">
-<h2 data-number="3.3" class="anchored" data-anchor-id="phase-2-doublons-sémantiques-embeddings-llm"><span class="header-section-number">3.3</span> 2.3. Phase 2 — Doublons Sémantiques (Embeddings + LLM)</h2>
+<section id="phase-2-doublons-sémantiques-embeddings-llm" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="phase-2-doublons-sémantiques-embeddings-llm"><span class="header-section-number">2.3</span> Phase 2 — Doublons Sémantiques (Embeddings + LLM)</h2>
 <p>Les deux phases précédentes ne comprennent <strong>pas le sens</strong> : possible de “Sexe” vs “Genre” avec codes différents.</p>
-<section id="embeddings-de-codelists" class="level3" data-number="3.3.1">
-<h3 data-number="3.3.1" class="anchored" data-anchor-id="embeddings-de-codelists"><span class="header-section-number">3.3.1</span> 2.3.1. Embeddings de CodeLists</h3>
+<section id="embeddings-de-codelists" class="level3" data-number="2.3.1">
+<h3 data-number="2.3.1" class="anchored" data-anchor-id="embeddings-de-codelists"><span class="header-section-number">2.3.1</span> Embeddings de CodeLists</h3>
 <ol type="1">
 <li>Vectorisation : modèle <code>qwen3-embedding-8b</code> sur nom + label + codes</li>
 <li>Cosinus entre toutes les paires (102 vecteurs → 102×102)</li>
@@ -531,9 +541,12 @@ window.Quarto = {
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"confiance"</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">,</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"raison"</span><span class="fu">:</span> <span class="st">"Mêmes codes départementaux français ; seule la casse et les accents diffèrent."</span></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<blockquote class="blockquote">
+<p><strong>Pas de barème</strong> : il n’existe pas de grille de notation ou de critères pondérés en aval. <code>confiance</code> est une valeur continue entre 0 et 1 <strong>auto-évaluée par le LLM lui-même</strong> (température 0, un seul appel par paire), accompagnée d’une justification en texte libre. Seules les 20 meilleures paires (triées par score cosinus) sont soumises au juge.</p>
+</blockquote>
 </section>
-<section id="embeddings-de-variables-usage" class="level3" data-number="3.3.2">
-<h3 data-number="3.3.2" class="anchored" data-anchor-id="embeddings-de-variables-usage"><span class="header-section-number">3.3.2</span> 2.3.2. Embeddings de Variables (usage)</h3>
+<section id="embeddings-de-variables-usage" class="level3" data-number="2.3.2">
+<h3 data-number="2.3.2" class="anchored" data-anchor-id="embeddings-de-variables-usage"><span class="header-section-number">2.3.2</span> Embeddings de Variables (usage)</h3>
 <p><strong>Approche inversée</strong> : on compare les <strong>variables</strong> qui référencent les CodeLists.</p>
 <table class="caption-top table">
 <colgroup>
@@ -563,8 +576,8 @@ window.Quarto = {
 </table>
 <p>Même sémantique des 2 premières variables → mêmes concept métier. Particulièrement efficace quand toutes les CodeLists sont référencées (BTS.xml : 156/156).</p>
 </section>
-<section id="caractéristiques-2" class="level3" data-number="3.3.3">
-<h3 data-number="3.3.3" class="anchored" data-anchor-id="caractéristiques-2"><span class="header-section-number">3.3.3</span> Caractéristiques</h3>
+<section id="caractéristiques-2" class="level3" data-number="2.3.3">
+<h3 data-number="2.3.3" class="anchored" data-anchor-id="caractéristiques-2"><span class="header-section-number">2.3.3</span> Caractéristiques</h3>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 15%">
@@ -599,12 +612,15 @@ window.Quarto = {
 </section>
 </section>
 </section>
-<section id="signaux-de-renforcement-var_sig" class="level1" data-number="4">
-<h1 data-number="4"><span class="header-section-number">4</span> 3. Signaux de Renforcement : <code>var_sig</code></h1>
-<p>Une CodeList est <strong>toujours</strong> référencée par au moins une variable. Deux listes utilisées par les <strong>mêmes variables</strong> sont quasi-certainement identiques.</p>
+<section id="signaux-de-renforcement-var_sig" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Signaux de Renforcement : <code>var_sig</code></h1>
+<p>Une CodeList est <strong>en principe toujours</strong> référencée par au moins une variable — c’est une hypothèse de modélisation, pas une contrainte garantie par DDI ni imposée par Colectica ; des CodeLists orphelines (0 variable référente) existent en pratique dans les données historiques. Deux listes utilisées par les <strong>mêmes variables</strong> sont quasi-certainement identiques.</p>
+<blockquote class="blockquote">
+<p><strong>Sans risque sur les orphelines</strong> : <code>find_usage_groups</code> exclut explicitement les CodeLists dont le <code>var_sig</code> est vide du regroupement par usage (<code>signals.py</code>). Les listes sans variable référente ne peuvent donc pas être faussement regroupées entre elles par ce seul signal.</p>
+</blockquote>
 <pre><code>var_sig(CL) = tuple(sorted( noms_des_variables_qui_la_referencent ))</code></pre>
-<section id="types-de-recoupement" class="level2" data-number="4.1">
-<h2 data-number="4.1" class="anchored" data-anchor-id="types-de-recoupement"><span class="header-section-number">4.1</span> 3.1. Types de recoupement</h2>
+<section id="types-de-recoupement" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="types-de-recoupement"><span class="header-section-number">3.1</span> Types de recoupement</h2>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 22%">
@@ -632,10 +648,10 @@ window.Quarto = {
 </tbody>
 </table>
 </section>
-<section id="exemples-bts.xml-1" class="level2" data-number="4.2">
-<h2 data-number="4.2" class="anchored" data-anchor-id="exemples-bts.xml-1"><span class="header-section-number">4.2</span> 3.2. Exemples BTS.xml</h2>
-<section id="groupe-a-var_sig-identique-contenu-identique-doublon-exact-confirmé" class="level3" data-number="4.2.1">
-<h3 data-number="4.2.1" class="anchored" data-anchor-id="groupe-a-var_sig-identique-contenu-identique-doublon-exact-confirmé"><span class="header-section-number">4.2.1</span> Groupe A : <code>var_sig</code> identique + contenu identique → doublon exact confirmé</h3>
+<section id="exemples-bts.xml-1" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="exemples-bts.xml-1"><span class="header-section-number">3.2</span> Exemples BTS.xml</h2>
+<section id="groupe-a-var_sig-identique-contenu-identique-doublon-exact-confirmé" class="level3" data-number="3.2.1">
+<h3 data-number="3.2.1" class="anchored" data-anchor-id="groupe-a-var_sig-identique-contenu-identique-doublon-exact-confirmé"><span class="header-section-number">3.2.1</span> Groupe A : <code>var_sig</code> identique + contenu identique → doublon exact confirmé</h3>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -655,8 +671,8 @@ window.Quarto = {
 </tbody>
 </table>
 </section>
-<section id="groupe-b-var_sig-identique-contenu-différent-à-vérifier" class="level3" data-number="4.2.2">
-<h3 data-number="4.2.2" class="anchored" data-anchor-id="groupe-b-var_sig-identique-contenu-différent-à-vérifier"><span class="header-section-number">4.2.2</span> Groupe B : <code>var_sig</code> identique + contenu différent → à vérifier</h3>
+<section id="groupe-b-var_sig-identique-contenu-différent-à-vérifier" class="level3" data-number="3.2.2">
+<h3 data-number="3.2.2" class="anchored" data-anchor-id="groupe-b-var_sig-identique-contenu-différent-à-vérifier"><span class="header-section-number">3.2.2</span> Groupe B : <code>var_sig</code> identique + contenu différent → à vérifier</h3>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -676,8 +692,33 @@ window.Quarto = {
 </tbody>
 </table>
 </section>
-<section id="groupe-c-var_sig-disjoints-contenu-identique-à-consolider" class="level3" data-number="4.2.3">
-<h3 data-number="4.2.3" class="anchored" data-anchor-id="groupe-c-var_sig-disjoints-contenu-identique-à-consolider"><span class="header-section-number">4.2.3</span> Groupe C : <code>var_sig</code> disjoints + contenu identique → à consolider</h3>
+<section id="groupe-b-bis-var_sig-identique-contenu-différent-cas-à-rejeter" class="level3" data-number="3.2.3">
+<h3 data-number="3.2.3" class="anchored" data-anchor-id="groupe-b-bis-var_sig-identique-contenu-différent-cas-à-rejeter"><span class="header-section-number">3.2.3</span> Groupe B bis : <code>var_sig</code> identique + contenu différent → cas à rejeter</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>CodeList</th>
+<th><code>var_sig</code></th>
+<th>Codes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>N_annee_23</code></td>
+<td><code>("annee",)</code></td>
+<td>2019, 2020, 2021, 2022, 2023</td>
+</tr>
+<tr class="even">
+<td><code>N_annee_24</code></td>
+<td><code>("annee",)</code></td>
+<td>2019, 2020, 2021, 2022, 2023, 2024</td>
+</tr>
+</tbody>
+</table>
+<p>Cas fréquent avec les nomenclatures d’années d’enquête : chaque millésime ajoute le code de l’année écoulée à la liste précédente, sous la même variable référente. Le <code>var_sig</code> identique ne signale ici aucune redondance — les deux listes sont des versions légitimement distinctes du même référentiel. Ce contre-exemple confirme que <code>var_sig</code> identique + contenu différent (Groupe B) reste <strong>structurellement ambigu</strong> : ni un rapprochement automatique, ni un rejet automatique ne seraient corrects dans tous les cas — l’arbitrage humain reste nécessaire.</p>
+</section>
+<section id="groupe-c-var_sig-disjoints-contenu-identique-à-consolider" class="level3" data-number="3.2.4">
+<h3 data-number="3.2.4" class="anchored" data-anchor-id="groupe-c-var_sig-disjoints-contenu-identique-à-consolider"><span class="header-section-number">3.2.4</span> Groupe C : <code>var_sig</code> disjoints + contenu identique → à consolider</h3>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -703,15 +744,15 @@ window.Quarto = {
 </section>
 </section>
 </section>
-<section id="le-flag---registry-dédoublonnage-transversal-itératif" class="level1" data-number="5">
-<h1 data-number="5"><span class="header-section-number">5</span> 4. Le Flag <code>--registry</code> : Dédoublonnage Transversal Itératif</h1>
-<section id="pourquoi---registry" class="level2" data-number="5.1">
-<h2 data-number="5.1" class="anchored" data-anchor-id="pourquoi---registry"><span class="header-section-number">5.1</span> 4.1. Pourquoi <code>--registry</code> ?</h2>
-<p>Un seul run du pipeline identifie les redondances <strong>au sein d’un unique fichier traité</strong>. Mais les mêmes CodeLists peuvent apparaître dans plusieurs opérations (BTS, BPE, CPE…). Sans registre partagé, chaque nouvel run redécouvre les paires déjà validées dans les opérations précédentes.</p>
+<section id="le-flag---registry-dédoublonnage-transversal-itératif" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Le Flag <code>--registry</code> : Dédoublonnage Transversal Itératif</h1>
+<section id="pourquoi---registry" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="pourquoi---registry"><span class="header-section-number">4.1</span> Pourquoi <code>--registry</code> ?</h2>
+<p>Un seul run du pipeline identifie les redondances <strong>au sein d’un unique fichier traité</strong>. Mais les mêmes CodeLists peuvent apparaître dans plusieurs opérations (BTS, BPE, RP…). Sans registre partagé, chaque nouvel run redécouvre les paires déjà validées dans les opérations précédentes.</p>
 <p>Le registre <code>cleaned_codelists.json</code> est un <strong>catalogue transversal de vérité</strong> : il s’alimente au fil des opérations et alimente la détection du run suivant, y compris les appariements <strong>cross-opération</strong>.</p>
 </section>
-<section id="flux-transversal" class="level2" data-number="5.2">
-<h2 data-number="5.2" class="anchored" data-anchor-id="flux-transversal"><span class="header-section-number">5.2</span> 4.2. Flux transversal</h2>
+<section id="flux-transversal" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="flux-transversal"><span class="header-section-number">4.2</span> Flux transversal</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode md code-with-copy"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="an">Opération 1 :</span><span class="co"> BTS_demo.xml (sans --registry)</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  → codelist_duplicates.json → 4 paires détectées (exact + flou + sémantique)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  → Interface web : examiner / approuver / rejeter</span>
@@ -731,8 +772,8 @@ window.Quarto = {
 <span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>Plus le registre grossit, plus la détection évite les réitérations</span>
 <span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>et capture les appariements inter-opérations.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="ce-que-fait---registry-dans-le-pipeline-main.py-2-bis" class="level2" data-number="5.3">
-<h2 data-number="5.3" class="anchored" data-anchor-id="ce-que-fait---registry-dans-le-pipeline-main.py-2-bis"><span class="header-section-number">5.3</span> 4.3. Ce que fait <code>--registry</code> dans le pipeline (main.py, §2 bis)</h2>
+<section id="ce-que-fait---registry-dans-le-pipeline-main.py-2-bis" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="ce-que-fait---registry-dans-le-pipeline-main.py-2-bis"><span class="header-section-number">4.3</span> Ce que fait <code>--registry</code> dans le pipeline (main.py, §2 bis)</h2>
 <p>Lors du lancement avec <code>--registry cleaned_codelists.json</code> :</p>
 <ol type="1">
 <li><strong>Lecture</strong> du registre nettoyé (schéma v2, migration automatique v1 → v2)</li>
@@ -747,9 +788,12 @@ window.Quarto = {
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cl.<span class="bu">id</span> <span class="kw">not</span> <span class="kw">in</span> registry_ids <span class="kw">and</span> cl.<span class="bu">id</span> <span class="kw">not</span> <span class="kw">in</span> replaced_ids</span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>]</span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>codelists <span class="op">=</span> registry_cls <span class="op">+</span> codelists  <span class="co"># masters d'abord</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<blockquote class="blockquote">
+<p><strong>À discuter — versioning</strong> : <code>replaced_ids</code> est aujourd’hui un simple ensemble d’IDs bruts, sans notion de version. Si une nouvelle version d’un objet déjà remplacé apparaît dans un fichier ultérieur, elle est silencieusement exclue de la détection (même comportement qu’un doublon déjà traité). Reste à trancher en équipe : faut-il ré-examiner un ID lors d’un changement de version (au risque de redétecter des paires déjà validées), ou continuer à l’exclure systématiquement (au risque de manquer un contenu qui a changé) ? Une piste : n’ajouter un couple <code>(id, version)</code> à <code>replaces[]</code> que si le modèle DDI expose une version exploitable sur le Fragment source.</p>
+</blockquote>
 </section>
-<section id="schéma-du-registre-nettoyé-v2" class="level2" data-number="5.4">
-<h2 data-number="5.4" class="anchored" data-anchor-id="schéma-du-registre-nettoyé-v2"><span class="header-section-number">5.4</span> 4.4. Schéma du registre nettoyé (v2)</h2>
+<section id="schéma-du-registre-nettoyé-v2" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="schéma-du-registre-nettoyé-v2"><span class="header-section-number">4.4</span> Schéma du registre nettoyé (v2)</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"version"</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"generated_at"</span><span class="fu">:</span> <span class="st">"2025-xx-xxTxx:xx:xx+00:00"</span><span class="fu">,</span></span>
@@ -776,8 +820,8 @@ window.Quarto = {
 <span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
 <span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="sync-incrémental-sync_cleaned_registry" class="level2" data-number="5.5">
-<h2 data-number="5.5" class="anchored" data-anchor-id="sync-incrémental-sync_cleaned_registry"><span class="header-section-number">5.5</span> 4.5. Sync incrémental (<code>sync_cleaned_registry</code>)</h2>
+<section id="sync-incrémental-sync_cleaned_registry" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="sync-incrémental-sync_cleaned_registry"><span class="header-section-number">4.5</span> Sync incrémental (<code>sync_cleaned_registry</code>)</h2>
 <p>Lors de <code>/api/registry/save</code> :</p>
 <ul>
 <li><strong>Décision approuvée</strong> → ajout au <code>replaces</code> du parent (création de l’entrée parente si inexistante)</li>
@@ -788,15 +832,15 @@ window.Quarto = {
 <hr>
 </section>
 </section>
-<section id="walkthrough-exemples-avec-les-datasets-demo" class="level1" data-number="6">
-<h1 data-number="6"><span class="header-section-number">6</span> 5. Walkthrough : Exemples avec les Datasets Demo</h1>
+<section id="walkthrough-exemples-avec-les-datasets-demo" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Walkthrough : Exemples avec les Datasets Demo</h1>
 <p>Le dossier <code>demo/</code> contient des fichiers XML de petite taille, générés depuis les sources S3, avec des paires connues pour illustrer et tester le pipeline.</p>
 <p>Générer les fichiers : <code>uv run demo/make_demo_files.py</code>.</p>
-<section id="demobts_demo.xml-run-1-sans-registry" class="level2" data-number="6.1">
-<h2 data-number="6.1" class="anchored" data-anchor-id="demobts_demo.xml-run-1-sans-registry"><span class="header-section-number">6.1</span> 5.1. <code>demo/BTS_demo.xml</code> — Run 1 (sans registry)</h2>
+<section id="demobts_demo.xml-run-1-sans-registry" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="demobts_demo.xml-run-1-sans-registry"><span class="header-section-number">5.1</span> <code>demo/BTS_demo.xml</code> — Run 1 (sans registry)</h2>
 <p><strong>Contexte</strong> : 10 CodeLists issues de BTS.xml : 4 paires connues + 2 listes uniques.</p>
-<section id="paire-1-exact-n_naf_6-n-activite-francaise-6-postes" class="level3" data-number="6.1.1">
-<h3 data-number="6.1.1" class="anchored" data-anchor-id="paire-1-exact-n_naf_6-n-activite-francaise-6-postes"><span class="header-section-number">6.1.1</span> Paire 1 — Exact : <code>N_NAF_6</code> ↔︎ <code>N-ACTIVITE-FRANCAISE-6-POSTES</code></h3>
+<section id="paire-1-exact-n_naf_6-n-activite-francaise-6-postes" class="level3" data-number="5.1.1">
+<h3 data-number="5.1.1" class="anchored" data-anchor-id="paire-1-exact-n_naf_6-n-activite-francaise-6-postes"><span class="header-section-number">5.1.1</span> Paire 1 — Exact : <code>N_NAF_6</code> ↔︎ <code>N-ACTIVITE-FRANCAISE-6-POSTES</code></h3>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">
@@ -850,34 +894,34 @@ window.Quarto = {
 </table>
 <p><strong>Détection</strong> : exact (signature <code>(valeur, libellé)</code> identique sur les 7 codes). <strong>Signal d’usage</strong> : mêmes variables référentes dans les deux listes. <strong>Décision expert</strong> : <code>N_NAF_6</code> retenue comme maître → <code>N-ACTIVITE-FRANCAISE-6-POSTES</code> placée dans <code>replaces[]</code> de <code>N_NAF_6</code>.</p>
 </section>
-<section id="paire-2-fuzzy-n_nat_etab_23-nat_etab" class="level3" data-number="6.1.2">
-<h3 data-number="6.1.2" class="anchored" data-anchor-id="paire-2-fuzzy-n_nat_etab_23-nat_etab"><span class="header-section-number">6.1.2</span> Paire 2 — Fuzzy : <code>N_nat_etab_23</code> ↔︎ <code>NAT_ETAB</code></h3>
+<section id="paire-2-fuzzy-n_nat_etab_23-nat_etab" class="level3" data-number="5.1.2">
+<h3 data-number="5.1.2" class="anchored" data-anchor-id="paire-2-fuzzy-n_nat_etab_23-nat_etab"><span class="header-section-number">5.1.2</span> Paire 2 — Fuzzy : <code>N_nat_etab_23</code> ↔︎ <code>NAT_ETAB</code></h3>
 <p>3 codes partagés (CCP, COM, STD) — libellés identiques mais noms de CodeList différents et description légèrement différente.</p>
 <p><strong>Détection</strong> : SequenceMatcher ≥ 0.90.</p>
 </section>
-<section id="paire-3-fuzzy-n_champ_23-n_champ_2022" class="level3" data-number="6.1.3">
-<h3 data-number="6.1.3" class="anchored" data-anchor-id="paire-3-fuzzy-n_champ_23-n_champ_2022"><span class="header-section-number">6.1.3</span> Paire 3 — Fuzzy : <code>N_champ_23</code> ↔︎ <code>N_CHAMP_2022</code></h3>
+<section id="paire-3-fuzzy-n_champ_23-n_champ_2022" class="level3" data-number="5.1.3">
+<h3 data-number="5.1.3" class="anchored" data-anchor-id="paire-3-fuzzy-n_champ_23-n_champ_2022"><span class="header-section-number">5.1.3</span> Paire 3 — Fuzzy : <code>N_champ_23</code> ↔︎ <code>N_CHAMP_2022</code></h3>
 <p>5 codes partagés (DADS, DADS-PUBLIC, DSN, DSN-PUBLIC, PE).</p>
 </section>
-<section id="paire-4-sémantique-llm-n_etat_23-etat_2020" class="level3" data-number="6.1.4">
-<h3 data-number="6.1.4" class="anchored" data-anchor-id="paire-4-sémantique-llm-n_etat_23-etat_2020"><span class="header-section-number">6.1.4</span> Paire 4 — Sémantique (LLM) : <code>N_etat_23</code> ↔︎ <code>Etat_2020</code></h3>
+<section id="paire-4-sémantique-llm-n_etat_23-etat_2020" class="level3" data-number="5.1.4">
+<h3 data-number="5.1.4" class="anchored" data-anchor-id="paire-4-sémantique-llm-n_etat_23-etat_2020"><span class="header-section-number">5.1.4</span> Paire 4 — Sémantique (LLM) : <code>N_etat_23</code> ↔︎ <code>Etat_2020</code></h3>
 <p>Pas de chevauchement direct de codes — détectée uniquement par embeddings + juge LLM.</p>
 <p><strong>Résultat run 1</strong> : <code>codelist_duplicates.json</code> contient 4 paires. Sauvegarde dans <code>cleaned_codelists.json</code> (v1) : 4 entrées de maître avec leurs <code>replaces[]</code>.</p>
 <hr>
 </section>
 </section>
-<section id="demobpe_demo.xml-run-2-avec---registry-cleaned_codelists.json" class="level2" data-number="6.2">
-<h2 data-number="6.2" class="anchored" data-anchor-id="demobpe_demo.xml-run-2-avec---registry-cleaned_codelists.json"><span class="header-section-number">6.2</span> 5.2. <code>demo/BPE_demo.xml</code> — Run 2 (avec <code>--registry cleaned_codelists.json</code>)</h2>
+<section id="demobpe_demo.xml-run-2-avec---registry-cleaned_codelists.json" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="demobpe_demo.xml-run-2-avec---registry-cleaned_codelists.json"><span class="header-section-number">5.2</span> <code>demo/BPE_demo.xml</code> — Run 2 (avec <code>--registry cleaned_codelists.json</code>)</h2>
 <p><strong>Contexte</strong> : 9 CodeLists issues de BPE.xml — 6 listes BPE natives, 2 copies de BTS avec IDs neufs, 1 unique à ajouter manuellement.</p>
-<section id="paires-intra-bpe-indépendantes-du-registre" class="level3" data-number="6.2.1">
-<h3 data-number="6.2.1" class="anchored" data-anchor-id="paires-intra-bpe-indépendantes-du-registre"><span class="header-section-number">6.2.1</span> Paires intra-BPE (indépendantes du registre)</h3>
+<section id="paires-intra-bpe-indépendantes-du-registre" class="level3" data-number="5.2.1">
+<h3 data-number="5.2.1" class="anchored" data-anchor-id="paires-intra-bpe-indépendantes-du-registre"><span class="header-section-number">5.2.1</span> Paires intra-BPE (indépendantes du registre)</h3>
 <p><strong>Paire 5 — <code>L_VAR_SPECIF_2023</code> ↔︎ <code>L_VAR_SPECIF_2021</code></strong></p>
 <p>Même concept, variantes annuelles différentes (codes 0/1/_U/_Z pour 2023 vs OUI/NON/IND/NC pour 2021).</p>
 <p><strong>Paire 6 — <code>L_AN_BPE_EVOL_2023</code> ↔︎ <code>L_AN_BPE_EVOL_2022</code></strong></p>
 <p>Codes : <code>2013/2017/2018/2023</code> pour 2023 vs <code>2017/2022</code> pour 2022 — même concept, années différentes.</p>
 </section>
-<section id="paires-cross-fichier-détectées-grâce-au-registry" class="level3" data-number="6.2.2">
-<h3 data-number="6.2.2" class="anchored" data-anchor-id="paires-cross-fichier-détectées-grâce-au-registry"><span class="header-section-number">6.2.2</span> Paires cross-fichier (détectées GRÂCE AU REGISTRY)</h3>
+<section id="paires-cross-fichier-détectées-grâce-au-registry" class="level3" data-number="5.2.2">
+<h3 data-number="5.2.2" class="anchored" data-anchor-id="paires-cross-fichier-détectées-grâce-au-registry"><span class="header-section-number">5.2.2</span> Paires cross-fichier (détectées GRÂCE AU REGISTRY)</h3>
 <p><strong>Paire 7 — <code>NAF_6_POSTES_BPE</code> ↔︎ registre <code>N_NAF_6</code> (exact, cross-fichier)</strong></p>
 <p><code>NAF_6_POSTES_BPE</code> est une copie exacte de <code>N_NAF_6</code> avec des UUIDs entièrement neufs. Sans le registre, le pipeline ne détecterait qu’une similarité de contenu brute. Avec le registre, <code>N_NAF_6</code> est injectée comme <strong>master prioritaire</strong> et servira de candidat à la comparaison — la détection exacte la reconnaît immédiatement.</p>
 <p><strong>Paire 8 — <code>ETAT_UNITE_BPE</code> ↔︎ registre <code>N_etat_23</code> (fuzzy, cross-fichier)</strong></p>
@@ -885,8 +929,8 @@ window.Quarto = {
 <hr>
 </section>
 </section>
-<section id="registre-après-opération-2-bpe" class="level2" data-number="6.3">
-<h2 data-number="6.3" class="anchored" data-anchor-id="registre-après-opération-2-bpe"><span class="header-section-number">6.3</span> 5.3. Registre après opération 2 (BPE)</h2>
+<section id="registre-après-opération-2-bpe" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="registre-après-opération-2-bpe"><span class="header-section-number">5.3</span> Registre après opération 2 (BPE)</h2>
 <p><code>cleaned_codelists.json</code> (v2) contient maintenant 6 entrées de maître :</p>
 <table class="caption-top table">
 <colgroup>
@@ -936,14 +980,22 @@ window.Quarto = {
 </table>
 <hr>
 </section>
-<section id="ajout-manuel-l_qualite_zonage_2023" class="level2" data-number="6.4">
-<h2 data-number="6.4" class="anchored" data-anchor-id="ajout-manuel-l_qualite_zonage_2023"><span class="header-section-number">6.4</span> 5.4. Ajout manuel : <code>L_QUALITE_ZONAGE_2023</code></h2>
+<section id="ajout-manuel-l_qualite_zonage_2023" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="ajout-manuel-l_qualite_zonage_2023"><span class="header-section-number">5.4</span> Ajout manuel : <code>L_QUALITE_ZONAGE_2023</code></h2>
 <p>Cette CodeList est unique (aucun doublon intra ou cross-fichier détecté). L’expert peut l’ajouter <strong>manuellement</strong> au registre (bouton “Ajouter au registre” dans l’interface), sans validation de paire. Elle sera présente comme master dans le registre pour les opérations futures.</p>
+<blockquote class="blockquote">
+<p><strong>À discuter — paquet partagé vs local au domaine producteur (RMéS)</strong> : l’ajout manuel ne distingue pas aujourd’hui une CodeList à verser dans le paquet de ressources partagées commun d’une CodeList qui doit rester locale au domaine du producteur. Critères candidats à trancher en équipe : réutilisation avérée par ≥ 2 domaines/opérations, correspondance à une nomenclature officiellement référencée, validation explicite d’un référent qualité. Il faudra aussi un mécanisme pour reverser a posteriori une CodeList locale dans le paquet partagé (ex. marquage « candidate à la promotion » + revue périodique), plutôt que de tout verser automatiquement — l’objectif étant d’éviter l’effet « premier-arrivé-premier-servi » qui imposerait les choix de nommage d’un seul producteur à tous les autres.</p>
+</blockquote>
+<section id="amorçage-du-registre-avec-les-nomenclatures-officielles-partagées" class="level3" data-number="5.4.1">
+<h3 data-number="5.4.1" class="anchored" data-anchor-id="amorçage-du-registre-avec-les-nomenclatures-officielles-partagées"><span class="header-section-number">5.4.1</span> Amorçage du registre avec les nomenclatures officielles partagées</h3>
+<p>Le mécanisme <code>--registry</code> (§ ci-dessus) fait déjà gagner la priorité « maître » aux entrées du registre <strong>même sans aucune variable référente</strong> : <code>main.py</code> préfixe les entrées du registre nettoyé à la liste des CodeLists avant tout regroupement, et <code>detect_exact_duplicates</code> / <code>find_usage_groups</code> retiennent toujours le premier élément du groupe comme maître — donc les entrées du registre l’emportent structurellement dès qu’un doublon apparaît, indépendamment du nombre de variables qui les référencent au moment de l’injection.</p>
+<p>A étudier : amorcer <code>cleaned_codelists.json</code> avec un export du paquet de ressources dédié aux nomenclatures officielles (codes renseignés, <code>vars: []</code> au départ), en dehors du cycle de sync normal des décisions. Une entrée ajoutée ainsi « à la main » survit aux syncs suivants même avec un <code>replaces</code> vide (<code>sync_cleaned_registry</code> ne supprime que les entrées vidées par le sync lui-même). Aucune modification de code n’est donc nécessaire pour que ces nomenclatures soient toujours reconnues comme maîtres — seule une procédure d’amorçage (export + import initial) reste à mettre en place.</p>
 <hr>
 </section>
 </section>
-<section id="tableau-récapitulatif-dédoublonnage-bts.xml" class="level1" data-number="7">
-<h1 data-number="7"><span class="header-section-number">7</span> 6. Tableau Récapitulatif — Dédoublonnage BTS.xml</h1>
+</section>
+<section id="tableau-récapitulatif-dédoublonnage-bts.xml" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Tableau Récapitulatif — Dédoublonnage BTS.xml</h1>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 25%">
@@ -996,34 +1048,37 @@ window.Quarto = {
 <li><span class="math inline">\(N\)</span> = nb CodeLists (156), <span class="math inline">\(C\)</span> = nb codes moyen (10)</li>
 <li><span class="math inline">\(U\)</span> = nb uniques après dédup exact (102)</li>
 <li><span class="math inline">\(V\)</span> = nb variables (287), <span class="math inline">\(D\)</span> = dimension embeddings (8192)</li>
+<li><span class="math inline">\(L\)</span> = longueur moyenne du texte comparé (nom + paires valeur:libellé concaténées) par <code>difflib.SequenceMatcher</code> en phase floue</li>
 </ul>
 <hr>
 </section>
-<section id="perspectives" class="level1" data-number="8">
-<h1 data-number="8"><span class="header-section-number">8</span> 7. Perspectives</h1>
-<section id="performance-à-grande-échelle" class="level2" data-number="8.1">
-<h2 data-number="8.1" class="anchored" data-anchor-id="performance-à-grande-échelle"><span class="header-section-number">8.1</span> 7.1. Performance à Grande Échelle</h2>
+<section id="perspectives" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Perspectives</h1>
+<section id="performance-à-grande-échelle" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="performance-à-grande-échelle"><span class="header-section-number">7.1</span> Performance à Grande Échelle</h2>
 <ul>
 <li><strong>MSA / MinHash</strong> pour remplacer la comparaison par paires <span class="math inline">\(O(n^2)\)</span></li>
 <li><strong>Parallélisation</strong> du pipeline sur Kubernetes via Argo Workflows</li>
 </ul>
 </section>
-<section id="robustesse" class="level2" data-number="8.2">
-<h2 data-number="8.2" class="anchored" data-anchor-id="robustesse"><span class="header-section-number">8.2</span> 7.2. Robustesse</h2>
+<section id="robustesse" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="robustesse"><span class="header-section-number">7.2</span> Robustesse</h2>
 <ul>
 <li>Détection de <strong>sous-ensembles</strong> : une CodeList peut être incluse dans une autre</li>
 <li>Embeddings spécialisés sur le vocabulaire statistique Insee</li>
+<li><strong>Inclusion par référence</strong> : le modèle DDI la permet, mais ni l’outil ni Colectica ne l’implémentent (crainte de références circulaires côté Colectica). Les listes plates issues d’un seul niveau d’une nomenclature hiérarchique officielle (ex. NAF) restent donc des CodeLists à part entière, correctement traitées comme distinctes par la détection de contenu.</li>
+<li><strong>Limite connue</strong> (déjà documentée dans le code, <code>semantic.py</code>, docstring de <code>detect_semantic_userid</code>) : l’heuristique de préfixe commun (même projet Colectica) peut signaler à tort deux niveaux différents d’une même nomenclature (ex. NAF 6 postes vs 17 postes) comme candidats — aucun garde-fou automatique aujourd’hui, surveillance manuelle nécessaire.</li>
 </ul>
 </section>
-<section id="pipeline-reproductible" class="level2" data-number="8.3">
-<h2 data-number="8.3" class="anchored" data-anchor-id="pipeline-reproductible"><span class="header-section-number">8.3</span> 7.3. Pipeline Reproductible</h2>
+<section id="pipeline-reproductible" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="pipeline-reproductible"><span class="header-section-number">7.3</span> Pipeline Reproductible</h2>
 <ul>
 <li>Transformation vers pipeline <strong><code>targets</code></strong> (R) ou Python équivalent</li>
 <li>Intégration <strong>CI/CD</strong> : déclencher le dédoublonnage à chaque commit</li>
 </ul>
 </section>
-<section id="analyse-fine-de-lusage" class="level2" data-number="8.4">
-<h2 data-number="8.4" class="anchored" data-anchor-id="analyse-fine-de-lusage"><span class="header-section-number">8.4</span> 7.4. Analyse Fine de l’Usage</h2>
+<section id="analyse-fine-de-lusage" class="level2" data-number="7.4">
+<h2 data-number="7.4" class="anchored" data-anchor-id="analyse-fine-de-lusage"><span class="header-section-number">7.4</span> Analyse Fine de l’Usage</h2>
 <ul>
 <li>Hiérarchie des variables (groupes, familles d’enquêtes)</li>
 <li>Pondération par importance (métrique de centralité)</li>
@@ -1032,8 +1087,8 @@ window.Quarto = {
 <hr>
 </section>
 </section>
-<section id="conclusion" class="level1" data-number="9">
-<h1 data-number="9"><span class="header-section-number">9</span> Conclusion</h1>
+<section id="conclusion" class="level1 unnumbered">
+<h1 class="unnumbered">Conclusion</h1>
 <p>Un entonnoir en trois niveaux — <strong>exact</strong> → <strong>flou</strong> → <strong>sémantique</strong> — complété par un signal d’usage (<code>var_sig</code>) et un registre transversal itératif (<code>--registry</code>) permet de couvrir toute la palette des redondances : copies conformes, variantes mineures, synonymes conceptuels, <strong>et doublons cross-opération</strong>.</p>
 <p>Les datasets <code>demo/</code> illustrent ce workflow complet :</p>
 <ol type="1">

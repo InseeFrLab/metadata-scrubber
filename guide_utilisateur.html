@@ -2,21 +2,24 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-07-21">
+<meta name="dcterms.date" content="2026-07-30">
 
 <title>Guide d’Utilisation — Metadata Scrubber – Metadata Scrubber</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -40,10 +43,10 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-c98d9d0b3b0a085d3ddf71e6e91476d8.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-6ac2aec46ad7f46b16024ee4409aa65c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -137,7 +140,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#actions-de-masse" id="toc-actions-de-masse" class="nav-link" data-scroll-target="#actions-de-masse"><span class="header-section-number">4.5</span> Actions de masse</a></li>
   <li><a href="#filtres" id="toc-filtres" class="nav-link" data-scroll-target="#filtres"><span class="header-section-number">4.6</span> Filtres</a></li>
   <li><a href="#sauvegarder-les-décisions" id="toc-sauvegarder-les-décisions" class="nav-link" data-scroll-target="#sauvegarder-les-décisions"><span class="header-section-number">4.7</span> Sauvegarder les décisions</a></li>
-  <li><a href="#ajouter-une-codeliste-au-registre" id="toc-ajouter-une-codeliste-au-registre" class="nav-link" data-scroll-target="#ajouter-une-codeliste-au-registre"><span class="header-section-number">4.8</span> Ajouter une CodeListe au registre</a></li>
+  <li><a href="#ajouter-une-codelist-au-registre" id="toc-ajouter-une-codelist-au-registre" class="nav-link" data-scroll-target="#ajouter-une-codelist-au-registre"><span class="header-section-number">4.8</span> Ajouter une CodeList au registre</a></li>
   </ul></li>
   <li><a href="#registre-nettoyé" id="toc-registre-nettoyé" class="nav-link" data-scroll-target="#registre-nettoyé"><span class="header-section-number">5</span> Registre nettoyé</a>
   <ul class="collapse">
@@ -173,7 +176,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 21, 2026</p>
+      <p class="date">July 30, 2026</p>
     </div>
   </div>
   
@@ -187,10 +190,10 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="introduction" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> Introduction</h1>
-<p>Le <strong>Metadata Scrubber</strong> est un outil qui identifie les listes de codes (<code>CodeList</code>) redondantes au sein d’un fichier de métadonnées au format DDI (Data Dictionary Interface). Il propose deux modes d’utilisation complémentaires :</p>
+<p>Le <strong>Metadata Scrubber</strong> est un outil qui identifie les listes de codes (<code>CodeList</code>) redondantes au sein d’un fichier de métadonnées au format DDI (Data Documentation Initiative). Il propose deux modes d’utilisation complémentaires :</p>
 <ul>
 <li><strong>Exécution automatique</strong> — analyse le fichier XML DDI et génère un registre de paires de CodeLists détectées comme potentiellement redondantes.</li>
-<li><strong>Interface de validation interactive</strong> — permet d’examiner chaque paire, prendre des décisions (consolider ou rejeter), et produire en sortie un registre épuré ne conservant qu’une CodeListe maîtresse par groupe de redondances.</li>
+<li><strong>Interface de validation interactive</strong> — permet d’examiner chaque paire, prendre des décisions (consolider ou rejeter), et produire en sortie un registre épuré ne conservant qu’une CodeList maîtresse par groupe de redondances.</li>
 </ul>
 <p>Ce document s’adresse à l’<strong>expert métier</strong> qui utilise l’interface web pour examiner les résultats et valider les rapprochements. La logique algorithmique du pipeline (entonnoir exact → flou → sémantique) est décrite en détail dans la <a href="./note_methodologique_dedoublonnage.html">note méthodologique</a> (§ 8).</p>
 <hr>
@@ -332,14 +335,14 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 </tbody>
 </table>
-<p>Chaque CodeListe est présentée sous forme de <strong>carte</strong> comportant :</p>
+<p>Chaque CodeList est présentée sous forme de <strong>carte</strong> comportant :</p>
 <ul>
-<li>Le <strong>nom</strong> de la CodeListe et un bouton <strong>Voir</strong> à côté (pour la comparaison)</li>
+<li>Le <strong>nom</strong> de la CodeList et un bouton <strong>Voir</strong> à côté (pour la comparaison)</li>
 <li>Le <strong>nombre de codes</strong></li>
 <li>Le <strong>score de confiance</strong> (0–100 %)</li>
 <li>Le <strong>badge de décision</strong> : 🟡 en attente, 🟢 approuvé, 🔴 rejeté</li>
-<li>Les <strong>signaux de détection</strong> : <em>exact</em>, <em>flou</em>, <em>usage</em>, <em>synonyme</em>, <em>semantic</em></li>
-<li>Un bouton <strong>📋 Détails</strong> affichant une liste <code>(valeur → libellé)</code> pour chaque CodeListe du groupe</li>
+<li>Les <strong>signaux de détection</strong> : <em>exact</em>, <em>flou</em>, <em>usage</em>, <em>synonyme</em>, <em>semantic</em> (ces badges reflètent la phase du pipeline qui a produit la correspondance — <em>synonyme</em> n’est pas un signal séparé mais une manifestation du signal <em>semantic</em> (juge LLM) ; le détail des définitions est dans la <a href="./note_methodologique_dedoublonnage.html">note méthodologique</a>, §2-3)</li>
+<li>Un bouton <strong>📋 Détails</strong> affichant une liste <code>(valeur → libellé)</code> pour chaque CodeList du groupe</li>
 </ul>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -350,10 +353,10 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="comparer-côte-à-côte" class="level2" data-number="4.3">
 <h2 data-number="4.3" class="anchored" data-anchor-id="comparer-côte-à-côte"><span class="header-section-number">4.3</span> Comparer côte à côte</h2>
-<p>Cliquez sur <strong>Voir</strong> (à côté du nom de la CodeListe) pour ouvrir le panneau de comparaison en deux colonnes :</p>
+<p>Cliquez sur <strong>Voir</strong> (à côté du nom de la CodeList) pour ouvrir le panneau de comparaison en deux colonnes :</p>
 <ul>
-<li><strong>Colonne gauche</strong> : la CodeListe maître (la plus récente, ou celle retenue)</li>
-<li><strong>Colonne droite</strong> : la CodeListe candidate détectée comme redondante</li>
+<li><strong>Colonne gauche</strong> : la CodeList maître (la plus récente, ou celle retenue)</li>
+<li><strong>Colonne droite</strong> : la CodeList candidate détectée comme redondante</li>
 <li><strong>Lignes colorées</strong> : les lignes où les valeurs ou libellés diffèrent entre les deux listes (mise en évidence rouge)</li>
 <li>Les <strong>codes communs</strong> (valeur + libellé identiques) ne sont pas colorés</li>
 </ul>
@@ -415,7 +418,7 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>Filtre décision</strong> : <em>Toutes</em> / <em>En attente</em> / <em>Approuvés</em> / <em>Rejetés</em> / <em>Sans doublon</em></li>
 <li><strong>Filtre origine</strong> : <em>Toutes</em> / <em>Registre uniquement</em> (uniquement les CodeLists qui sont des maîtres d’un registre existant)</li>
-<li><strong>Recherche</strong> : champ texte — recherche par nom de la CodeListe</li>
+<li><strong>Recherche</strong> : champ texte — recherche par nom de la CodeList</li>
 <li><strong>Afficher</strong> : 20 / 50 / 100 éléments par page</li>
 </ul>
 </section>
@@ -437,12 +440,12 @@ ul.task-list li input[type="checkbox"] {
 <p><strong>Ce que la sauvegarde produit</strong> : <code>cleaned_codelists.json</code> ne contient que les CodeLists maîtres — celles qui ont été approuvées et celles marquées “sans doublon”. Chaque maître possède un champ <code>replaces[]</code> listant les CodeLists redondantes qu’il remplace. Ce fichier est un input pour les runs suivants (workflow itératif, § 6.2).</p>
 </blockquote>
 </section>
-<section id="ajouter-une-codeliste-au-registre" class="level2" data-number="4.8">
-<h2 data-number="4.8" class="anchored" data-anchor-id="ajouter-une-codeliste-au-registre"><span class="header-section-number">4.8</span> Ajouter une CodeListe au registre</h2>
-<p>Lorsqu’une CodeListe n’a aucun doublon détecté, l’expert peut décider tout de même de l’ajouter au registre épuré :</p>
+<section id="ajouter-une-codelist-au-registre" class="level2" data-number="4.8">
+<h2 data-number="4.8" class="anchored" data-anchor-id="ajouter-une-codelist-au-registre"><span class="header-section-number">4.8</span> Ajouter une CodeList au registre</h2>
+<p>Lorsqu’une CodeList n’a aucun doublon détecté, l’expert peut décider tout de même de l’ajouter au registre épuré :</p>
 <ol type="1">
-<li>Cliquez sur le bouton <strong>➕ Ajouter au registre</strong> (en haut de la carte de la CodeListe concernée, accessible via le bouton <strong>📋 Détails</strong> ou dans la vue comparée)</li>
-<li>La CodeListe apparaît alors comme maître dans le registre nettoyé</li>
+<li>Cliquez sur le bouton <strong>➕ Ajouter au registre</strong> (en haut de la carte de la CodeList concernée, accessible via le bouton <strong>📋 Détails</strong> ou dans la vue comparée)</li>
+<li>La CodeList apparaît alors comme maître dans le registre nettoyé</li>
 <li>La sauvegarde (<strong>💾 sauvegarder</strong>) écrit cette entrée dans <code>cleaned_codelists.json</code></li>
 </ol>
 <blockquote class="blockquote">
@@ -470,12 +473,12 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="contenu-dune-entrée" class="level2" data-number="5.2">
 <h2 data-number="5.2" class="anchored" data-anchor-id="contenu-dune-entrée"><span class="header-section-number">5.2</span> Contenu d’une entrée</h2>
-<p>Chaque carte de CodeListe maître contient :</p>
+<p>Chaque carte de CodeList maître contient :</p>
 <ul>
 <li><strong>Nom</strong> et <strong>label</strong> (libellé)</li>
 <li><strong>Nombre de codes</strong></li>
 <li><strong>Codes</strong> : liste de paires <code>(valeur → libellé)</code> dans un bloc copiable</li>
-<li><strong>Variables référentes</strong> : noms des variables DDI qui référencent cette CodeListe</li>
+<li><strong>Variables référentes</strong> : noms des variables DDI qui référencent cette CodeList</li>
 <li><strong>Replace</strong> : badge indiquant le nombre de CodeLists redondantes remplacées (cliquable, affiche la liste détaillée des remplaçants — nom, type de détection, score de confiance)</li>
 </ul>
 </section>
@@ -520,7 +523,7 @@ ul.task-list li input[type="checkbox"] {
 <p>Le circuit se décompose en 5 étapes :</p>
 <ol type="1">
 <li><p><strong>Exécuter le pipeline</strong> (§ 3) — configurez le chemin source et lancez le pipeline. Le résultat est un fichier de doublons.</p></li>
-<li><p><strong>Examiner les cartes</strong> (§ 4.1–4.2) — passez à l’onglet <strong>Validation</strong>, chargez le registre si nécessaire, et parcourrez les cartes. Les cartes sont triées par nombre de codes par défaut, mais vous pouvez les filtrer par décision, origine ou recherche textuelle.</p></li>
+<li><p><strong>Examiner les cartes</strong> (§ 4.1–4.2) — passez à l’onglet <strong>Validation</strong>, chargez le registre si nécessaire, et parcourez les cartes. Les cartes sont triées par nombre de codes par défaut, mais vous pouvez les filtrer par décision, origine ou recherche textuelle.</p></li>
 <li><p><strong>Comparer par paire</strong> (§ 4.3) — pour chaque paire douteuse, cliquez sur <strong>Voir</strong> pour comparer les deux CodeLists côte à côte. Les lignes colorées en rouge indiquent les différences de contenu.</p></li>
 <li><p><strong>Prendre des décisions</strong> (§ 4.4–4.5) — pour chaque paire, cliquez sur <strong>✅ Approuver</strong> (les listes sont redondantes) ou <strong>❌ Rejeter</strong> (les listes sont distinctes). Les actions de masse (§ 4.5) permettent de accélérer le traitement des paires à fort score de confiance.</p></li>
 <li><p><strong>Sauvegarder</strong> (§ 4.7) — une fois toutes les décisions prises (ou avant de reprendre plus tard), cliquez sur <strong>💾 sauvegarder</strong>. Ceci met à jour le registre <code>codelist_duplicates.json</code> et écrit le registre nettoyé <code>cleaned_codelists.json</code>.</p></li>
@@ -546,18 +549,18 @@ Step 2 — Analyser BPE
 <p><strong>Pourquoi c’est utile :</strong></p>
 <ul>
 <li>Les doublons déjà validés (ex. <code>N_NAF_6</code>) sont <strong>exclus de la détection</strong> : on ne les redécouvre pas dans des runs ultérieurs.</li>
-<li>Les nouveaux doublons sont détectés <strong>par rapport aux maîtres cumulés</strong> : une CodeListe BPE peut être reconnue comme doublon d’une CodeListe BTS, même si aucune des deux ne figure dans le même fichier.</li>
+<li>Les nouveaux doublons sont détectés <strong>par rapport aux maîtres cumulés</strong> : une CodeList BPE peut être reconnue comme doublon d’une CodeList BTS, même si aucune des deux ne figure dans le même fichier.</li>
 <li>Le registre propre <strong>croît</strong> à chaque run et constitue une référence transversale sur tout le projet.</li>
 </ul>
 <p><strong>Dans l’interface</strong> : saisissez simplement le chemin <code>cleaned_codelists.json</code> dans le champ <strong>Registre nettoyé</strong> de l’onglet Pipeline avant de lancer le nouveau run.</p>
 </section>
 <section id="ajouter-des-listes-sans-doublon" class="level2" data-number="6.3">
 <h2 data-number="6.3" class="anchored" data-anchor-id="ajouter-des-listes-sans-doublon"><span class="header-section-number">6.3</span> Ajouter des listes sans doublon</h2>
-<p>Lorsqu’une CodeListe n’est détectée comme doublon de personne par le pipeline (ex. <code>L_QUALITE_ZONAGE_2023</code> dans l’exemple BPE_demo), vous pouvez la <strong>ajouter manuellement</strong> au registre propre :</p>
+<p>Lorsqu’une CodeList n’est détectée comme doublon de personne par le pipeline (ex. <code>L_QUALITE_ZONAGE_2023</code> dans l’exemple BPE_demo), vous pouvez la <strong>ajouter manuellement</strong> au registre propre :</p>
 <ol type="1">
-<li>Consultez la CodeListe dans l’onglet <strong>Validation</strong> (ou via son détail)</li>
+<li>Consultez la CodeList dans l’onglet <strong>Validation</strong> (ou via son détail)</li>
 <li>Cliquez sur <strong>➕ Ajouter au registre</strong></li>
-<li>Sauvegardez (<strong>💾 sauvegarder</strong>) — la liste apparaît dans <code>cleaned_codelists.json</code> comme maître sans remplacent.</li>
+<li>Sauvegardez (<strong>💾 sauvegarder</strong>) — la liste apparaît dans <code>cleaned_codelists.json</code> comme maître sans remplaçant.</li>
 </ol>
 <blockquote class="blockquote">
 <p>Cette fonctionnalité est particulièrement utile pour les CodeLists uniques mais essentielles, ou lorsque vous souhaitez créer une référence maître pour un nouveau concept métier avant d’identifier ses variantes.</p>
@@ -575,8 +578,35 @@ Step 2 — Analyser BPE
 </section>
 <section id="note-méthodologique" class="level1" data-number="8">
 <h1 data-number="8"><span class="header-section-number">8</span> Note méthodologique</h1>
-<p>Un entonnoir en trois niveaux — <strong>exact</strong> (signature identique) → <strong>flou</strong> (Similarity ≥ 0.90) → <strong>sémantique</strong> (embeddings + juge LLM) — permet de couvrir toutes les formes de redondance : copies conformes, variantes mineures (casse, accents, ordre), synonymes conceptuels, et doublons cross-fichier.</p>
-<p>Le signal d’usage (<code>var_sig</code> — variables qui référencent les CodeLists) et le registre propre (<code>cleaned_codelists.json</code>) complètent cette approche pour obtenir un dédoublonnage transversal, cumulatif et reproductible.</p>
+<p>Un entonnoir en trois niveaux — <strong>exact</strong> (signature identique) → <strong>flou</strong> (Similarity ≥ 0.90) → <strong>sémantique</strong> (embeddings + juge LLM) — permet de couvrir la majorité des formes de redondance :</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Forme de redondance</th>
+<th>Signal qui la détecte</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Copies conformes</td>
+<td><strong>exact</strong></td>
+</tr>
+<tr class="even">
+<td>Variantes mineures (casse, accents, ordre)</td>
+<td><strong>flou</strong></td>
+</tr>
+<tr class="odd">
+<td>Synonymes conceptuels</td>
+<td><strong>sémantique</strong> (badge <em>synonyme</em> ou <em>semantic</em>, même mécanisme LLM)</td>
+</tr>
+</tbody>
+</table>
+<p>Ces trois niveaux sont <strong>strictement hiérarchiques</strong> (un candidat n’est traité qu’une fois, par le premier niveau qui le détecte). Le signal d’usage (<code>var_sig</code> — variables qui référencent les CodeLists) et les <strong>doublons cross-opération</strong> ne sont pas un quatrième niveau de l’entonnoir : ce sont deux mécanismes <strong>transversaux</strong>, qui s’appliquent en plus des trois niveaux et pas à une étape fixe du pipeline. <code>var_sig</code> vient renforcer ou nuancer n’importe lequel des trois niveaux (voir note méthodologique, §3), et les doublons cross-opération sont simplement des doublons exacts, flous ou sémantiques détectés entre deux exécutions successives du pipeline grâce au registre propre (<code>cleaned_codelists.json</code>), et non une catégorie de redondance à part.</p>
+<p>Le registre propre (<code>cleaned_codelists.json</code>) complète cette approche pour obtenir un dédoublonnage transversal, cumulatif et reproductible.</p>
 <p>Pour le détail complet de l’algorithme et des résultats sur BTS.xml (156 CodeLists, 29 groupes de doublons, 54 CodeLists redondantes), consultez la <a href="./note_methodologique_dedoublonnage.html">note méthodologique</a>. (source : note méthodologique, § 2).</p>
 
 
