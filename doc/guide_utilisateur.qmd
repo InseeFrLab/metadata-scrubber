@@ -13,14 +13,14 @@ documentclass: article
 # Introduction
 
 Le **Metadata Scrubber** est un outil qui identifie les listes de codes (`CodeList`)
-redondantes au sein d'un fichier de métadonnées au format DDI (Data Dictionary
-Interface). Il propose deux modes d'utilisation complémentaires :
+redondantes au sein d'un fichier de métadonnées au format DDI (Data Documentation
+Initiative). Il propose deux modes d'utilisation complémentaires :
 
 - **Exécution automatique** — analyse le fichier XML DDI et génère un registre de
   paires de CodeLists détectées comme potentiellement redondantes.
 - **Interface de validation interactive** — permet d'examiner chaque paire, prendre
   des décisions (consolider ou rejeter), et produire en sortie un registre épuré
-  ne conservant qu'une CodeListe maîtresse par groupe de redondances.
+  ne conservant qu'une CodeList maîtresse par groupe de redondances.
 
 Ce document s'adresse à l'**expert métier** qui utilise l'interface web pour examiner
 les résultats et valider les rapprochements. La logique algorithmique du pipeline
@@ -121,25 +121,29 @@ Quatre indicateurs en haut de page résument l'état du registre :
 | **Approuvés** | Pairs pour lesquelles l'expert a validé le rapprochement |
 | **En attente** | Paires n'ayant pas encore été examinées |
 
-Chaque CodeListe est présentée sous forme de **carte** comportant :
+Chaque CodeList est présentée sous forme de **carte** comportant :
 
-- Le **nom** de la CodeListe et un bouton **Voir** à côté (pour la comparaison)
+- Le **nom** de la CodeList et un bouton **Voir** à côté (pour la comparaison)
 - Le **nombre de codes**
 - Le **score de confiance** (0–100 %)
 - Le **badge de décision** : 🟡 en attente, 🟢 approuvé, 🔴 rejeté
 - Les **signaux de détection** : *exact*, *flou*, *usage*, *synonyme*, *semantic*
+  (ces badges reflètent la phase du pipeline qui a produit la correspondance —
+  *synonyme* n'est pas un signal séparé mais une manifestation du signal
+  *semantic* (juge LLM) ; le détail des définitions est dans la
+  [note méthodologique](note_methodologique_dedoublonnage.qmd), §2-3)
 - Un bouton **📋 Détails** affichant une liste `(valeur → libellé)` pour chaque
-  CodeListe du groupe
+  CodeList du groupe
 
 ![Vue en cartes du registre avec indicateurs](img/app_view_duplicates.png){width="700px"}
 
 ## Comparer côte à côte
 
-Cliquez sur **Voir** (à côté du nom de la CodeListe) pour ouvrir le panneau de
+Cliquez sur **Voir** (à côté du nom de la CodeList) pour ouvrir le panneau de
 comparaison en deux colonnes :
 
-- **Colonne gauche** : la CodeListe maître (la plus récente, ou celle retenue)
-- **Colonne droite** : la CodeListe candidate détectée comme redondante
+- **Colonne gauche** : la CodeList maître (la plus récente, ou celle retenue)
+- **Colonne droite** : la CodeList candidate détectée comme redondante
 - **Lignes colorées** : les lignes où les valeurs ou libellés diffèrent entre
   les deux listes (mise en évidence rouge)
 - Les **codes communs** (valeur + libellé identiques) ne sont pas colorés
@@ -178,7 +182,7 @@ Pour se concentrer sur un sous-ensemble de CodeLists :
 
 - **Filtre décision** : *Toutes* / *En attente* / *Approuvés* / *Rejetés* / *Sans doublon*
 - **Filtre origine** : *Toutes* / *Registre uniquement* (uniquement les CodeLists qui sont des maîtres d'un registre existant)
-- **Recherche** : champ texte — recherche par nom de la CodeListe
+- **Recherche** : champ texte — recherche par nom de la CodeList
 - **Afficher** : 20 / 50 / 100 éléments par page
 
 ## Sauvegarder les décisions
@@ -198,15 +202,15 @@ Une notification (toast) verte apparaît en confirmation :
 > CodeLists redondantes qu'il remplace. Ce fichier est un input pour les runs
 > suivants (workflow itératif, § 6.2).
 
-## Ajouter une CodeListe au registre
+## Ajouter une CodeList au registre
 
-Lorsqu'une CodeListe n'a aucun doublon détecté, l'expert peut décider tout de
+Lorsqu'une CodeList n'a aucun doublon détecté, l'expert peut décider tout de
 même de l'ajouter au registre épuré :
 
 1. Cliquez sur le bouton **➕ Ajouter au registre** (en haut de la carte de la
-   CodeListe concernée, accessible via le bouton **📋 Détails** ou dans la
+   CodeList concernée, accessible via le bouton **📋 Détails** ou dans la
    vue comparée)
-2. La CodeListe apparaît alors comme maître dans le registre nettoyé
+2. La CodeList apparaît alors comme maître dans le registre nettoyé
 3. La sauvegarde (**💾 sauvegarder**) écrit cette entrée dans
    `cleaned_codelists.json`
 
@@ -232,12 +236,12 @@ L'interface affiche alors la liste des CodeLists maîtres avec leurs remplaçant
 
 ## Contenu d'une entrée
 
-Chaque carte de CodeListe maître contient :
+Chaque carte de CodeList maître contient :
 
 - **Nom** et **label** (libellé)
 - **Nombre de codes**
 - **Codes** : liste de paires `(valeur → libellé)` dans un bloc copiable
-- **Variables référentes** : noms des variables DDI qui référencent cette CodeListe
+- **Variables référentes** : noms des variables DDI qui référencent cette CodeList
 - **Replace** : badge indiquant le nombre de CodeLists redondantes remplacées
   (cliquable, affiche la liste détaillée des remplaçants — nom, type de
   détection, score de confiance)
@@ -277,7 +281,7 @@ Le circuit se décompose en 5 étapes :
    pipeline. Le résultat est un fichier de doublons.
 
 2. **Examiner les cartes** (§ 4.1–4.2) — passez à l'onglet **Validation**,
-   chargez le registre si nécessaire, et parcourrez les cartes. Les cartes
+   chargez le registre si nécessaire, et parcourez les cartes. Les cartes
    sont triées par nombre de codes par défaut, mais vous pouvez les filtrer
    par décision, origine ou recherche textuelle.
 
@@ -323,7 +327,7 @@ Step 2 — Analyser BPE
 - Les doublons déjà validés (ex. `N_NAF_6`) sont **exclus de la détection** :
   on ne les redécouvre pas dans des runs ultérieurs.
 - Les nouveaux doublons sont détectés **par rapport aux maîtres cumulés** :
-  une CodeListe BPE peut être reconnue comme doublon d'une CodeListe BTS,
+  une CodeList BPE peut être reconnue comme doublon d'une CodeList BTS,
   même si aucune des deux ne figure dans le même fichier.
 - Le registre propre **croît** à chaque run et constitue une référence
   transversale sur tout le projet.
@@ -334,14 +338,14 @@ nouveau run.
 
 ## Ajouter des listes sans doublon
 
-Lorsqu'une CodeListe n'est détectée comme doublon de personne par le pipeline
+Lorsqu'une CodeList n'est détectée comme doublon de personne par le pipeline
 (ex. `L_QUALITE_ZONAGE_2023` dans l'exemple BPE_demo), vous pouvez la
 **ajouter manuellement** au registre propre :
 
-1. Consultez la CodeListe dans l'onglet **Validation** (ou via son détail)
+1. Consultez la CodeList dans l'onglet **Validation** (ou via son détail)
 2. Cliquez sur **➕ Ajouter au registre**
 3. Sauvegardez (**💾 sauvegarder**) — la liste apparaît dans `cleaned_codelists.json`
-   comme maître sans remplacent.
+   comme maître sans remplaçant.
 
 > Cette fonctionnalité est particulièrement utile pour les CodeLists uniques
 > mais essentielles, ou lorsque vous souhaitez créer une référence maître pour
@@ -373,12 +377,27 @@ tous les endpoints, leurs paramètres et leurs réponses.
 
 Un entonnoir en trois niveaux — **exact** (signature identique) → **flou**
 (Similarity ≥ 0.90) → **sémantique** (embeddings + juge LLM) — permet de
-couvrir toutes les formes de redondance : copies conformes, variantes
-mineures (casse, accents, ordre), synonymes conceptuels, et doublons
-cross-fichier.
+couvrir la majorité des formes de redondance :
 
-Le signal d'usage (`var_sig` — variables qui référencent les CodeLists)
-et le registre propre (`cleaned_codelists.json`) complètent cette approche
+| Forme de redondance | Signal qui la détecte |
+|---|---|
+| Copies conformes | **exact** |
+| Variantes mineures (casse, accents, ordre) | **flou** |
+| Synonymes conceptuels | **sémantique** (badge *synonyme* ou *semantic*, même mécanisme LLM) |
+
+Ces trois niveaux sont **strictement hiérarchiques** (un candidat n'est traité
+qu'une fois, par le premier niveau qui le détecte). Le signal d'usage
+(`var_sig` — variables qui référencent les CodeLists) et les **doublons
+cross-opération** ne sont pas un quatrième niveau de l'entonnoir : ce sont
+deux mécanismes **transversaux**, qui s'appliquent en plus des trois niveaux
+et pas à une étape fixe du pipeline. `var_sig` vient renforcer ou nuancer
+n'importe lequel des trois niveaux (voir note méthodologique, §3), et les
+doublons cross-opération sont simplement des doublons exacts, flous ou
+sémantiques détectés entre deux exécutions successives du pipeline grâce au
+registre propre (`cleaned_codelists.json`), et non une catégorie de
+redondance à part.
+
+Le registre propre (`cleaned_codelists.json`) complète cette approche
 pour obtenir un dédoublonnage transversal, cumulatif et reproductible.
 
 Pour le détail complet de l'algorithme et des résultats sur BTS.xml (156

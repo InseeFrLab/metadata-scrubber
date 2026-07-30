@@ -6,9 +6,9 @@ format: html
 ## Metadata Scrubber
 
 Pipeline de **dédoublonnage des CodeLists** DDI 3.3 / 6.0.  
-Il analyse un fichier de métadonnées au format DDI, identifie les listes de codes redondantes via un entonnoir de quatre méthodes (exact, flou, embeddings, usage) et propose une **interface de validation interactive** pour que l'expert métier puisse examiner, approuver ou rejeter chaque paire détectée.
+Il analyse un fichier de métadonnées au format DDI, identifie les listes de codes redondantes via un entonnoir en trois niveaux (exact, flou, sémantique) complété par un signal d'usage transversal (`var_sig`), et propose une **interface de validation interactive** pour que l'expert métier puisse examiner, approuver ou rejeter chaque paire détectée.
 
-Le résultat est un **registre épuré** (`cleaned_codelists.json`) qui ne conserve qu'une CodeListe maître par groupe de redondances — injectable de manière itérative via l'option `--registry` pour traiter les fichiers suivants.
+Le résultat est un **registre épuré** (`cleaned_codelists.json`) qui ne conserve qu'une CodeList maître par groupe de redondances — injectable de manière itérative via l'option `--registry` pour traiter les fichiers suivants.
 
 ---
 

@@ -7,9 +7,9 @@ date: today
 documentclass: article
 ---
 
-# Introduction
+# Introduction {.unnumbered}
 
-Cette note décrit la méthodologie implémentée dans le pipeline `metadata-scrubber` pour identifier les listes de codes (`CodeList`) redondantes au sein d'un fichier XML DDI (Data Dictionary Interface).
+Cette note décrit la méthodologie implémentée dans le pipeline `metadata-scrubber` pour identifier les listes de codes (`CodeList`) redondantes au sein d'un fichier XML DDI (Data Documentation Initiative).
 
 > **Scénario** : un fichier de métadonnées peut contenir plusieurs définitions de `CodeList` qui, bien que nommées différemment ou légèrement variées, décrivent le même concept.
 
@@ -17,11 +17,11 @@ Cette note décrit la méthodologie implémentée dans le pipeline `metadata-scr
 
 ---
 
-# 1. Modèle de Données DDI et Extraction
+# Modèle de Données DDI et Extraction
 
-## 1.1. Structure du fichier DDI
+## Structure du fichier DDI
 
-Un fichier DDI 3.3 est une suite d'objets enfermés dans des balises `<Fragment>` (~2 573 pour BTS.xml). Chaque `Fragment` contient **exactement un objet** :
+Un fichier DDI 3.3 est une suite d'objets enfermés dans des balises `<Fragment>` (~2 573 pour BTS.xml). Chaque `Fragment` contient **exactement un objet identifiable, versionnable et maintenable** :
 
 - **`CodeList`** : la liste de codes elle-même
 - **`Category`** : le libellé d'une valeur de code
@@ -75,7 +75,7 @@ Le libellé est stocké séparément :
 </Variable>
 ```
 
-## 1.2. Pipeline d'extraction (4 phases)
+## Pipeline d'extraction (4 phases)
 
 ```
 ┌───────────────────────────────────────────────────────┐
@@ -99,11 +99,11 @@ Le libellé est stocké séparément :
 
 ---
 
-# 2. L'Entonnoir de Détection
+# L'Entonnoir de Détection
 
 **Principe** : un entonnoir en trois niveaux, du plus simple au plus coûteux.
 
-## 2.1. Phase 1 — Doublons Exact
+## Phase 1 — Doublons Exact
 
 **Méthode :**
 
@@ -123,7 +123,20 @@ Chacune contient un seul code :
 |--------|---------------------------------------|
 | `cf`   | `Voir dictionnaire des nomenclatures` |
 
-Toutes 18 partagent **exactement la même signature** → doublons exacts. Probablement des **codes génériques** « consulter le dictionnaire » dupliqués par l'outil de modélisation (Collectica).
+Toutes 18 partagent **exactement la même signature** → doublons exacts. Probablement des **codes génériques** « consulter le dictionnaire » dupliqués par l'outil de modélisation (Colectica).
+
+
+> **Limite connue** : ce ne sont pas de vrais doublons conceptuels. Il s'agit d'un
+> raccourci arbitraire du producteur, qui — au lieu de créer ou référencer les
+> listes de codes spécifiques (existantes ou à créer) — a renvoyé vers un
+> document statique unique censé toutes les regrouper. Cette pratique est
+> désormais corrigée systématiquement à la validation de la documentation avant
+> publication (référence directe vers la liste de codes spécifique). Le
+> regroupement en doublon exact reste pertinent sur les données passées pour
+> **signaler l'anomalie**, mais le choix d'une CodeList « maître » parmi les 18
+> est arbitraire/cosmétique — aucune n'est réellement correcte. La vraie
+> correction (créer les 18 listes de codes spécifiques) reste un travail humain
+> hors périmètre de l'outil.
 
 ### Caractéristiques
 
@@ -136,7 +149,7 @@ Toutes 18 partagent **exactement la même signature** → doublons exacts. Proba
 
 Sur BTS.xml : **29 groupes** détectés, **54** CodeLists redondantes.
 
-## 2.2. Phase 1 bis — Quasi-Doublons (Similarité Floue)
+## Phase 1 bis — Quasi-Doublons (Similarité Floue)
 
 **Méthode :**
 
@@ -161,11 +174,11 @@ Sur BTS.xml : **29 groupes** détectés, **54** CodeLists redondantes.
 | Faux négatifs | Différence > ~10 % du texte                 |
 | Faux positifs | Deux listes de plages de valeurs similaires |
 
-## 2.3. Phase 2 — Doublons Sémantiques (Embeddings + LLM)
+## Phase 2 — Doublons Sémantiques (Embeddings + LLM)
 
 Les deux phases précédentes ne comprennent **pas le sens** : possible de "Sexe" vs "Genre" avec codes différents.
 
-### 2.3.1. Embeddings de CodeLists
+### Embeddings de CodeLists
 
 1. Vectorisation : modèle `qwen3-embedding-8b` sur nom + label + codes
 2. Cosinus entre toutes les paires (102 vecteurs → 102×102)
@@ -180,7 +193,13 @@ Les deux phases précédentes ne comprennent **pas le sens** : possible de "Sexe
 }
 ```
 
-### 2.3.2. Embeddings de Variables (usage)
+> **Pas de barème** : il n'existe pas de grille de notation ou de critères
+> pondérés en aval. `confiance` est une valeur continue entre 0 et 1
+> **auto-évaluée par le LLM lui-même** (température 0, un seul appel par
+> paire), accompagnée d'une justification en texte libre. Seules les 20
+> meilleures paires (triées par score cosinus) sont soumises au juge.
+
+### Embeddings de Variables (usage)
 
 **Approche inversée** : on compare les **variables** qui référencent les CodeLists.
 
@@ -203,15 +222,20 @@ Particulièrement efficace quand toutes les CodeLists sont référencées (BTS.x
 
 ---
 
-# 3. Signaux de Renforcement : `var_sig`
+# Signaux de Renforcement : `var_sig`
 
-Une CodeList est **toujours** référencée par au moins une variable. Deux listes utilisées par les **mêmes variables** sont quasi-certainement identiques.
+Une CodeList est **en principe toujours** référencée par au moins une variable — c'est une hypothèse de modélisation, pas une contrainte garantie par DDI ni imposée par Colectica ; des CodeLists orphelines (0 variable référente) existent en pratique dans les données historiques. Deux listes utilisées par les **mêmes variables** sont quasi-certainement identiques.
+
+> **Sans risque sur les orphelines** : `find_usage_groups` exclut explicitement
+> les CodeLists dont le `var_sig` est vide du regroupement par usage
+> (`signals.py`). Les listes sans variable référente ne peuvent donc pas être
+> faussement regroupées entre elles par ce seul signal.
 
 ```
 var_sig(CL) = tuple(sorted( noms_des_variables_qui_la_referencent ))
 ```
 
-## 3.1. Types de recoupement
+## Types de recoupement
 
 | Signal               | Signification                                                                |
 |----------------------|------------------------------------------------------------------------------|
@@ -219,7 +243,7 @@ var_sig(CL) = tuple(sorted( noms_des_variables_qui_la_referencent ))
 | `~ usage partiel`    | Intersection significative → variation contextuelle possible                 |
 | `✗ usages disjoints` | Aucune variable commune → probablement distinctes ou besoin de consolidation |
 
-## 3.2. Exemples BTS.xml
+## Exemples BTS.xml
 
 ### Groupe A : `var_sig` identique + contenu identique → doublon exact confirmé
 
@@ -235,6 +259,22 @@ var_sig(CL) = tuple(sorted( noms_des_variables_qui_la_referencent ))
 | `N_champ_23`   | `("champ",)` |
 | `N_CHAMP_2022` | `("champ",)` |
 
+### Groupe B bis : `var_sig` identique + contenu différent → cas à rejeter
+
+| CodeList        | `var_sig`   | Codes |
+|------------------|-------------|-------|
+| `N_annee_23`     | `("annee",)` | 2019, 2020, 2021, 2022, 2023 |
+| `N_annee_24`     | `("annee",)` | 2019, 2020, 2021, 2022, 2023, 2024 |
+
+Cas fréquent avec les nomenclatures d'années d'enquête : chaque millésime
+ajoute le code de l'année écoulée à la liste précédente, sous la même
+variable référente. Le `var_sig` identique ne signale ici aucune redondance —
+les deux listes sont des versions légitimement distinctes du même référentiel.
+Ce contre-exemple confirme que `var_sig` identique + contenu différent
+(Groupe B) reste **structurellement ambigu** : ni un rapprochement
+automatique, ni un rejet automatique ne seraient corrects dans tous les cas —
+l'arbitrage humain reste nécessaire.
+
 ### Groupe C : `var_sig` disjoints + contenu identique → à consolider
 
 | CodeList | `var_sig` | Codes |
@@ -244,12 +284,12 @@ var_sig(CL) = tuple(sorted( noms_des_variables_qui_la_referencent ))
 
 ---
 
-# 4. Le Flag `--registry` : Dédoublonnage Transversal Itératif
+# Le Flag `--registry` : Dédoublonnage Transversal Itératif
 
-## 4.1. Pourquoi `--registry` ?
+## Pourquoi `--registry` ?
 
 Un seul run du pipeline identifie les redondances **au sein d'un unique fichier traité**.
-Mais les mêmes CodeLists peuvent apparaître dans plusieurs opérations (BTS, BPE, CPE…).
+Mais les mêmes CodeLists peuvent apparaître dans plusieurs opérations (BTS, BPE, RP…).
 Sans registre partagé, chaque nouvel run redécouvre les paires déjà validées dans les
 opérations précédentes.
 
@@ -257,7 +297,7 @@ Le registre `cleaned_codelists.json` est un **catalogue transversal de vérité*
 s'alimente au fil des opérations et alimente la détection du run suivant, y compris les
 appariements **cross-opération**.
 
-## 4.2. Flux transversal
+## Flux transversal
 
 ````md
 Opération 1 : BTS_demo.xml (sans --registry)
@@ -280,7 +320,7 @@ Plus le registre grossit, plus la détection évite les réitérations
 et capture les appariements inter-opérations.
 ````
 
-## 4.3. Ce que fait `--registry` dans le pipeline (main.py, §2 bis)
+## Ce que fait `--registry` dans le pipeline (main.py, §2 bis)
 
 Lors du lancement avec `--registry cleaned_codelists.json` :
 
@@ -299,7 +339,18 @@ codelists = [
 codelists = registry_cls + codelists  # masters d'abord
 ```
 
-## 4.4. Schéma du registre nettoyé (v2)
+> **À discuter — versioning** : `replaced_ids` est aujourd'hui un simple
+> ensemble d'IDs bruts, sans notion de version. Si une nouvelle version d'un
+> objet déjà remplacé apparaît dans un fichier ultérieur, elle est
+> silencieusement exclue de la détection (même comportement qu'un doublon déjà
+> traité). Reste à trancher en équipe : faut-il ré-examiner un ID lors d'un
+> changement de version (au risque de redétecter des paires déjà validées),
+> ou continuer à l'exclure systématiquement (au risque de manquer un contenu
+> qui a changé) ? Une piste : n'ajouter un couple `(id, version)` à
+> `replaces[]` que si le modèle DDI expose une version exploitable sur le
+> Fragment source.
+
+## Schéma du registre nettoyé (v2)
 
 ```json
 {
@@ -329,7 +380,7 @@ codelists = registry_cls + codelists  # masters d'abord
 }
 ```
 
-## 4.5. Sync incrémental (`sync_cleaned_registry`)
+## Sync incrémental (`sync_cleaned_registry`)
 
 Lors de `/api/registry/save` :
 
@@ -340,13 +391,13 @@ Lors de `/api/registry/save` :
 
 ---
 
-# 5. Walkthrough : Exemples avec les Datasets Demo
+# Walkthrough : Exemples avec les Datasets Demo
 
 Le dossier `demo/` contient des fichiers XML de petite taille, générés depuis les sources S3, avec des paires connues pour illustrer et tester le pipeline.
 
 Générer les fichiers : `uv run demo/make_demo_files.py`.
 
-## 5.1. `demo/BTS_demo.xml` — Run 1 (sans registry)
+## `demo/BTS_demo.xml` — Run 1 (sans registry)
 
 **Contexte** : 10 CodeLists issues de BTS.xml : 4 paires connues + 2 listes uniques.
 
@@ -384,7 +435,7 @@ Pas de chevauchement direct de codes — détectée uniquement par embeddings + 
 
 ---
 
-## 5.2. `demo/BPE_demo.xml` — Run 2 (avec `--registry cleaned_codelists.json`)
+## `demo/BPE_demo.xml` — Run 2 (avec `--registry cleaned_codelists.json`)
 
 **Contexte** : 9 CodeLists issues de BPE.xml — 6 listes BPE natives, 2 copies de BTS avec IDs neufs, 1 unique à ajouter manuellement.
 
@@ -410,7 +461,7 @@ Codes : `2013/2017/2018/2023` pour 2023 vs `2017/2022` pour 2022 — même conce
 
 ---
 
-## 5.3. Registre après opération 2 (BPE)
+## Registre après opération 2 (BPE)
 
 `cleaned_codelists.json` (v2) contient maintenant 6 entrées de maître :
 
@@ -425,13 +476,45 @@ Codes : `2013/2017/2018/2023` pour 2023 vs `2017/2022` pour 2022 — même conce
 
 ---
 
-## 5.4. Ajout manuel : `L_QUALITE_ZONAGE_2023`
+## Ajout manuel : `L_QUALITE_ZONAGE_2023`
 
 Cette CodeList est unique (aucun doublon intra ou cross-fichier détecté). L'expert peut l'ajouter **manuellement** au registre (bouton "Ajouter au registre" dans l'interface), sans validation de paire. Elle sera présente comme master dans le registre pour les opérations futures.
 
+> **À discuter — paquet partagé vs local au domaine producteur (RMéS)** :
+> l'ajout manuel ne distingue pas aujourd'hui une CodeList à verser dans le
+> paquet de ressources partagées commun d'une CodeList qui doit rester locale
+> au domaine du producteur. Critères candidats à trancher en équipe :
+> réutilisation avérée par ≥ 2 domaines/opérations, correspondance à une
+> nomenclature officiellement référencée, validation explicite d'un référent
+> qualité. Il faudra aussi un mécanisme pour reverser a posteriori une
+> CodeList locale dans le paquet partagé (ex. marquage « candidate à la
+> promotion » + revue périodique), plutôt que de tout verser automatiquement —
+> l'objectif étant d'éviter l'effet « premier-arrivé-premier-servi » qui
+> imposerait les choix de nommage d'un seul producteur à tous les autres.
+
+### Amorçage du registre avec les nomenclatures officielles partagées
+
+Le mécanisme `--registry` (§ ci-dessus) fait déjà gagner la priorité
+« maître » aux entrées du registre **même sans aucune variable référente** :
+`main.py` préfixe les entrées du registre nettoyé à la liste des CodeLists
+avant tout regroupement, et `detect_exact_duplicates` / `find_usage_groups`
+retiennent toujours le premier élément du groupe comme maître — donc les
+entrées du registre l'emportent structurellement dès qu'un doublon apparaît,
+indépendamment du nombre de variables qui les référencent au moment de
+l'injection.
+
+A étudier : amorcer `cleaned_codelists.json` avec un export du paquet de
+ressources dédié aux nomenclatures officielles (codes renseignés, `vars: []`
+au départ), en dehors du cycle de sync normal des décisions. Une entrée
+ajoutée ainsi « à la main » survit aux syncs suivants même avec un `replaces`
+vide (`sync_cleaned_registry` ne supprime que les entrées vidées par le sync
+lui-même). Aucune modification de code n'est donc nécessaire pour que ces
+nomenclatures soient toujours reconnues comme maîtres — seule une procédure
+d'amorçage (export + import initial) reste à mettre en place.
+
 ---
 
-# 6. Tableau Récapitulatif — Dédoublonnage BTS.xml
+# Tableau Récapitulatif — Dédoublonnage BTS.xml
 
 | Méthode | Seuil | Complexité | Output BTS.xml (156 CLs) |
 |---|---|---|---|
@@ -444,27 +527,39 @@ Cette CodeList est unique (aucun doublon intra ou cross-fichier détecté). L'ex
 - $N$ = nb CodeLists (156), $C$ = nb codes moyen (10)
 - $U$ = nb uniques après dédup exact (102)
 - $V$ = nb variables (287), $D$ = dimension embeddings (8192)
+- $L$ = longueur moyenne du texte comparé (nom + paires valeur:libellé
+  concaténées) par `difflib.SequenceMatcher` en phase floue
 
 ---
 
-# 7. Perspectives
+# Perspectives
 
-## 7.1. Performance à Grande Échelle
+## Performance à Grande Échelle
 
 - **MSA / MinHash** pour remplacer la comparaison par paires $O(n^2)$
 - **Parallélisation** du pipeline sur Kubernetes via Argo Workflows
 
-## 7.2. Robustesse
+## Robustesse
 
 - Détection de **sous-ensembles** : une CodeList peut être incluse dans une autre
 - Embeddings spécialisés sur le vocabulaire statistique Insee
+- **Inclusion par référence** : le modèle DDI la permet, mais ni l'outil ni
+  Colectica ne l'implémentent (crainte de références circulaires côté
+  Colectica). Les listes plates issues d'un seul niveau d'une nomenclature
+  hiérarchique officielle (ex. NAF) restent donc des CodeLists à part entière,
+  correctement traitées comme distinctes par la détection de contenu.
+- **Limite connue** (déjà documentée dans le code, `semantic.py`, docstring de
+  `detect_semantic_userid`) : l'heuristique de préfixe commun (même projet
+  Colectica) peut signaler à tort deux niveaux différents d'une même
+  nomenclature (ex. NAF 6 postes vs 17 postes) comme candidats — aucun
+  garde-fou automatique aujourd'hui, surveillance manuelle nécessaire.
 
-## 7.3. Pipeline Reproductible
+## Pipeline Reproductible
 
 - Transformation vers pipeline **`targets`** (R) ou Python équivalent
 - Intégration **CI/CD** : déclencher le dédoublonnage à chaque commit
 
-## 7.4. Analyse Fine de l'Usage
+## Analyse Fine de l'Usage
 
 - Hiérarchie des variables (groupes, familles d'enquêtes)
 - Pondération par importance (métrique de centralité)
@@ -472,7 +567,7 @@ Cette CodeList est unique (aucun doublon intra ou cross-fichier détecté). L'ex
 
 ---
 
-# Conclusion
+# Conclusion {.unnumbered}
 
 Un entonnoir en trois niveaux — **exact** → **flou** → **sémantique** — complété par un signal d'usage (`var_sig`) et un registre transversal itératif (`--registry`) permet de couvrir toute la palette des redondances : copies conformes, variantes mineures, synonymes conceptuels, **et doublons cross-opération**.
 
