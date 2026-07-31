@@ -93,14 +93,26 @@ class TestDetectFuzzyDuplicates:
     def test_fuzzy_high_similarity(self):
         cl1 = self.build_cl("a", [("1", "Un"), ("2", "Deux"), ("3", "Trois")])
         cl2 = self.build_cl("b", [("1", "Un"), ("2", "Deux"), ("3", "Troi")])  # typo
-        detected, all_pairs, by_score = detect_fuzzy_duplicates([cl1, cl2])
+        detected, all_pairs, by_score, excluded = detect_fuzzy_duplicates([cl1, cl2])
         assert len(detected) >= 1  # haute similarité
+        assert excluded == []
 
     def test_fuzzy_no_match(self):
         cl1 = self.build_cl("a", [("1", "Sexe")])
         cl2 = self.build_cl("b", [("1", "Code Postal")])
-        detected, _, by_score = detect_fuzzy_duplicates([cl1, cl2])
+        detected, _, by_score, excluded = detect_fuzzy_duplicates([cl1, cl2])
         assert len(detected) == 0
+        assert excluded == []
+
+    def test_fuzzy_excludes_large_codelists(self):
+        cl1 = self.build_cl("a", [(str(i), f"Label {i}") for i in range(150)])
+        cl2 = self.build_cl("b", [(str(i), f"Autre {i}") for i in range(150)])
+        detected, all_pairs, by_score, excluded = detect_fuzzy_duplicates(
+            [cl1, cl2], max_codes=100
+        )
+        assert detected == []
+        assert all_pairs == {}
+        assert {cl.id for cl in excluded} == {cl1.id, cl2.id}
 
 
 # =====================================================================
@@ -374,7 +386,7 @@ class TestDuplicatesRegistry:
         assert len(exact_groups) == 1  # cl-001 et cl-002 dupliqués
 
         # Pipeline funnel fuzzy
-        detected, pairs, by_score = detect_fuzzy_duplicates(codelists)
+        detected, pairs, by_score, excluded = detect_fuzzy_duplicates(codelists)
         assert isinstance(detected, list)
 
         # Construire des candidats manuellement pour tester le registry

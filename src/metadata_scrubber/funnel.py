@@ -8,6 +8,13 @@ from difflib import SequenceMatcher
 from .normalize import concat_text
 from .types import CodeList
 
+# Nombre de codes maximum d'une CodeList pour être comparée en phase floue.
+# _code_similarity est en O(len(a.codes) * len(b.codes)) avec des appels
+# SequenceMatcher par paire de codes : au-delà de ce seuil, une seule paire
+# peut prendre plusieurs dizaines de minutes (ex. nomenclature des communes,
+# ~35 000 codes).
+MAX_CODES_FOR_FUZZY = 100
+
 
 def _group_by_sig(codelists: list[CodeList]) -> dict[tuple, list[CodeList]]:
     """Groupe les codelists par signature de contenu."""
@@ -166,11 +173,14 @@ def detect_fuzzy_duplicates(
     threshold: float = 0.90,
     inspect_threshold: float = 0.80,
     min_code_sim: float = 0.75,
-) -> tuple[list, dict, dict]:
+    max_codes: int = MAX_CODES_FOR_FUZZY,
+) -> tuple[list, dict, dict, list[CodeList]]:
     """
     Phase 2 — Quasi-doublons (similarite hybride).
 
-    Ne compare que les representatives uniques (1 par signature exacte).
+    Ne compare que les representatives uniques (1 par signature exacte),
+    et seulement celles dont le nombre de codes ne depasse pas `max_codes`
+    (_code_similarity est en O(len(a.codes) * len(b.codes))).
 
     Score hybride = 0.6 * similarite_codes + 0.4 * similarite_noms.
     Boost : si code_sim >= 0.90, le score minimum est élever a 0.95 pour
@@ -181,18 +191,24 @@ def detect_fuzzy_duplicates(
         threshold: Seuil minimal pour une detection (>= 0.90 par defaut).
         inspect_threshold: Seuil minimal pour l'inspection (>= 0.80 par defaut).
         min_code_sim: Similarite minimale sur les codes pour etre considere.
+        max_codes: Nombre de codes maximum d'une CodeList pour etre comparee
+            (au-dela, elle est exclue de la phase floue).
 
     Returns:
-        Tuple (paires_detectees, toutes_paires_dict, toutes_paires_list).
+        Tuple (paires_detectees, toutes_paires_dict, toutes_paires_list, exclues).
         - paires_detectees: liste de scores >= threshold
         - toutes_paires_dict: dict {score: entry} pour scores >= inspect_threshold
         - toutes_paires_list: liste de tous SCORES >= inspect_threshold (triée)
+        - exclues: CodeLists dont len(codes) > max_codes, non comparees
     """
     groups = _group_by_sig(codelists)
     uniques = [g[0] for g in groups.values()]
 
+    excluded = [cl for cl in uniques if len(cl.codes) > max_codes]
+    eligible = [cl for cl in uniques if len(cl.codes) <= max_codes]
+
     nearby: list = []
-    for a, b in itertools.combinations(uniques, 2):
+    for a, b in itertools.combinations(eligible, 2):
         code_sim = _code_similarity(a, b)
 
         # Filtre prealable : similarite codes minimale
@@ -223,7 +239,7 @@ def detect_fuzzy_duplicates(
 
     nearby.sort(key=lambda e: e["score"], reverse=True)
     detected = [e for e in nearby if e["score"] >= threshold]
-    return detected, {e["score"]: e for e in nearby}, detected
+    return detected, {e["score"]: e for e in nearby}, detected, excluded
 
 
 # Alias pour compatibilite avec les appels existants

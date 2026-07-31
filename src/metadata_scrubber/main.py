@@ -36,6 +36,7 @@ from .extractor import (  # noqa: E402
     read_bytes,
 )
 from .funnel import (  # noqa: E402
+    MAX_CODES_FOR_FUZZY,
     detect_exact_duplicates,
     detect_fuzzy_duplicates,
 )
@@ -198,6 +199,7 @@ def run_pipeline(
     # ------------------------------------------------------------------
     # 5. Détection exacte
     # ------------------------------------------------------------------
+    print("[5/9] Détection exacte...")
     exact_groups = detect_exact_duplicates(codelists)
     n_exact_dups = sum(len(g) - 1 for g in exact_groups.values())
     print(f"  [exact] {len(exact_groups)} groupes, {n_exact_dups} redondantes.")
@@ -205,14 +207,19 @@ def run_pipeline(
     # ------------------------------------------------------------------
     # 6. Détection floue
     # ------------------------------------------------------------------
-    detected, all_pairs_dict, _ = detect_fuzzy_duplicates(codelists)
+    print("[6/9] Détection floue...")
+    detected, all_pairs_dict, _, excluded = detect_fuzzy_duplicates(codelists)
     n_detected = len(detected)
     n_inspect = len(all_pairs_dict)
     print(f"  [flou]  {n_detected} pairs détectées, {n_inspect} d'inspection.")
+    if excluded:
+        noms = ", ".join(f"{cl.name or cl.id[:8]} ({len(cl.codes)} codes)" for cl in excluded)
+        print(f"  [flou]  {len(excluded)} CodeList(s) exclue(s) (> {MAX_CODES_FOR_FUZZY} codes) : {noms}")
 
     # ------------------------------------------------------------------
     # 7. Signaux d'usage
     # ------------------------------------------------------------------
+    print("[7/9] Signaux d'usage...")
     for cl in codelists:
         cl.var_sig = tuple(sorted(set(cl.vars)))
 
