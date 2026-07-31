@@ -106,11 +106,22 @@ def _get_openai_client() -> OpenAI:
 
 
 def _cl_texts(codelists: list[CodeList]) -> list[str]:
-    """Pour chaque CodeList, un texte concaténé pour l'embedding."""
-    return [
-        concat_text(cl.name, cl.label, cl.codes, cl.description)
-        for cl in codelists
-    ]
+    """Pour chaque CodeList, un texte concaténé pour l'embedding (tronqué à
+    _TRUNCATE_CL caractères pour ne pas dépasser le context window du modèle)."""
+    texts: list[str] = []
+    truncated: list[CodeList] = []
+    for cl in codelists:
+        text = concat_text(cl.name, cl.label, cl.codes, cl.description)
+        if len(text) > _TRUNCATE_CL:
+            truncated.append(cl)
+        texts.append(text[:_TRUNCATE_CL])
+    if truncated:
+        noms = ", ".join(f"{cl.name or cl.id[:8]} ({len(cl.codes)} codes)" for cl in truncated)
+        print(
+            f"  [semantic] {len(truncated)} CodeList(s) tronquée(s) à {_TRUNCATE_CL} "
+            f"caractères avant embedding : {noms}"
+        )
+    return texts
 
 
 @dataclass

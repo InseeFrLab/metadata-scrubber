@@ -194,6 +194,16 @@ Les deux phases précédentes ne comprennent **pas le sens** : possible de "Sexe
 3. Filtrage : **≥ 0.90**
 4. **Juge LLM** : `gemma4-26b-moe` sur les meilleures candidates
 
+> **Troncature `_TRUNCATE_CL` (8000 caractères)** : le texte concaténé (nom +
+> label + codes) est tronqué avant l'appel d'embedding, pour rester sous la
+> limite de contexte du modèle (`qwen3-embedding-8b` : 40 960 tokens). Sans
+> cette troncature, une CodeList volumineuse (ex. la nomenclature des
+> communes, ~35 000 codes) fait planter l'appel API. La troncature garde nom
+> et label en entier (partie la plus discriminante) et un échantillon des
+> premiers codes — la capacité de détection n'est donc pas perdue, contrairement
+> à une exclusion complète comme pour le seuil `MAX_CODES_FOR_FUZZY` de la
+> phase floue (§ précédent).
+
 ```json
 {
   "meme_concept": true,

@@ -8,8 +8,10 @@ import numpy as np
 import pytest
 
 from metadata_scrubber.semantic import (
+    _TRUNCATE_CL,
     _CandidatePair,
     _VarRecord,
+    _cl_texts,
     _embed_texts,
     detect_semantic_codelists,
     detect_semantic_via_variables,
@@ -50,6 +52,34 @@ class TestEmbedTexts:
         vecs = _embed_texts(client, ["a", "b", "c"])
 
         assert vecs.shape == (3, 2)
+
+
+class TestClTexts:
+    """Tests de _cl_texts (troncature avant embedding)."""
+
+    def test_truncates_large_codelist(self, capsys):
+        """Une CodeList au texte trop long est tronquée à _TRUNCATE_CL caractères."""
+        codes = [(str(i), f"Libellé numéro {i}") for i in range(3000)]
+        cl = CodeList(id="cl-huge", name="HUGE", label="Grosse liste", codes=codes)
+
+        texts = _cl_texts([cl])
+
+        assert len(texts) == 1
+        assert len(texts[0]) == _TRUNCATE_CL
+        captured = capsys.readouterr()
+        assert "tronquée" in captured.out
+        assert "HUGE" in captured.out
+
+    def test_does_not_truncate_small_codelist(self, capsys):
+        """Une CodeList au texte court n'est pas signalée comme tronquée."""
+        cl = CodeList(id="cl-small", name="SMALL", label="Petite liste", codes=[("1", "Un")])
+
+        texts = _cl_texts([cl])
+
+        assert len(texts) == 1
+        assert len(texts[0]) < _TRUNCATE_CL
+        captured = capsys.readouterr()
+        assert captured.out == ""
 
 
 class TestDetectSemanticCodelists:
