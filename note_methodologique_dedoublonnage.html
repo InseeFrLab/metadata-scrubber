@@ -539,6 +539,9 @@ window.Quarto = {
 <li>Filtrage : <strong>≥ 0.90</strong></li>
 <li><strong>Juge LLM</strong> : <code>gemma4-26b-moe</code> sur les meilleures candidates</li>
 </ol>
+<blockquote class="blockquote">
+<p><strong>Troncature <code>_TRUNCATE_CL</code> (8000 caractères)</strong> : le texte concaténé (nom + label + codes) est tronqué avant l’appel d’embedding, pour rester sous la limite de contexte du modèle (<code>qwen3-embedding-8b</code> : 40 960 tokens). Sans cette troncature, une CodeList volumineuse (ex. la nomenclature des communes, ~35 000 codes) fait planter l’appel API. La troncature garde nom et label en entier (partie la plus discriminante) et un échantillon des premiers codes — la capacité de détection n’est donc pas perdue, contrairement à une exclusion complète comme pour le seuil <code>MAX_CODES_FOR_FUZZY</code> de la phase floue (§ précédent).</p>
+</blockquote>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"meme_concept"</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"confiance"</span><span class="fu">:</span> <span class="fl">0.95</span><span class="fu">,</span></span>
