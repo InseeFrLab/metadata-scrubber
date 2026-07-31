@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-07-30">
+<meta name="dcterms.date" content="2026-07-31">
 
 <title>Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0) – Metadata Scrubber</title>
 <style>
@@ -284,7 +284,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 30, 2026</p>
+      <p class="date">July 31, 2026</p>
     </div>
   </div>
   
@@ -523,6 +523,9 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
+<blockquote class="blockquote">
+<p><strong>Seuil <code>MAX_CODES_FOR_FUZZY</code> (défaut 100)</strong> : la comparaison code-à-code (<code>_code_similarity</code>) est en <span class="math inline">\(O(\text{len}(a.codes) \times \text{len}(b.codes))\)</span>, indépendamment du nombre de CodeLists. Une seule liste volumineuse (ex. la nomenclature des communes, ~35 000 codes) suffit à rendre une paire impraticable (plusieurs dizaines de minutes). Les CodeLists dépassant ce seuil sont donc exclues de la phase floue et listées explicitement dans les logs — un vrai doublon parmi elles serait de toute façon capté par la phase exacte (§ précédent).</p>
+</blockquote>
 </section>
 </section>
 <section id="phase-2-doublons-sémantiques-embeddings-llm" class="level2" data-number="2.3">
