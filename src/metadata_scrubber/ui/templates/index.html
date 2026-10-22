@@ -135,6 +135,7 @@
                                 <p>Durée : <span id="resultDuration">-</span></p>
                                 <div id="fileLinks"></div>
                             </div>
+                            <div id="resultWarnings"></div>
                             <div class="mt-3">
                                 <button class="btn btn-outline-primary" id="goToValidationBtn">
                                     🔍 Aller à l'onglet Validation
@@ -167,6 +168,9 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Avertissements du run (étape sémantique sautée, etc.) -->
+                        <div id="runWarnings"></div>
 
                         <!-- Stats -->
                         <div id="statsSection" class="d-none">
@@ -268,14 +272,53 @@
                                 </div>
                             </div>
 
+                            <p class="small text-muted mb-2">
+                                Pastilles d'une CodeList : <span class="badge bg-success">approuvés</span>
+                                <span class="badge bg-danger">rejetés</span>
+                                <span class="badge bg-warning text-dark">en attente</span>
+                                <span class="badge bg-secondary">total des doublons</span>
+                                — les badges d'un doublon (exact, fuzzy…) décrivent sa détection
+                                par rapport à la CodeList principale.
+                            </p>
+
                             <!-- Pagination -->
                             <nav aria-label="Pagination">
                                 <ul class="pagination pagination-sm" id="pagination"></ul>
                             </nav>
 
-                            <!-- Codelist list -->
-                            <div id="codelistContainer" class="mb-3">
-                                <!-- Will be filled by JS -->
+                            <!-- Codelists (left) / duplicates of the selected one (right) -->
+                            <div class="row g-3 mb-3" id="splitView">
+                                <div class="col-md-4 col-lg-3">
+                                    <!-- Batch add to cleaned registry (lists without duplicates) -->
+                                    <div id="batchBar" class="mb-2">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <input type="checkbox" class="form-check-input mt-0" id="batchSelectAll"
+                                                title="Sélectionner les CodeLists sans doublon de la page">
+                                            <label class="small mb-0" for="batchSelectAll">
+                                                Tout sélectionner (sans doublon)
+                                            </label>
+                                            <span class="small text-muted ms-auto">
+                                                <span id="batchCount">0</span> sél.
+                                            </span>
+                                        </div>
+                                        <div class="d-grid gap-1">
+                                            <button class="btn btn-sm btn-outline-success" id="batchAddBtn" disabled>
+                                                ➕ Ajouter la sélection
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success" id="addAllNoDupBtn" disabled>
+                                                ➕ Ajouter toutes les CodeLists sans doublon (<span id="noDupCount">0</span>)
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="codelistNav" class="list-group split-nav">
+                                        <!-- Will be filled by JS -->
+                                    </div>
+                                </div>
+                                <div class="col-md-8 col-lg-9">
+                                    <div id="codelistDetail" class="split-detail">
+                                        <!-- Will be filled by JS -->
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Save/Download -->

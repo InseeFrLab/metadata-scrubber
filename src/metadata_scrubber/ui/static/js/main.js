@@ -13,6 +13,25 @@ function switchTab(tabId) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Avertissements d'un run (étape sémantique sautée, listes exclues…)
+/* ------------------------------------------------------------------ */
+
+const PHASE_LABELS = { semantic: 'Étape sémantique', fuzzy: 'Détection floue' };
+
+function renderRunWarnings(container, warnings) {
+    if (!container) return;
+    container.innerHTML = '';
+    for (const w of warnings || []) {
+        const div = document.createElement('div');
+        div.className = 'alert alert-warning py-2 small mb-2';
+        const label = PHASE_LABELS[w.phase] || w.phase;
+        const state = { skipped: 'non exécutée', disabled: 'désactivée', partial: 'partielle' }[w.status] || w.status;
+        div.textContent = `⚠ ${label} ${state} : ${w.reason}`;
+        container.appendChild(div);
+    }
+}
+
+/* ------------------------------------------------------------------ */
 /* Toast notifications (shared across all scripts)
 /* ------------------------------------------------------------------ */
 
