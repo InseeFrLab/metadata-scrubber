@@ -30,6 +30,20 @@ class AddToCleanedRequest(BaseModel):
     cl_id: str = Field(..., description="Id de la CodeList (parent du registre des doublons).")
 
 
+class AddToCleanedBatchRequest(BaseModel):
+    """Requête d'ajout en lot de CodeLists sans doublon au registre nettoyé."""
+    cl_ids: list[str] = Field(default_factory=list, description="Ids des CodeLists à ajouter.")
+    all_without_duplicates: bool = Field(
+        False,
+        description="Ajoute toutes les CodeLists sans doublon du registre chargé (cl_ids ignoré).",
+    )
+
+
+class RemoveFromCleanedRequest(BaseModel):
+    """Requête de retrait de CodeLists (ajoutées à la main) du registre nettoyé."""
+    cl_ids: list[str] = Field(..., min_length=1, description="Ids des CodeLists à retirer.")
+
+
 class PipelineResponse(BaseModel):
     """Réponse lors du lancement d'un pipeline."""
     job_id: str
