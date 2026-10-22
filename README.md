@@ -58,12 +58,28 @@ uv run scrubber input.xml --audit-dir ./audit
 uv run scrubber input.xml --verbose
 ```
 
+**Sorties d'un run** — chaque exécution crée son propre dossier daté (UTC) sous `--audit-dir` :
+
+```
+scrubber_output/
+├── cleaned_codelists.json            # registre nettoyé, partagé et cumulé entre les runs
+├── 20261022-140509/
+│   ├── codelist_duplicates.json      # registre des doublons du run
+│   ├── run_summary.json              # statut, durée, compteurs et avertissements
+│   └── pipeline.log                  # journal complet (écrit aussi en cas d'erreur)
+└── 20261023-091200/ …
+```
+
+`run_summary.json` signale notamment l'étape sémantique sautée (variables
+`OPENAI_BASE_URL` / `OPENAI_API_KEY` absentes) et les CodeLists exclues de la
+détection floue (> 100 codes).
+
 **Arguments CLI :**
 
 | Argument | Défaut | Rôle |
 |---|---|---|
 | `xml_source` | `s3://projet-metadonnees-rmes/BTS.xml` | Source DDI (locale ou S3) |
-| `--audit-dir` | `s3://projet-metadonnees-rmes/scrubber_output` | Sortie `codelist_duplicates.json` |
+| `--audit-dir` | `s3://projet-metadonnees-rmes/scrubber_output` | Racine des sorties : chaque run écrit dans un sous-dossier daté `<AAAAMMJJ-HHMMSS>/` |
 | `--run-llm` | `True` | Activer embeddings + juge LLM |
 | `--no-llm` | — | Sauter les phases sémantiques |
 | `--verbose` | `False` | Afficher détails LLM/embeddings |

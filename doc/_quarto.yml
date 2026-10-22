@@ -11,6 +11,8 @@ website:
         text: Guide Utilisateur
       - href: note_methodologique_dedoublonnage.qmd
         text: Note Méthodologique
+      - href: modifications_recentes.qmd
+        text: Changements récents
   page-footer:
     left: "Insee — SSP Cloud / Onyxia"
     right:

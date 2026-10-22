@@ -153,9 +153,11 @@ Sur BTS.xml : **29 groupes** détectés, **54** CodeLists redondantes.
 
 **Méthode :**
 
-1. À partir des uniques (une par groupe exact → ~102 pour BTS.xml), concaténer nom + paires `valeur:libellé` en une chaîne
-2. Comparer **toutes les paires** avec `difflib.SequenceMatcher`
-3. Seuils : **≥ 0.90** = détecté ; **≥ 0.80** = flagged pour inspection
+1. À partir des uniques (une par groupe exact → ~102 pour BTS.xml), comparer **toutes les paires** de CodeLists
+2. **Similarité des codes** (`_code_similarity`) : chaque code de la première liste est apparié au meilleur code encore libre de la seconde (valeur puis libellé, via `difflib.SequenceMatcher`) ; un code est apparié si son score atteint 0.65. La similarité est le nombre de codes appariés rapporté à la taille de la **plus grande** des deux listes : elle est symétrique, et une liste incluse dans une plus grande n'atteint pas 100 % (13 codes inclus dans 22 → 0.59, paire écartée)
+3. **Score hybride** = 0.6 × similarité des codes + 0.4 × similarité des noms (les noms de moins de 3 caractères sont ignorés). Si les codes sont quasi identiques (≥ 0.95) mais les noms très différents (< 0.5), le score est relevé à 0.95
+4. Seuils : **≥ 0.90** = détecté ; **≥ 0.80** = flagged pour inspection ; similarité des codes minimale 0.75
+5. La confiance d'une détection non exacte est plafonnée à **0.99** : **100 % est réservé à la signature exacte**
 
 ### Exemples BTS.xml
 

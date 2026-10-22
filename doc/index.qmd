@@ -18,3 +18,4 @@ Le résultat est un **registre épuré** (`cleaned_codelists.json`) qui ne conse
 |---|---|
 | [**Guide Utilisateur**](guide_utilisateur.qmd) | Comment utiliser l'interface web : lancer le pipeline, examiner les paires, prendre des décisions, sauvegarder le registre. |
 | [**Note Méthodologique**](note_methodologique_dedoublonnage.qmd) | Algorithme de détection en trois niveaux, walkthrough avec les datasets démo, schéma du registre v2. |
+| [**Changements récents**](modifications_recentes.qmd) | Ce qui a changé depuis le dernier push : onglet Validation en deux colonnes, ajout en lot, correctifs de détection, sorties datées par run. |
