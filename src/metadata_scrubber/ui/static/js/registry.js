@@ -543,9 +543,12 @@ function toggleSelectAllVisible(checked) {
 }
 
 async function postBatchToCleaned(body, btn) {
-    const originalText = btn.textContent;
+    // Ne pas toucher au contenu du bouton (il porte des éléments comme #noDupCount) :
+    // on ajoute seulement un spinner, retiré à la fin.
+    const spinner = document.createElement('span');
+    spinner.className = 'spinner-border spinner-border-sm me-1';
+    btn.prepend(spinner);
     btn.disabled = true;
-    btn.textContent = '⏳ Traitement…';
     try {
         const resp = await fetch(`${API_BASE}api/registry/add-to-cleaned/batch`, {
             method: 'POST',
@@ -566,7 +569,7 @@ async function postBatchToCleaned(body, btn) {
     } catch (err) {
         showToast(`Erreur: ${err.message}`, 'danger');
     } finally {
-        btn.textContent = originalText;
+        spinner.remove();
         updateBatchBar();   // recalcule l'état disabled des boutons
     }
 }
