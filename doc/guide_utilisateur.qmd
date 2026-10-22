@@ -57,7 +57,7 @@ Quatre champs paramètrent le run :
 | Champ | Rôle |
 |---|---|
 | **Chemin source DDI (XML)** | URL S3 ou chemin local vers le fichier DDI à analyser. |
-| **Dossier de sortie** | Emplacement où sera écrit le registre de doublons. |
+| **Dossier de sortie** | Racine des sorties (par défaut `s3://projet-metadonnees-rmes/scrubber_output`). Chaque run crée son propre sous-dossier daté `AAAAMMJJ-HHMMSS` contenant `codelist_duplicates.json`, `run_summary.json` et `pipeline.log`. Le registre nettoyé reste à la racine, partagé entre les runs. |
 | **Registre nettoyé** (optionnel) | Chemin vers un `cleaned_codelists.json` préexistant. Les CodeLists maîtres de ce registre sont injectées comme candidates prioritaires ; les doublons déjà validés sont exclus de la détection. |
 | **Exécuter les phases LLM / embeddings** | Décocher pour un run rapide (exact + flou uniquement, sans embeddings ni juge LLM). |
 | **Mode verbeux** | Afficher les détails d'exécution (étapes d'embeddings, messages LLM …) dans les logs. |
@@ -97,7 +97,8 @@ En fin d'exécution, une alerte verte affiche :
 
 Le deuxième onglet (**🔍 Validation des doublons**) est au cœur du travail de
 l'expert. Il présente le registre des paires de CodeLists détectées comme
-potentiellement redondantes sous forme de cartes, avec des filtres, des
+potentiellement redondantes (liste des CodeLists à gauche, doublons de la
+CodeList sélectionnée à droite), avec des filtres, des
 actions par paire et des actions de masse.
 
 ## Charger le registre
@@ -106,7 +107,7 @@ Si un pipeline n'a pas été lancé depuis l'interface, chargez un registre
 préexistant :
 
 1. Saisissez le chemin (S3 ou local) vers le fichier de sortie du pipeline, par
-   exemple `s3://projet-metadonnees-rmes/scrubber_output/codelist_duplicates.json`
+   exemple `s3://projet-metadonnees-rmes/scrubber_output/20261022-140509/codelist_duplicates.json`
 2. Cliquez sur **📂 Charger le registre**
 3. Les résultats s'affichent alors sous forme de cartes
 
@@ -121,7 +122,36 @@ Quatre indicateurs en haut de page résument l'état du registre :
 | **Approuvés** | Pairs pour lesquelles l'expert a validé le rapprochement |
 | **En attente** | Paires n'ayant pas encore été examinées |
 
-Chaque CodeList est présentée sous forme de **carte** comportant :
+Sous les indicateurs, la page est découpée en deux colonnes :
+
+- **Colonne de gauche** : la liste des CodeLists de référence du fichier examiné,
+  avec leur nom, leur identifiant et des pastilles de décision (approuvés,
+  rejetés, en attente, total). La première ligne est sélectionnée à l'ouverture.
+- **Colonne de droite** : la CodeList sélectionnée, avec ses modalités
+  (valeur et étiquette de chaque code), puis en dessous les doublons détectés
+  pour cette liste.
+
+Les filtres, la recherche (qui porte aussi sur le nom et l'identifiant des
+doublons) et la pagination s'appliquent à la colonne de gauche.
+
+### Ajouter des CodeLists sans doublon au registre nettoyé
+
+Les CodeLists pour lesquelles aucun doublon n'a été détecté peuvent être ajoutées
+au registre nettoyé sans passer par une décision. Elles portent une case à
+cocher dans la colonne de gauche (les CodeLists avec doublons n'en ont pas) :
+
+- **Case à cocher** sur chaque ligne, et **Tout sélectionner** pour cocher toutes
+  les CodeLists sans doublon de la page affichée. La sélection est conservée
+  quand on change de page ou de filtre.
+- **➕ Ajouter la sélection** ajoute les CodeLists cochées, après confirmation.
+- **➕ Ajouter toutes les CodeLists sans doublon** ajoute d'un coup toutes celles
+  du registre chargé, sans sélection préalable et quels que soient les filtres
+  actifs. Le nombre de CodeLists concernées est indiqué sur le bouton.
+
+Les CodeLists déjà présentes dans le registre nettoyé sont ignorées. Une fois
+ajoutée, une CodeList est marquée ✅ dans la liste.
+
+Chaque doublon est présenté sous forme de **carte** comportant :
 
 - Le **nom** de la CodeList et un bouton **Voir** à côté (pour la comparaison)
 - Le **nombre de codes**

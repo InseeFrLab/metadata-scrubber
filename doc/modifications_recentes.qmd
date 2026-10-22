@@ -1,0 +1,243 @@
+---
+title: "Changements récents"
+format: html
+---
+
+Ce document décrit ce qui a changé depuis le dernier push (`4be5503`,
+« Truncate codelist for embedding »). Il regroupe l'évolution de l'onglet
+**Validation des doublons**, les correctifs de détection issus des remarques de
+Guillaume sur l'ancienne version, et la nouvelle organisation des fichiers de
+sortie.
+
+# Vue d'ensemble
+
+| Thème | Effet principal |
+|---|---|
+| Onglet Validation | Deux colonnes : liste des CodeLists à gauche, modalités et doublons à droite |
+| Registre nettoyé | Ajout en lot, retrait d'une liste ajoutée par erreur |
+| Détection | Score flou symétrique, confiance plafonnée, badges fidèles à la liste principale |
+| Étape sémantique | Son absence est désormais visible dans l'interface |
+| Sorties d'un run | Un dossier daté par exécution, avec résumé et journal |
+
+---
+
+# Onglet Validation des doublons
+
+## Deux colonnes
+
+- **Colonne de gauche** : une ligne par CodeList de référence (nom, identifiant,
+  pastilles *approuvés / rejetés / en attente / total*). La première ligne est
+  sélectionnée à l'ouverture.
+- **Colonne de droite** : l'en-tête de la CodeList sélectionnée, le tableau de ses
+  **modalités** (valeur et étiquette de chaque code, repliable), puis une carte par
+  doublon. Chaque carte garde sa décision, sa confiance, ses badges de détection et
+  un bouton « Détails » qui ouvre la comparaison avec la CodeList principale.
+- Chaque colonne défile séparément ; sous 768 px elles s'empilent.
+- Stats, actions en masse, filtres et pagination restent au-dessus, sur toute la
+  largeur, et s'appliquent à la colonne de gauche.
+
+## Filtres
+
+- Les filtres *décision* et *origine* s'appliquent dès qu'on les change ; la
+  recherche s'applique après 300 ms sans frappe. Le bouton « Filtrer » reste
+  disponible.
+- Le panneau de droite ne montre que les doublons correspondant au filtre de
+  décision (par exemple « en attente »), avec la mention « X sur Y, filtre actif ».
+- La recherche porte aussi sur le nom et l'identifiant des doublons et renvoie leur
+  CodeList de référence.
+
+## Lisibilité des badges
+
+- Infobulles sur les pastilles de décision et sur les badges de détection.
+- Une légende d'une ligne sous les filtres.
+- Un doublon relié à la CodeList principale seulement via un autre doublon affiche
+  « lien indirect, via … » (voir *Détection*).
+
+---
+
+# Registre nettoyé
+
+## Ajout en lot
+
+Les CodeLists **sans doublon** peuvent être ajoutées au registre nettoyé sans
+décision, avec `replaces` vide.
+
+- Une case à cocher par ligne éligible ; les CodeLists avec doublons n'en ont pas.
+- **Tout sélectionner** : coche les CodeLists sans doublon de la page affichée.
+  La sélection est conservée quand on change de page ou de filtre.
+- **➕ Ajouter la sélection** : ajoute les CodeLists cochées, après confirmation.
+- **➕ Ajouter toutes les CodeLists sans doublon (N)** : porte sur tout le registre
+  chargé, quels que soient les filtres ; N est affiché sur le bouton.
+- Une seule lecture et une seule écriture du fichier par action (un seul aller-retour
+  S3), au lieu d'une écriture par CodeList.
+
+## Retrait d'une liste ajoutée par erreur
+
+Le bouton « ↩ Retirer du registre nettoyé » apparaît dans le panneau de droite pour
+une CodeList sans doublon déjà présente dans le registre. Seules les entrées sans
+`replaces` sont retirables : les autres résultent de décisions approuvées et se
+corrigent en changeant la décision puis en sauvegardant.
+
+Au chargement d'un registre, l'interface lit le registre nettoyé existant : le ✅
+d'une CodeList déjà ajoutée est donc correct d'une session à l'autre.
+
+---
+
+# Détection
+
+Ces changements corrigent des comportements relevés dans les observations sur
+l'ancienne version.
+
+## Score flou symétrique
+
+`_code_similarity` (`funnel.py`) divisait le nombre de codes appariés par la taille
+de la **première** liste de la paire. Une liste incluse dans une plus grande
+obtenait 100 % si elle passait en premier, et la paire était écartée dans l'ordre
+inverse. Le score dépendait donc de l'ordre des listes.
+
+Le score est maintenant rapporté à la taille de la **plus grande** liste :
+
+| Cas | Avant | Après |
+|---|---|---|
+| 13 codes inclus dans une liste de 22 | 1,00 ou écartée selon l'ordre | 0,59, écartée |
+| 85 codes identiques, 3 codes en plus | 1,00 ou 0,97 selon l'ordre | 0,97 |
+| Listes identiques | 1,00 | 1,00 |
+
+## Confiance : 100 % réservé à l'exact
+
+La confiance des détections floues et sémantiques est plafonnée à **0,99**. Un
+score de 100 % signifie désormais « signature exacte ».
+
+## Double signalement entre phases
+
+`used.update(master.id, slave.id)` ajoutait les **caractères** des identifiants au
+lieu des identifiants. Le filtre `in used` ne fonctionnait donc plus après la phase
+floue et une même paire pouvait ressortir aussi en « usage » ou « sémantique ».
+Les esclaves flous sont désormais marqués après la boucle floue : toutes les paires
+floues restent détectées (chaînes a→b→c comprises), mais les phases suivantes ne les
+re-signalent plus.
+
+## Badges propres à la liste principale
+
+Le registre est présenté « doublon par rapport à la CodeList principale », mais les
+types de détection et la confiance d'un doublon étaient fusionnés avec toutes les
+paires l'impliquant, y compris avec d'autres doublons. Un doublon pouvait ainsi
+afficher « exact » et 100 % alors que ses codes différaient de ceux de la liste
+principale.
+
+- Les types et la confiance viennent d'abord de la **paire directe** avec la liste
+  principale.
+- Sans paire directe (lien transitif), on garde les paires qui impliquent le doublon
+  et on ajoute un champ optionnel `via` (ids des CodeLists réellement liées). La carte
+  affiche « lien indirect, via … ».
+- Les registres existants restent valides : `via` est absent quand il ne sert pas.
+
+::: {.callout-warning}
+## Impact sur les résultats
+
+Les scores et le nombre de paires détectées changent : les sous-ensembles ne
+ressortent plus en flou et certains scores baissent. Il est conseillé de relancer le
+pipeline sur BTS ou EAR et de comparer le nombre de candidats avant et après.
+:::
+
+La note méthodologique a aussi été corrigée : la phase floue compare les codes un à
+un (pas une chaîne concaténée) avec un score hybride 0,6 × codes + 0,4 × noms.
+
+---
+
+# Étape sémantique visible
+
+Quand les variables `OPENAI_BASE_URL` et `OPENAI_API_KEY` manquent, l'étape
+sémantique est sautée. Cela n'était visible que dans la console.
+
+- Le run enregistre un avertissement `{phase, status, reason}` dans
+  `run_summary.json`. `status` vaut `skipped` (variables absentes), `disabled`
+  (`--no-llm`) ou `partial` (listes de plus de 100 codes exclues de la détection
+  floue).
+- Un **bandeau jaune** l'affiche dans l'onglet Pipeline, à la fin du run, et en haut
+  de l'onglet Validation quand le registre chargé a un `run_summary.json`.
+
+---
+
+# Sorties d'un run
+
+Chaque exécution écrit dans son propre dossier daté (UTC), sous la racine de sortie :
+
+```
+scrubber_output/
+├── cleaned_codelists.json            # registre nettoyé, partagé et cumulé entre les runs
+├── 20261022-140509/
+│   ├── codelist_duplicates.json
+│   ├── run_summary.json              # statut, durée, compteurs, avertissements
+│   └── pipeline.log                  # journal complet, écrit aussi en cas d'erreur
+└── 20261023-091200/ …
+```
+
+- `--audit-dir` et le champ « Dossier de sortie » désignent la **racine** ; le
+  sous-dossier daté est créé dessous.
+- `pipeline.log` recueille la sortie standard, la sortie d'erreur et le logging INFO,
+  pour la ligne de commande comme pour l'interface. En cas d'erreur il contient le
+  traceback, et `run_summary.json` a le statut `error`.
+- `cleaned_codelists.json` reste à la racine : `cleaned_registry_path` remonte d'un
+  niveau quand le dossier du registre des doublons a la forme `AAAAMMJJ-HHMMSS`.
+  L'accumulation entre runs continue donc de fonctionner.
+- Un ancien registre, hors dossier daté, se charge et se sauvegarde comme avant.
+- `run_pipeline` renvoie `{run_id, run_dir, output_files, warnings}`.
+
+Exemple de `run_summary.json` :
+
+```json
+{
+  "run_id": "20261022-140509",
+  "xml_source": "s3://projet-metadonnees-rmes/BTS.xml",
+  "status": "success",
+  "duration_seconds": 42.3,
+  "run_llm": true,
+  "counts": {"codelists": 214, "excluded_over_max_codes": 3, "candidates": 57},
+  "warnings": [
+    {"phase": "semantic", "status": "skipped",
+     "reason": "Les variables OPENAI_BASE_URL et OPENAI_API_KEY sont requises pour la détection sémantique."}
+  ]
+}
+```
+
+---
+
+# API
+
+| Méthode | Route | Rôle |
+|---|---|---|
+| `POST` | `/api/registry/add-to-cleaned/batch` | Ajoute plusieurs CodeLists sans doublon. Corps : `{"cl_ids": [...]}` ou `{"all_without_duplicates": true}`. Réponse : `added`, `already_present`, `not_found`, `skipped_with_duplicates`, `path`, `count`. |
+| `POST` | `/api/registry/remove-from-cleaned` | Retire des CodeLists ajoutées à la main. Corps : `{"cl_ids": [...]}`. Réponse : `removed`, `not_present`, `protected`, `path`, `count`. |
+| `GET` | `/api/registry/run-summary` | Renvoie le `run_summary.json` situé à côté du registre chargé (404 s'il n'existe pas). |
+
+Les CodeLists qui ont des doublons sont refusées côté serveur par l'ajout en lot
+(`skipped_with_duplicates`), même si l'appel ne vient pas de l'interface.
+
+---
+
+# Hors périmètre et suites possibles
+
+Points soulevés dans les observations sur l'ancienne version, **non traités** :
+
+- changer la liste maître d'un groupe depuis l'interface ;
+- écarter une CodeList du registre sans l'ajouter ;
+- valeurs d'échappement (`MissingCodeRepresentation`) : les comparer à part ;
+- versions des objets DDI et `BasedOnObject` : ils ne sont pas lus aujourd'hui ;
+- CodeLists non référencées, et mise à jour des objets via l'API Colectica ;
+- indicateur du nombre de variables qui utilisent une CodeList.
+
+---
+
+# Tests ajoutés
+
+| Fichier | Couvre |
+|---|---|
+| `tests/test_detection_fixes.py` | Symétrie du score, sous-ensembles, plafond de confiance, bug `used`, badges directs et `via` |
+| `tests/test_run_output.py` | Dossier daté, `write_text`, capture du journal (y compris en erreur), `run_pipeline` de bout en bout, chemin du registre nettoyé |
+| `tests/test_add_to_cleaned_batch.py` | Ajout en lot et retrait d'entrées |
+| `tests/test_registry_routes.py` | Routes d'ajout en lot, de retrait et de résumé de run |
+
+```bash
+uv run pytest -q
+```
