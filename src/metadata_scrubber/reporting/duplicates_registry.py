@@ -36,6 +36,7 @@ class DuplicateInfo:
     detection_types: list[str] = field(default_factory=list)
     confidence: float = 0.0
     origin: str = "xml"
+    via: list[str] = field(default_factory=list)
 
 
 def _serialize_minimal(cl) -> dict:
@@ -144,14 +145,24 @@ def build_duplicates_registry(
             target_cl = cl_by_id.get(tid)
             if target_cl is None:
                 continue
-            # Fusionner toutes les détections impliquant ce membre (deux sens)
+            # Détections avec le parent (deux sens) : c'est ce que l'interface
+            # présente. À défaut (lien transitif via un autre satellite), on
+            # retombe sur les paires impliquant ce membre et on note `via`.
             types: set = set()
             conf = 0.0
-            for other in component:
-                for key in ((other, tid), (tid, other)):
-                    if key in pair_data:
-                        types |= pair_data[key]["types"]
-                        conf = max(conf, pair_data[key]["confidence"])
+            for key in ((cl.id, tid), (tid, cl.id)):
+                if key in pair_data:
+                    types |= pair_data[key]["types"]
+                    conf = max(conf, pair_data[key]["confidence"])
+            via: list[str] = []
+            if not types:
+                for other in component:
+                    for key in ((other, tid), (tid, other)):
+                        if key in pair_data:
+                            types |= pair_data[key]["types"]
+                            conf = max(conf, pair_data[key]["confidence"])
+                            if other != tid and other not in via:
+                                via.append(other)
             dupes_infos.append(
                 DuplicateInfo(
                     id=tid,
@@ -164,6 +175,7 @@ def build_duplicates_registry(
                     detection_types=types,
                     confidence=conf,
                     origin=getattr(target_cl, "origin", "xml"),
+                    via=via,
                 )
             )
 
@@ -185,6 +197,8 @@ def build_duplicates_registry(
                     "confidence": d.confidence,
                     "origin": d.origin,
                     "decision": "pending",
+                    # Présent seulement pour un lien indirect (pas de paire avec le parent)
+                    **({"via": d.via} if d.via else {}),
                 }
                 for d in dupes
             ],

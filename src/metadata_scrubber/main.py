@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Ajouter src/ au PYTHONPATH pour l'exécution directe
@@ -54,7 +55,12 @@ from .semantic import (  # noqa: E402
     detect_semantic_via_variables,
     llm_judge,
 )
+from .registry_io import write_json_registry  # noqa: E402
+from .run_output import RunLogCapture, make_run_dir  # noqa: E402
 from .types import CandidateFusion, CodeList  # noqa: E402
+
+# La confiance 1.0 est réservée à la signature exacte
+MAX_NON_EXACT_CONFIDENCE = 0.99
 
 
 # ────────────────────────────────────────────────────────────────────────
@@ -101,23 +107,77 @@ def run_pipeline(
     run_llm: bool = True,
     verbose: bool = False,
     registry_path: str | None = None,
-) -> None:
+) -> dict:
     """
     Pipeline complet : extraction → détection → registre des doublons.
 
-    Output unique : `codelist_duplicates.json` dans `audit_dir`.
+    Chaque exécution écrit dans son propre dossier ``<audit_dir>/<AAAAMMJJ-HHMMSS>/`` :
+    `codelist_duplicates.json`, `run_summary.json` et `pipeline.log` (le journal
+    est écrit même en cas d'erreur).
 
     Args:
         xml_source:    URL S3 ou chemin local du fichier DDI.
-        audit_dir:     Répertoire de sortie.
+        audit_dir:     Racine des sorties (le dossier daté est créé dessous).
         run_llm:       Si True, phases sémantiques (embeddings + juge LLM).
         verbose:       Si True, détails LLM/embeddings.
         registry_path: Registre nettoyé (cleaned_codelists.json) à injecter :
                        ses listes sont prioritaires (masters) et les listes
                        déjà remplacées sont exclues de la détection.
+
+    Returns:
+        {"run_id", "run_dir", "output_files": {nom: chemin}, "warnings": [...]}
     """
+    started = datetime.now(timezone.utc)
+    run_id, run_dir = make_run_dir(audit_dir, started)
+    summary: dict = {
+        "run_id": run_id,
+        "xml_source": xml_source,
+        "started_at": started.isoformat(),
+        "run_llm": run_llm,
+        "registry_path": registry_path,
+        "status": "error",
+        "warnings": [],
+        "counts": {},
+    }
+
+    with RunLogCapture(f"{run_dir}/pipeline.log"):
+        try:
+            _run_pipeline_body(xml_source, run_dir, run_llm, verbose, registry_path, summary)
+            summary["status"] = "success"
+        finally:
+            summary["duration_seconds"] = round(
+                (datetime.now(timezone.utc) - started).total_seconds(), 1
+            )
+            # Écrit même en cas d'erreur : le diagnostic reste consultable
+            try:
+                write_json_registry(summary, f"{run_dir}/run_summary.json")
+            except Exception as exc:  # ne pas masquer l'erreur d'origine
+                print(f"[scrubber] run_summary.json non écrit : {exc}")
+
+    return {
+        "run_id": run_id,
+        "run_dir": run_dir,
+        "output_files": {
+            "codelist_duplicates.json": f"{run_dir}/codelist_duplicates.json",
+            "run_summary.json": f"{run_dir}/run_summary.json",
+            "pipeline.log": f"{run_dir}/pipeline.log",
+        },
+        "warnings": summary["warnings"],
+    }
+
+
+def _run_pipeline_body(
+    xml_source: str,
+    run_dir: str,
+    run_llm: bool,
+    verbose: bool,
+    registry_path: str | None,
+    summary: dict,
+) -> None:
+    """Corps du pipeline ; alimente `summary` (avertissements, compteurs)."""
     print("=" * 60)
     print(f"  Dédoublonnage DDI — source : {xml_source}")
+    print(f"  Dossier de sortie du run : {run_dir}")
     print("=" * 60)
 
     # ------------------------------------------------------------------
@@ -212,9 +272,19 @@ def run_pipeline(
     n_detected = len(detected)
     n_inspect = len(all_pairs_dict)
     print(f"  [flou]  {n_detected} pairs détectées, {n_inspect} d'inspection.")
+    summary["counts"]["codelists"] = len(codelists)
+    summary["counts"]["excluded_over_max_codes"] = len(excluded)
     if excluded:
         noms = ", ".join(f"{cl.name or cl.id[:8]} ({len(cl.codes)} codes)" for cl in excluded)
         print(f"  [flou]  {len(excluded)} CodeList(s) exclue(s) (> {MAX_CODES_FOR_FUZZY} codes) : {noms}")
+        summary["warnings"].append({
+            "phase": "fuzzy",
+            "status": "partial",
+            "reason": (
+                f"{len(excluded)} CodeList(s) de plus de {MAX_CODES_FOR_FUZZY} codes "
+                "exclue(s) de la détection floue."
+            ),
+        })
 
     # ------------------------------------------------------------------
     # 7. Signaux d'usage
@@ -296,8 +366,16 @@ def run_pipeline(
 
         except RuntimeError as exc:
             print(f"  [semantic] Sauté — {exc}")
+            summary["warnings"].append(
+                {"phase": "semantic", "status": "skipped", "reason": str(exc)}
+            )
     else:
         print("\n[8/9] Détection sémantique — sautée (run_llm=False).")
+        summary["warnings"].append({
+            "phase": "semantic",
+            "status": "disabled",
+            "reason": "Étape sémantique désactivée (--no-llm).",
+        })
 
     print(f"  [semantic] {len(pairs_semantic)} paires sémantiques collectées.")
 
@@ -309,12 +387,9 @@ def run_pipeline(
         exact_groups, detected, codelists, usage_groups, pairs_semantic,
     )
     print(f"  {len(candidates)} candidats totaux.")
+    summary["counts"]["candidates"] = len(candidates)
 
-    if audit_dir.startswith("s3://"):
-        out_path = f"{audit_dir.rstrip('/')}/codelist_duplicates.json"
-    else:
-        out_path = os.path.join(audit_dir, "codelist_duplicates.json")
-        os.makedirs(audit_dir, exist_ok=True)
+    out_path = f"{run_dir}/codelist_duplicates.json"
     write_duplicates_registry(candidates, codelists, out_path)
     print(f"  → {out_path}")
 
@@ -363,6 +438,10 @@ def _build_candidates(
                 used.add(slave.id)
 
     # Phase 1 — flou
+    # Les esclaves flous ne sont marqués « utilisés » qu'après la boucle : toutes
+    # les paires floues sont conservées (chaînes a→b→c), mais usage et
+    # sémantique ne les re-signalent pas.
+    fuzzy_slaves: set[str] = set()
     for pair in fuzzy_pairs:
         if pair["a"].id in used:
             continue
@@ -374,7 +453,8 @@ def _build_candidates(
                 detection_type="fuzzy",
                 master_cl=master_cl,
                 slave_cls=[slave],
-                confidence=pair["score"],
+                # 1.0 est réservé à la signature exacte
+                confidence=min(pair["score"], MAX_NON_EXACT_CONFIDENCE),
                 evidence={
                     "text_similarity": pair["score"],
                     "a_codes": pair.get("a_codes"),
@@ -382,7 +462,8 @@ def _build_candidates(
                 },
             )
         )
-        used.update(master_cl.id, slave.id)
+        fuzzy_slaves.add(slave.id)
+    used.update(fuzzy_slaves)
 
     # Phase 1 bis — usage
     for _sig, group in usage_groups.items():
@@ -422,7 +503,7 @@ def _build_candidates(
                     detection_type=det_type,
                     master_cl=cl_a,
                     slave_cls=[cl_b],
-                    confidence=round(score, 4),
+                    confidence=min(round(score, 4), MAX_NON_EXACT_CONFIDENCE),
                     evidence={
                         "cosine_score": round(score, 4),
                         "phase": phase,
@@ -455,7 +536,10 @@ def main() -> None:
     parser.add_argument(
         "--audit-dir",
         default="s3://projet-metadonnees-rmes/scrubber_output",
-        help="Répertoire de sortie (codelist_duplicates.json).",
+        help=(
+            "Racine des sorties : chaque exécution écrit dans un sous-dossier daté "
+            "(codelist_duplicates.json, run_summary.json, pipeline.log)."
+        ),
     )
     parser.add_argument(
         "--run-llm",
@@ -484,13 +568,14 @@ def main() -> None:
         help="Registre nettoyé (cleaned_codelists.json) à injecter dans la détection.",
     )
     args = parser.parse_args()
-    run_pipeline(
+    result = run_pipeline(
         xml_source=args.xml_source,
         audit_dir=args.audit_dir,
         run_llm=args.run_llm,
         verbose=args.verbose,
         registry_path=args.registry_path,
     )
+    print(f"Sorties du run : {result['run_dir']}")
 
 
 if __name__ == "__main__":

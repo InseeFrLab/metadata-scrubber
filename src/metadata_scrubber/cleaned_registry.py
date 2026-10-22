@@ -29,6 +29,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from .registry_io import read_json_registry, write_json_registry
+from .run_output import RUN_DIR_PATTERN
 from .types import CodeList
 
 
@@ -37,12 +38,19 @@ def _now() -> str:
 
 
 def cleaned_registry_path(registry_path: str) -> str:
-    """Dérive le chemin du registre nettoyé (même dossier, cleaned_codelists.json).
+    """Dérive le chemin du registre nettoyé (cleaned_codelists.json).
+
+    Il se trouve dans le dossier du fichier des doublons ; si ce dossier est un
+    dossier de run daté (AAAAMMJJ-HHMMSS), le registre nettoyé reste à la racine
+    de sortie, au niveau supérieur, pour être partagé (et accumulé) entre les runs.
 
     Manipulation de chaîne (pas de pathlib) pour rester compatible S3.
     """
     if "/" in registry_path:
         base, _ = registry_path.rsplit("/", 1)
+        parent, _, last = base.rpartition("/")
+        if parent and RUN_DIR_PATTERN.match(last):
+            base = parent
         return f"{base}/cleaned_codelists.json"
     return "cleaned_codelists.json"
 
@@ -230,6 +238,73 @@ def add_entry_from_parent(cleaned: dict[str, Any], cl_data: dict[str, Any]) -> b
     }
     cleaned["generated_at"] = now
     return True
+
+
+def add_entries_from_parents(
+    cleaned: dict[str, Any],
+    registry: dict[str, Any],
+    cl_ids: list[str] | None = None,
+) -> dict[str, list[str]]:
+    """Ajoute en lot au registre nettoyé des listes sans doublon du registre.
+
+    Args:
+        cleaned: registre nettoyé, modifié en place.
+        registry: registre des doublons ({cl_id: entrée parent}).
+        cl_ids: ids à ajouter ; None = toutes les listes sans doublon du registre.
+
+    Returns:
+        Ids classés en added / already_present / not_found / skipped_with_duplicates.
+    """
+    result: dict[str, list[str]] = {
+        "added": [],
+        "already_present": [],
+        "not_found": [],
+        "skipped_with_duplicates": [],
+    }
+    if cl_ids is None:
+        cl_ids = [cl_id for cl_id, cl in registry.items() if not cl.get("duplicates")]
+
+    for cl_id in dict.fromkeys(cl_ids):
+        cl_data = registry.get(cl_id)
+        if cl_data is None:
+            result["not_found"].append(cl_id)
+        elif cl_data.get("duplicates"):
+            result["skipped_with_duplicates"].append(cl_id)
+        elif add_entry_from_parent(cleaned, cl_data):
+            result["added"].append(cl_id)
+        else:
+            result["already_present"].append(cl_id)
+    return result
+
+
+def remove_entries(cleaned: dict[str, Any], cl_ids: list[str]) -> dict[str, list[str]]:
+    """Retire du registre nettoyé des entrées ajoutées manuellement.
+
+    Seules les entrées sans ``replaces`` (listes sans doublon ajoutées à la main)
+    sont retirables : les autres résultent de décisions approuvées et se
+    corrigent en changeant la décision puis en sauvegardant le registre.
+
+    Args:
+        cleaned: registre nettoyé, modifié en place.
+        cl_ids: ids à retirer.
+
+    Returns:
+        Ids classés en removed / not_present / protected.
+    """
+    result: dict[str, list[str]] = {"removed": [], "not_present": [], "protected": []}
+    entries = cleaned.get("codelists", {})
+    for cl_id in dict.fromkeys(cl_ids):
+        entry = entries.get(cl_id)
+        if entry is None:
+            result["not_present"].append(cl_id)
+        elif entry.get("replaces"):
+            result["protected"].append(cl_id)
+        else:
+            del entries[cl_id]
+            result["removed"].append(cl_id)
+    if result["removed"]:
+        cleaned["generated_at"] = _now()
+    return result
 
 
 def validate_cleaned_doc(doc: Any) -> list[str]:
