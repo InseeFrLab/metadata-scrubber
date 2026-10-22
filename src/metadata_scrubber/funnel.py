@@ -54,9 +54,11 @@ def _text_map(codelists: list[CodeList]) -> dict[str, str]:
 def _code_similarity(a: CodeList, b: CodeList) -> float:
     """Score de similarite entre deux listes de codes.
 
-    Pour chaque code de la liste la plus petite, on cherche le meilleur match
-    dans l'autre liste (sur la valeur + libelle). Le score est la fraction
-    de codes bien apparies.
+    Pour chaque code de `a`, on cherche le meilleur match dans `b`
+    (sur la valeur + libelle), chaque code de `b` ne servant qu'une fois.
+    Le score est le nombre de codes apparies rapporte a la taille de la
+    PLUS GRANDE liste : il est symetrique et une liste incluse dans une
+    plus grande n'obtient plus 100 %.
 
     Un match est valide si les valeurs sont identiques ET les libelles
     ont une similarite élevée (> 0.6 par defaut).
@@ -109,7 +111,7 @@ def _code_similarity(a: CodeList, b: CodeList) -> float:
             matches += 1
             used_b.add(best_j)
 
-    return matches / len(codes_a)
+    return matches / max(len(codes_a), len(codes_b))
 
 
 def _name_similarity(a: CodeList, b: CodeList) -> tuple[float, bool]:

@@ -57,7 +57,16 @@ def write_json_registry(doc: dict[str, Any], path: str) -> None:
         doc: Le document à écrire.
         path: chemin de destination (local ou S3).
     """
-    formatted = json.dumps(doc, indent=2, ensure_ascii=False)
+    write_text(json.dumps(doc, indent=2, ensure_ascii=False), path)
+
+
+def write_text(text: str, path: str) -> None:
+    """Écrit un texte (UTF-8) vers un chemin local ou S3, en créant le dossier parent.
+
+    Args:
+        text: Le contenu à écrire.
+        path: chemin de destination (local ou S3).
+    """
     if _is_s3_path(path):
         from metadata_scrubber.s3 import make_s3_filesystem
 
@@ -68,10 +77,10 @@ def write_json_registry(doc: dict[str, Any], path: str) -> None:
         except Exception:
             pass  # bucket existe probablement déjà
         with s3.open(path, "w", encoding="utf-8") as f:
-            f.write(formatted)
+            f.write(text)
         logger.info("Document écrit sur S3: %s", path)
     else:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
-            f.write(formatted)
+            f.write(text)
         logger.info("Document écrit en local: %s", path)
