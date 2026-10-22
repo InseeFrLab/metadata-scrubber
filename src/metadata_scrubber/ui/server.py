@@ -26,7 +26,9 @@ from fastapi import FastAPI, HTTPException, Query, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from metadata_scrubber.ui.models import (
+    AddToCleanedBatchRequest,
     AddToCleanedRequest,
+    RemoveFromCleanedRequest,
     BulkDecision,
     CodelistFilter,
     DecisionUpdate,
@@ -39,7 +41,9 @@ from metadata_scrubber.ui.models import (
 from metadata_scrubber.ui.services.job_manager import JobStatus, job_manager
 from metadata_scrubber.ui.services.pipeline_service import start_pipeline_job
 from metadata_scrubber.cleaned_registry import (
+    add_entries_from_parents,
     add_entry_from_parent,
+    remove_entries,
     cleaned_registry_path,
     empty_cleaned_doc,
     read_cleaned_registry,
@@ -429,6 +433,76 @@ async def add_to_cleaned(req: AddToCleanedRequest):
         "path": path,
         "count": len(cleaned["codelists"]),
     }
+
+
+@app.post("/api/registry/add-to-cleaned/batch")
+async def add_to_cleaned_batch(req: AddToCleanedBatchRequest):
+    """Ajoute en lot des CodeLists sans doublon au registre nettoyé (une seule écriture)."""
+    if not req.all_without_duplicates and not req.cl_ids:
+        raise HTTPException(status_code=422, detail="cl_ids vide et all_without_duplicates faux")
+
+    with _registry_lock:
+        if _registry_state is None or _registry_path is None:
+            raise HTTPException(status_code=400, detail="No registry loaded")
+        registry = dict(_registry_state)
+        path = cleaned_registry_path(_registry_path)
+
+    try:
+        cleaned = read_cleaned_registry(path)
+    except FileNotFoundError:
+        cleaned = empty_cleaned_doc()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lecture registre nettoyé: {e}")
+
+    result = add_entries_from_parents(
+        cleaned, registry, None if req.all_without_duplicates else req.cl_ids
+    )
+
+    if result["added"]:
+        try:
+            write_registry(cleaned, path)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Erreur écriture: {e}")
+    return {**result, "path": path, "count": len(cleaned["codelists"])}
+
+
+@app.post("/api/registry/remove-from-cleaned")
+async def remove_from_cleaned(req: RemoveFromCleanedRequest):
+    """Retire du registre nettoyé des CodeLists ajoutées à la main (sans `replaces`)."""
+    with _registry_lock:
+        if _registry_path is None:
+            raise HTTPException(status_code=400, detail="No registry loaded")
+        path = cleaned_registry_path(_registry_path)
+
+    try:
+        cleaned = read_cleaned_registry(path)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Registre nettoyé introuvable")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lecture registre nettoyé: {e}")
+
+    result = remove_entries(cleaned, req.cl_ids)
+    if result["removed"]:
+        try:
+            write_registry(cleaned, path)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Erreur écriture: {e}")
+    return {**result, "path": path, "count": len(cleaned["codelists"])}
+
+
+@app.get("/api/registry/run-summary")
+async def get_run_summary():
+    """Résumé du run (run_summary.json) situé à côté du registre chargé, s'il existe."""
+    with _registry_lock:
+        if _registry_path is None:
+            raise HTTPException(status_code=400, detail="No registry loaded")
+        base = _registry_path.rsplit("/", 1)[0] if "/" in _registry_path else "."
+    try:
+        return read_registry(f"{base}/run_summary.json")
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Pas de run_summary.json pour ce registre")
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"run_summary.json illisible: {e}")
 
 
 # ============================================================================

@@ -99,7 +99,7 @@ def _run_pipeline_internal(
         # Execute the pipeline
         from metadata_scrubber.main import run_pipeline as main_run_pipeline
 
-        main_run_pipeline(
+        run = main_run_pipeline(
             xml_source=xml_source,
             audit_dir=local_tmp,
             run_llm=run_llm,
@@ -107,45 +107,44 @@ def _run_pipeline_internal(
             registry_path=registry_path,
         )
 
-        # --- Result ---
+        # --- Result : les chemins viennent du pipeline (dossier daté du run) ---
         output_files = {}
-
         if local_tmp.startswith("s3://"):
             from metadata_scrubber.s3 import make_s3_filesystem
 
-            dest = f"{local_tmp.rstrip('/')}/codelist_duplicates.json"
             fs = make_s3_filesystem()
-            if fs.exists(dest):
-                fsize = fs.size(dest)
-                print(f"[scrubber] codelist_duplicates.json: {fsize} octets (S3)", file=capture, flush=True)
-                output_files["codelist_duplicates.json"] = dest
-                print("[scrubber] Registre des doublons genere avec succes", file=capture, flush=True)
-            else:
-                print(f"[scrubber] codelist_duplicates.json: ABSENT de {local_tmp}", file=capture, flush=True)
+            exists = fs.exists
         else:
-            local_path = os.path.join(local_tmp, "codelist_duplicates.json")
-            if os.path.isfile(local_path):
-                fsize = os.path.getsize(local_path)
-                print(f"[scrubber] codelist_duplicates.json: {fsize} octets", file=capture, flush=True)
-                output_files["codelist_duplicates.json"] = local_path
-                print("[scrubber] Registre des doublons genere avec succes", file=capture, flush=True)
+            exists = os.path.isfile
+
+        for name, path in run["output_files"].items():
+            if exists(path):
+                output_files[name] = path
             else:
-                print("[scrubber] codelist_duplicates.json: ABSENT", file=capture, flush=True)
+                print(f"[scrubber] {name}: ABSENT de {run['run_dir']}", file=capture, flush=True)
+        if "codelist_duplicates.json" in output_files:
+            print("[scrubber] Registre des doublons genere avec succes", file=capture, flush=True)
 
         # Diagnostic if nothing was written
         if not output_files:
-            try:
-                actual = os.listdir(local_tmp)
-                print(
-                    f"[scrubber] WARNING: aucun fichier dans {local_tmp} — "
-                    f"fichiers reels: {actual}",
-                    file=capture,
-                    flush=True,
-                )
-            except Exception:
-                pass
+            print(
+                f"[scrubber] WARNING: aucun fichier ecrit dans {run['run_dir']}",
+                file=capture,
+                flush=True,
+            )
 
-        return {"status": "success", "output_files": output_files}
+        from metadata_scrubber.cleaned_registry import cleaned_registry_path
+
+        dup_path = output_files.get("codelist_duplicates.json")
+        return {
+            "status": "success",
+            "run_id": run["run_id"],
+            "run_dir": run["run_dir"],
+            "output_files": output_files,
+            "warnings": run["warnings"],
+            # Registre nettoyé partagé entre runs (racine de sortie, pas le dossier daté)
+            "cleaned_registry_path": cleaned_registry_path(dup_path) if dup_path else None,
+        }
 
     except Exception as exc:
         tb = traceback.format_exc()
