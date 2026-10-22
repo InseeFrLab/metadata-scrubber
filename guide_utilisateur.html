@@ -2,11 +2,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.18">
+<meta name="generator" content="quarto-1.10.19">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-07-31">
+<meta name="dcterms.date" content="2026-10-22">
 
 <title>Guide d’Utilisation — Metadata Scrubber – Metadata Scrubber</title>
 <style>
@@ -43,10 +43,10 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-6ac2aec46ad7f46b16024ee4409aa65c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-d3c09cf01b9717715406c5b992d80823.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -107,6 +107,10 @@ ul.task-list li input[type="checkbox"] {
     <a class="nav-link" href="./note_methodologique_dedoublonnage.html"> 
 <span class="menu-text">Note Méthodologique</span></a>
   </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./modifications_recentes.html"> 
+<span class="menu-text">Changements récents</span></a>
+  </li>  
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
@@ -134,7 +138,10 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#examiner-et-valider-les-doublons" id="toc-examiner-et-valider-les-doublons" class="nav-link" data-scroll-target="#examiner-et-valider-les-doublons"><span class="header-section-number">4</span> Examiner et valider les doublons</a>
   <ul class="collapse">
   <li><a href="#charger-le-registre" id="toc-charger-le-registre" class="nav-link" data-scroll-target="#charger-le-registre"><span class="header-section-number">4.1</span> Charger le registre</a></li>
-  <li><a href="#vue-densemble" id="toc-vue-densemble" class="nav-link" data-scroll-target="#vue-densemble"><span class="header-section-number">4.2</span> Vue d’ensemble</a></li>
+  <li><a href="#vue-densemble" id="toc-vue-densemble" class="nav-link" data-scroll-target="#vue-densemble"><span class="header-section-number">4.2</span> Vue d’ensemble</a>
+  <ul class="collapse">
+  <li><a href="#ajouter-des-codelists-sans-doublon-au-registre-nettoyé" id="toc-ajouter-des-codelists-sans-doublon-au-registre-nettoyé" class="nav-link" data-scroll-target="#ajouter-des-codelists-sans-doublon-au-registre-nettoyé"><span class="header-section-number">4.2.1</span> Ajouter des CodeLists sans doublon au registre nettoyé</a></li>
+  </ul></li>
   <li><a href="#comparer-côte-à-côte" id="toc-comparer-côte-à-côte" class="nav-link" data-scroll-target="#comparer-côte-à-côte"><span class="header-section-number">4.3</span> Comparer côte à côte</a></li>
   <li><a href="#décisions-par-paire" id="toc-décisions-par-paire" class="nav-link" data-scroll-target="#décisions-par-paire"><span class="header-section-number">4.4</span> Décisions par paire</a></li>
   <li><a href="#actions-de-masse" id="toc-actions-de-masse" class="nav-link" data-scroll-target="#actions-de-masse"><span class="header-section-number">4.5</span> Actions de masse</a></li>
@@ -176,7 +183,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 31, 2026</p>
+      <p class="date">October 22, 2026</p>
     </div>
   </div>
   
@@ -235,7 +242,7 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 <tr class="even">
 <td><strong>Dossier de sortie</strong></td>
-<td>Emplacement où sera écrit le registre de doublons.</td>
+<td>Racine des sorties (par défaut <code>s3://projet-metadonnees-rmes/scrubber_output</code>). Chaque run crée son propre sous-dossier daté <code>AAAAMMJJ-HHMMSS</code> contenant <code>codelist_duplicates.json</code>, <code>run_summary.json</code> et <code>pipeline.log</code>. Le registre nettoyé reste à la racine, partagé entre les runs.</td>
 </tr>
 <tr class="odd">
 <td><strong>Registre nettoyé</strong> (optionnel)</td>
@@ -292,12 +299,12 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="examiner-et-valider-les-doublons" class="level1" data-number="4">
 <h1 data-number="4"><span class="header-section-number">4</span> Examiner et valider les doublons</h1>
-<p>Le deuxième onglet (<strong>🔍 Validation des doublons</strong>) est au cœur du travail de l’expert. Il présente le registre des paires de CodeLists détectées comme potentiellement redondantes sous forme de cartes, avec des filtres, des actions par paire et des actions de masse.</p>
+<p>Le deuxième onglet (<strong>🔍 Validation des doublons</strong>) est au cœur du travail de l’expert. Il présente le registre des paires de CodeLists détectées comme potentiellement redondantes (liste des CodeLists à gauche, doublons de la CodeList sélectionnée à droite), avec des filtres, des actions par paire et des actions de masse.</p>
 <section id="charger-le-registre" class="level2" data-number="4.1">
 <h2 data-number="4.1" class="anchored" data-anchor-id="charger-le-registre"><span class="header-section-number">4.1</span> Charger le registre</h2>
 <p>Si un pipeline n’a pas été lancé depuis l’interface, chargez un registre préexistant :</p>
 <ol type="1">
-<li>Saisissez le chemin (S3 ou local) vers le fichier de sortie du pipeline, par exemple <code>s3://projet-metadonnees-rmes/scrubber_output/codelist_duplicates.json</code></li>
+<li>Saisissez le chemin (S3 ou local) vers le fichier de sortie du pipeline, par exemple <code>s3://projet-metadonnees-rmes/scrubber_output/20261022-140509/codelist_duplicates.json</code></li>
 <li>Cliquez sur <strong>📂 Charger le registre</strong></li>
 <li>Les résultats s’affichent alors sous forme de cartes</li>
 </ol>
@@ -335,7 +342,22 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 </tbody>
 </table>
-<p>Chaque CodeList est présentée sous forme de <strong>carte</strong> comportant :</p>
+<p>Sous les indicateurs, la page est découpée en deux colonnes :</p>
+<ul>
+<li><strong>Colonne de gauche</strong> : la liste des CodeLists de référence du fichier examiné, avec leur nom, leur identifiant et des pastilles de décision (approuvés, rejetés, en attente, total). La première ligne est sélectionnée à l’ouverture.</li>
+<li><strong>Colonne de droite</strong> : la CodeList sélectionnée, avec ses modalités (valeur et étiquette de chaque code), puis en dessous les doublons détectés pour cette liste.</li>
+</ul>
+<p>Les filtres, la recherche (qui porte aussi sur le nom et l’identifiant des doublons) et la pagination s’appliquent à la colonne de gauche.</p>
+<section id="ajouter-des-codelists-sans-doublon-au-registre-nettoyé" class="level3" data-number="4.2.1">
+<h3 data-number="4.2.1" class="anchored" data-anchor-id="ajouter-des-codelists-sans-doublon-au-registre-nettoyé"><span class="header-section-number">4.2.1</span> Ajouter des CodeLists sans doublon au registre nettoyé</h3>
+<p>Les CodeLists pour lesquelles aucun doublon n’a été détecté peuvent être ajoutées au registre nettoyé sans passer par une décision. Elles portent une case à cocher dans la colonne de gauche (les CodeLists avec doublons n’en ont pas) :</p>
+<ul>
+<li><strong>Case à cocher</strong> sur chaque ligne, et <strong>Tout sélectionner</strong> pour cocher toutes les CodeLists sans doublon de la page affichée. La sélection est conservée quand on change de page ou de filtre.</li>
+<li><strong>➕ Ajouter la sélection</strong> ajoute les CodeLists cochées, après confirmation.</li>
+<li><strong>➕ Ajouter toutes les CodeLists sans doublon</strong> ajoute d’un coup toutes celles du registre chargé, sans sélection préalable et quels que soient les filtres actifs. Le nombre de CodeLists concernées est indiqué sur le bouton.</li>
+</ul>
+<p>Les CodeLists déjà présentes dans le registre nettoyé sont ignorées. Une fois ajoutée, une CodeList est marquée ✅ dans la liste.</p>
+<p>Chaque doublon est présenté sous forme de <strong>carte</strong> comportant :</p>
 <ul>
 <li>Le <strong>nom</strong> de la CodeList et un bouton <strong>Voir</strong> à côté (pour la comparaison)</li>
 <li>Le <strong>nombre de codes</strong></li>
@@ -350,6 +372,7 @@ ul.task-list li input[type="checkbox"] {
 <figcaption>Vue en cartes du registre avec indicateurs</figcaption>
 </figure>
 </div>
+</section>
 </section>
 <section id="comparer-côte-à-côte" class="level2" data-number="4.3">
 <h2 data-number="4.3" class="anchored" data-anchor-id="comparer-côte-à-côte"><span class="header-section-number">4.3</span> Comparer côte à côte</h2>

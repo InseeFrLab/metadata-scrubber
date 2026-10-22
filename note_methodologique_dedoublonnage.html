@@ -2,11 +2,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.18">
+<meta name="generator" content="quarto-1.10.19">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-07-31">
+<meta name="dcterms.date" content="2026-10-22">
 
 <title>Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0) – Metadata Scrubber</title>
 <style>
@@ -78,10 +78,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-6ac2aec46ad7f46b16024ee4409aa65c.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-d3c09cf01b9717715406c5b992d80823.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -170,6 +170,10 @@ window.Quarto = {
   <li class="nav-item">
     <a class="nav-link active" href="./note_methodologique_dedoublonnage.html" aria-current="page"> 
 <span class="menu-text">Note Méthodologique</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./modifications_recentes.html"> 
+<span class="menu-text">Changements récents</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -284,7 +288,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 31, 2026</p>
+      <p class="date">October 22, 2026</p>
     </div>
   </div>
   
@@ -456,9 +460,11 @@ window.Quarto = {
 <h2 data-number="2.2" class="anchored" data-anchor-id="phase-1-bis-quasi-doublons-similarité-floue"><span class="header-section-number">2.2</span> Phase 1 bis — Quasi-Doublons (Similarité Floue)</h2>
 <p><strong>Méthode :</strong></p>
 <ol type="1">
-<li>À partir des uniques (une par groupe exact → ~102 pour BTS.xml), concaténer nom + paires <code>valeur:libellé</code> en une chaîne</li>
-<li>Comparer <strong>toutes les paires</strong> avec <code>difflib.SequenceMatcher</code></li>
-<li>Seuils : <strong>≥ 0.90</strong> = détecté ; <strong>≥ 0.80</strong> = flagged pour inspection</li>
+<li>À partir des uniques (une par groupe exact → ~102 pour BTS.xml), comparer <strong>toutes les paires</strong> de CodeLists</li>
+<li><strong>Similarité des codes</strong> (<code>_code_similarity</code>) : chaque code de la première liste est apparié au meilleur code encore libre de la seconde (valeur puis libellé, via <code>difflib.SequenceMatcher</code>) ; un code est apparié si son score atteint 0.65. La similarité est le nombre de codes appariés rapporté à la taille de la <strong>plus grande</strong> des deux listes : elle est symétrique, et une liste incluse dans une plus grande n’atteint pas 100 % (13 codes inclus dans 22 → 0.59, paire écartée)</li>
+<li><strong>Score hybride</strong> = 0.6 × similarité des codes + 0.4 × similarité des noms (les noms de moins de 3 caractères sont ignorés). Si les codes sont quasi identiques (≥ 0.95) mais les noms très différents (&lt; 0.5), le score est relevé à 0.95</li>
+<li>Seuils : <strong>≥ 0.90</strong> = détecté ; <strong>≥ 0.80</strong> = flagged pour inspection ; similarité des codes minimale 0.75</li>
+<li>La confiance d’une détection non exacte est plafonnée à <strong>0.99</strong> : <strong>100 % est réservé à la signature exacte</strong></li>
 </ol>
 <section id="exemples-bts.xml" class="level3" data-number="2.2.1">
 <h3 data-number="2.2.1" class="anchored" data-anchor-id="exemples-bts.xml"><span class="header-section-number">2.2.1</span> Exemples BTS.xml</h3>

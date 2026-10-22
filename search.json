@@ -4,14 +4,14 @@
     "href": "index.html",
     "title": "Accueil — Metadata Scrubber",
     "section": "",
-    "text": "Pipeline de dédoublonnage des CodeLists DDI 3.3 / 6.0.\nIl analyse un fichier de métadonnées au format DDI, identifie les listes de codes redondantes via un entonnoir en trois niveaux (exact, flou, sémantique) complété par un signal d’usage transversal (var_sig), et propose une interface de validation interactive pour que l’expert métier puisse examiner, approuver ou rejeter chaque paire détectée.\nLe résultat est un registre épuré (cleaned_codelists.json) qui ne conserve qu’une CodeList maître par groupe de redondances — injectable de manière itérative via l’option --registry pour traiter les fichiers suivants.\n\n\n\n\n\n\nDocument\nDescription\n\n\n\n\nGuide Utilisateur\nComment utiliser l’interface web : lancer le pipeline, examiner les paires, prendre des décisions, sauvegarder le registre.\n\n\nNote Méthodologique\nAlgorithme de détection en trois niveaux, walkthrough avec les datasets démo, schéma du registre v2."
+    "text": "Pipeline de dédoublonnage des CodeLists DDI 3.3 / 6.0.\nIl analyse un fichier de métadonnées au format DDI, identifie les listes de codes redondantes via un entonnoir en trois niveaux (exact, flou, sémantique) complété par un signal d’usage transversal (var_sig), et propose une interface de validation interactive pour que l’expert métier puisse examiner, approuver ou rejeter chaque paire détectée.\nLe résultat est un registre épuré (cleaned_codelists.json) qui ne conserve qu’une CodeList maître par groupe de redondances — injectable de manière itérative via l’option --registry pour traiter les fichiers suivants.\n\n\n\n\n\n\nDocument\nDescription\n\n\n\n\nGuide Utilisateur\nComment utiliser l’interface web : lancer le pipeline, examiner les paires, prendre des décisions, sauvegarder le registre.\n\n\nNote Méthodologique\nAlgorithme de détection en trois niveaux, walkthrough avec les datasets démo, schéma du registre v2.\n\n\nChangements récents\nCe qui a changé depuis le dernier push : onglet Validation en deux colonnes, ajout en lot, correctifs de détection, sorties datées par run."
   },
   {
     "objectID": "index.html#metadata-scrubber",
     "href": "index.html#metadata-scrubber",
     "title": "Accueil — Metadata Scrubber",
     "section": "",
-    "text": "Pipeline de dédoublonnage des CodeLists DDI 3.3 / 6.0.\nIl analyse un fichier de métadonnées au format DDI, identifie les listes de codes redondantes via un entonnoir en trois niveaux (exact, flou, sémantique) complété par un signal d’usage transversal (var_sig), et propose une interface de validation interactive pour que l’expert métier puisse examiner, approuver ou rejeter chaque paire détectée.\nLe résultat est un registre épuré (cleaned_codelists.json) qui ne conserve qu’une CodeList maître par groupe de redondances — injectable de manière itérative via l’option --registry pour traiter les fichiers suivants.\n\n\n\n\n\n\nDocument\nDescription\n\n\n\n\nGuide Utilisateur\nComment utiliser l’interface web : lancer le pipeline, examiner les paires, prendre des décisions, sauvegarder le registre.\n\n\nNote Méthodologique\nAlgorithme de détection en trois niveaux, walkthrough avec les datasets démo, schéma du registre v2."
+    "text": "Pipeline de dédoublonnage des CodeLists DDI 3.3 / 6.0.\nIl analyse un fichier de métadonnées au format DDI, identifie les listes de codes redondantes via un entonnoir en trois niveaux (exact, flou, sémantique) complété par un signal d’usage transversal (var_sig), et propose une interface de validation interactive pour que l’expert métier puisse examiner, approuver ou rejeter chaque paire détectée.\nLe résultat est un registre épuré (cleaned_codelists.json) qui ne conserve qu’une CodeList maître par groupe de redondances — injectable de manière itérative via l’option --registry pour traiter les fichiers suivants.\n\n\n\n\n\n\nDocument\nDescription\n\n\n\n\nGuide Utilisateur\nComment utiliser l’interface web : lancer le pipeline, examiner les paires, prendre des décisions, sauvegarder le registre.\n\n\nNote Méthodologique\nAlgorithme de détection en trois niveaux, walkthrough avec les datasets démo, schéma du registre v2.\n\n\nChangements récents\nCe qui a changé depuis le dernier push : onglet Validation en deux colonnes, ajout en lot, correctifs de détection, sorties datées par run."
   },
   {
     "objectID": "note_methodologique_dedoublonnage.html",
@@ -46,7 +46,7 @@
     "href": "note_methodologique_dedoublonnage.html#phase-1-bis-quasi-doublons-similarité-floue",
     "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
     "section": "2.2 Phase 1 bis — Quasi-Doublons (Similarité Floue)",
-    "text": "2.2 Phase 1 bis — Quasi-Doublons (Similarité Floue)\nMéthode :\n\nÀ partir des uniques (une par groupe exact → ~102 pour BTS.xml), concaténer nom + paires valeur:libellé en une chaîne\nComparer toutes les paires avec difflib.SequenceMatcher\nSeuils : ≥ 0.90 = détecté ; ≥ 0.80 = flagged pour inspection\n\n\n2.2.1 Exemples BTS.xml\n\n\n\n\n\n\n\n\nPaire\nScore\nDifférence\n\n\n\n\nSOURCE ↔︎ SOURCE_1\n0.9985\nIdentique (casse près)\n\n\nN_tr_ca_23 ↔︎ TR_CA\n0.9896\nMajuscules/espace sur 2 codes\n\n\nETAT_ET ↔︎ ETAT_ET_1\n0.9961\nQuasi-identique\n\n\nN_domempl_23 ↔︎ DOMEMPL\n0.86\nNON détectée (accent + ordre)\n\n\n\n\n\n2.2.2 Caractéristiques\n\n\n\nAspect\nDétail\n\n\n\n\nComplexité\n\\(O(U^2 \\cdot L)\\), \\(U\\) ≈ 102 uniques\n\n\nFaux négatifs\nDifférence &gt; ~10 % du texte\n\n\nFaux positifs\nDeux listes de plages de valeurs similaires\n\n\n\n\nSeuil MAX_CODES_FOR_FUZZY (défaut 100) : la comparaison code-à-code (_code_similarity) est en \\(O(\\text{len}(a.codes) \\times \\text{len}(b.codes))\\), indépendamment du nombre de CodeLists. Une seule liste volumineuse (ex. la nomenclature des communes, ~35 000 codes) suffit à rendre une paire impraticable (plusieurs dizaines de minutes). Les CodeLists dépassant ce seuil sont donc exclues de la phase floue et listées explicitement dans les logs — un vrai doublon parmi elles serait de toute façon capté par la phase exacte (§ précédent)."
+    "text": "2.2 Phase 1 bis — Quasi-Doublons (Similarité Floue)\nMéthode :\n\nÀ partir des uniques (une par groupe exact → ~102 pour BTS.xml), comparer toutes les paires de CodeLists\nSimilarité des codes (_code_similarity) : chaque code de la première liste est apparié au meilleur code encore libre de la seconde (valeur puis libellé, via difflib.SequenceMatcher) ; un code est apparié si son score atteint 0.65. La similarité est le nombre de codes appariés rapporté à la taille de la plus grande des deux listes : elle est symétrique, et une liste incluse dans une plus grande n’atteint pas 100 % (13 codes inclus dans 22 → 0.59, paire écartée)\nScore hybride = 0.6 × similarité des codes + 0.4 × similarité des noms (les noms de moins de 3 caractères sont ignorés). Si les codes sont quasi identiques (≥ 0.95) mais les noms très différents (&lt; 0.5), le score est relevé à 0.95\nSeuils : ≥ 0.90 = détecté ; ≥ 0.80 = flagged pour inspection ; similarité des codes minimale 0.75\nLa confiance d’une détection non exacte est plafonnée à 0.99 : 100 % est réservé à la signature exacte\n\n\n2.2.1 Exemples BTS.xml\n\n\n\n\n\n\n\n\nPaire\nScore\nDifférence\n\n\n\n\nSOURCE ↔︎ SOURCE_1\n0.9985\nIdentique (casse près)\n\n\nN_tr_ca_23 ↔︎ TR_CA\n0.9896\nMajuscules/espace sur 2 codes\n\n\nETAT_ET ↔︎ ETAT_ET_1\n0.9961\nQuasi-identique\n\n\nN_domempl_23 ↔︎ DOMEMPL\n0.86\nNON détectée (accent + ordre)\n\n\n\n\n\n2.2.2 Caractéristiques\n\n\n\nAspect\nDétail\n\n\n\n\nComplexité\n\\(O(U^2 \\cdot L)\\), \\(U\\) ≈ 102 uniques\n\n\nFaux négatifs\nDifférence &gt; ~10 % du texte\n\n\nFaux positifs\nDeux listes de plages de valeurs similaires\n\n\n\n\nSeuil MAX_CODES_FOR_FUZZY (défaut 100) : la comparaison code-à-code (_code_similarity) est en \\(O(\\text{len}(a.codes) \\times \\text{len}(b.codes))\\), indépendamment du nombre de CodeLists. Une seule liste volumineuse (ex. la nomenclature des communes, ~35 000 codes) suffit à rendre une paire impraticable (plusieurs dizaines de minutes). Les CodeLists dépassant ce seuil sont donc exclues de la phase floue et listées explicitement dans les logs — un vrai doublon parmi elles serait de toute façon capté par la phase exacte (§ précédent)."
   },
   {
     "objectID": "note_methodologique_dedoublonnage.html#phase-2-doublons-sémantiques-embeddings-llm",
@@ -172,7 +172,7 @@
     "href": "guide_utilisateur.html#configurer-le-pipeline",
     "title": "Guide d’Utilisation — Metadata Scrubber",
     "section": "3.1 Configurer le pipeline",
-    "text": "3.1 Configurer le pipeline\nQuatre champs paramètrent le run :\n\n\n\n\n\n\n\nChamp\nRôle\n\n\n\n\nChemin source DDI (XML)\nURL S3 ou chemin local vers le fichier DDI à analyser.\n\n\nDossier de sortie\nEmplacement où sera écrit le registre de doublons.\n\n\nRegistre nettoyé (optionnel)\nChemin vers un cleaned_codelists.json préexistant. Les CodeLists maîtres de ce registre sont injectées comme candidates prioritaires ; les doublons déjà validés sont exclus de la détection.\n\n\nExécuter les phases LLM / embeddings\nDécocher pour un run rapide (exact + flou uniquement, sans embeddings ni juge LLM).\n\n\nMode verbeux\nAfficher les détails d’exécution (étapes d’embeddings, messages LLM …) dans les logs.\n\n\n\n\n\n\nFormulaire de configuration du pipeline"
+    "text": "3.1 Configurer le pipeline\nQuatre champs paramètrent le run :\n\n\n\n\n\n\n\nChamp\nRôle\n\n\n\n\nChemin source DDI (XML)\nURL S3 ou chemin local vers le fichier DDI à analyser.\n\n\nDossier de sortie\nRacine des sorties (par défaut s3://projet-metadonnees-rmes/scrubber_output). Chaque run crée son propre sous-dossier daté AAAAMMJJ-HHMMSS contenant codelist_duplicates.json, run_summary.json et pipeline.log. Le registre nettoyé reste à la racine, partagé entre les runs.\n\n\nRegistre nettoyé (optionnel)\nChemin vers un cleaned_codelists.json préexistant. Les CodeLists maîtres de ce registre sont injectées comme candidates prioritaires ; les doublons déjà validés sont exclus de la détection.\n\n\nExécuter les phases LLM / embeddings\nDécocher pour un run rapide (exact + flou uniquement, sans embeddings ni juge LLM).\n\n\nMode verbeux\nAfficher les détails d’exécution (étapes d’embeddings, messages LLM …) dans les logs.\n\n\n\n\n\n\nFormulaire de configuration du pipeline"
   },
   {
     "objectID": "guide_utilisateur.html#exécuter-le-pipeline",
@@ -193,14 +193,14 @@
     "href": "guide_utilisateur.html#charger-le-registre",
     "title": "Guide d’Utilisation — Metadata Scrubber",
     "section": "4.1 Charger le registre",
-    "text": "4.1 Charger le registre\nSi un pipeline n’a pas été lancé depuis l’interface, chargez un registre préexistant :\n\nSaisissez le chemin (S3 ou local) vers le fichier de sortie du pipeline, par exemple s3://projet-metadonnees-rmes/scrubber_output/codelist_duplicates.json\nCliquez sur 📂 Charger le registre\nLes résultats s’affichent alors sous forme de cartes"
+    "text": "4.1 Charger le registre\nSi un pipeline n’a pas été lancé depuis l’interface, chargez un registre préexistant :\n\nSaisissez le chemin (S3 ou local) vers le fichier de sortie du pipeline, par exemple s3://projet-metadonnees-rmes/scrubber_output/20261022-140509/codelist_duplicates.json\nCliquez sur 📂 Charger le registre\nLes résultats s’affichent alors sous forme de cartes"
   },
   {
     "objectID": "guide_utilisateur.html#vue-densemble",
     "href": "guide_utilisateur.html#vue-densemble",
     "title": "Guide d’Utilisation — Metadata Scrubber",
     "section": "4.2 Vue d’ensemble",
-    "text": "4.2 Vue d’ensemble\nQuatre indicateurs en haut de page résument l’état du registre :\n\n\n\n\n\n\n\nIndicateur\nSignification\n\n\n\n\nCodeLists\nNombre total de CodeLists dans le fichier analysé\n\n\nDoublons\nNombre de CodeLists marquées comme potentiellement redondantes\n\n\nApprouvés\nPairs pour lesquelles l’expert a validé le rapprochement\n\n\nEn attente\nPaires n’ayant pas encore été examinées\n\n\n\nChaque CodeList est présentée sous forme de carte comportant :\n\nLe nom de la CodeList et un bouton Voir à côté (pour la comparaison)\nLe nombre de codes\nLe score de confiance (0–100 %)\nLe badge de décision : 🟡 en attente, 🟢 approuvé, 🔴 rejeté\nLes signaux de détection : exact, flou, usage, synonyme, semantic (ces badges reflètent la phase du pipeline qui a produit la correspondance — synonyme n’est pas un signal séparé mais une manifestation du signal semantic (juge LLM) ; le détail des définitions est dans la note méthodologique, §2-3)\nUn bouton 📋 Détails affichant une liste (valeur → libellé) pour chaque CodeList du groupe\n\n\n\n\nVue en cartes du registre avec indicateurs"
+    "text": "4.2 Vue d’ensemble\nQuatre indicateurs en haut de page résument l’état du registre :\n\n\n\n\n\n\n\nIndicateur\nSignification\n\n\n\n\nCodeLists\nNombre total de CodeLists dans le fichier analysé\n\n\nDoublons\nNombre de CodeLists marquées comme potentiellement redondantes\n\n\nApprouvés\nPairs pour lesquelles l’expert a validé le rapprochement\n\n\nEn attente\nPaires n’ayant pas encore été examinées\n\n\n\nSous les indicateurs, la page est découpée en deux colonnes :\n\nColonne de gauche : la liste des CodeLists de référence du fichier examiné, avec leur nom, leur identifiant et des pastilles de décision (approuvés, rejetés, en attente, total). La première ligne est sélectionnée à l’ouverture.\nColonne de droite : la CodeList sélectionnée, avec ses modalités (valeur et étiquette de chaque code), puis en dessous les doublons détectés pour cette liste.\n\nLes filtres, la recherche (qui porte aussi sur le nom et l’identifiant des doublons) et la pagination s’appliquent à la colonne de gauche.\n\n4.2.1 Ajouter des CodeLists sans doublon au registre nettoyé\nLes CodeLists pour lesquelles aucun doublon n’a été détecté peuvent être ajoutées au registre nettoyé sans passer par une décision. Elles portent une case à cocher dans la colonne de gauche (les CodeLists avec doublons n’en ont pas) :\n\nCase à cocher sur chaque ligne, et Tout sélectionner pour cocher toutes les CodeLists sans doublon de la page affichée. La sélection est conservée quand on change de page ou de filtre.\n➕ Ajouter la sélection ajoute les CodeLists cochées, après confirmation.\n➕ Ajouter toutes les CodeLists sans doublon ajoute d’un coup toutes celles du registre chargé, sans sélection préalable et quels que soient les filtres actifs. Le nombre de CodeLists concernées est indiqué sur le bouton.\n\nLes CodeLists déjà présentes dans le registre nettoyé sont ignorées. Une fois ajoutée, une CodeList est marquée ✅ dans la liste.\nChaque doublon est présenté sous forme de carte comportant :\n\nLe nom de la CodeList et un bouton Voir à côté (pour la comparaison)\nLe nombre de codes\nLe score de confiance (0–100 %)\nLe badge de décision : 🟡 en attente, 🟢 approuvé, 🔴 rejeté\nLes signaux de détection : exact, flou, usage, synonyme, semantic (ces badges reflètent la phase du pipeline qui a produit la correspondance — synonyme n’est pas un signal séparé mais une manifestation du signal semantic (juge LLM) ; le détail des définitions est dans la note méthodologique, §2-3)\nUn bouton 📋 Détails affichant une liste (valeur → libellé) pour chaque CodeList du groupe\n\n\n\n\nVue en cartes du registre avec indicateurs"
   },
   {
     "objectID": "guide_utilisateur.html#comparer-côte-à-côte",
@@ -292,5 +292,75 @@
     "title": "Guide d’Utilisation — Metadata Scrubber",
     "section": "6.3 Ajouter des listes sans doublon",
     "text": "6.3 Ajouter des listes sans doublon\nLorsqu’une CodeList n’est détectée comme doublon de personne par le pipeline (ex. L_QUALITE_ZONAGE_2023 dans l’exemple BPE_demo), vous pouvez la ajouter manuellement au registre propre :\n\nConsultez la CodeList dans l’onglet Validation (ou via son détail)\nCliquez sur ➕ Ajouter au registre\nSauvegardez (💾 sauvegarder) — la liste apparaît dans cleaned_codelists.json comme maître sans remplaçant.\n\n\nCette fonctionnalité est particulièrement utile pour les CodeLists uniques mais essentielles, ou lorsque vous souhaitez créer une référence maître pour un nouveau concept métier avant d’identifier ses variantes."
+  },
+  {
+    "objectID": "modifications_recentes.html",
+    "href": "modifications_recentes.html",
+    "title": "Changements récents",
+    "section": "",
+    "text": "Ce document décrit ce qui a changé depuis le dernier push (4be5503, « Truncate codelist for embedding »). Il regroupe l’évolution de l’onglet Validation des doublons, les correctifs de détection issus des remarques de Guillaume sur l’ancienne version, et la nouvelle organisation des fichiers de sortie."
+  },
+  {
+    "objectID": "modifications_recentes.html#deux-colonnes",
+    "href": "modifications_recentes.html#deux-colonnes",
+    "title": "Changements récents",
+    "section": "2.1 Deux colonnes",
+    "text": "2.1 Deux colonnes\n\nColonne de gauche : une ligne par CodeList de référence (nom, identifiant, pastilles approuvés / rejetés / en attente / total). La première ligne est sélectionnée à l’ouverture.\nColonne de droite : l’en-tête de la CodeList sélectionnée, le tableau de ses modalités (valeur et étiquette de chaque code, repliable), puis une carte par doublon. Chaque carte garde sa décision, sa confiance, ses badges de détection et un bouton « Détails » qui ouvre la comparaison avec la CodeList principale.\nChaque colonne défile séparément ; sous 768 px elles s’empilent.\nStats, actions en masse, filtres et pagination restent au-dessus, sur toute la largeur, et s’appliquent à la colonne de gauche."
+  },
+  {
+    "objectID": "modifications_recentes.html#filtres",
+    "href": "modifications_recentes.html#filtres",
+    "title": "Changements récents",
+    "section": "2.2 Filtres",
+    "text": "2.2 Filtres\n\nLes filtres décision et origine s’appliquent dès qu’on les change ; la recherche s’applique après 300 ms sans frappe. Le bouton « Filtrer » reste disponible.\nLe panneau de droite ne montre que les doublons correspondant au filtre de décision (par exemple « en attente »), avec la mention « X sur Y, filtre actif ».\nLa recherche porte aussi sur le nom et l’identifiant des doublons et renvoie leur CodeList de référence."
+  },
+  {
+    "objectID": "modifications_recentes.html#lisibilité-des-badges",
+    "href": "modifications_recentes.html#lisibilité-des-badges",
+    "title": "Changements récents",
+    "section": "2.3 Lisibilité des badges",
+    "text": "2.3 Lisibilité des badges\n\nInfobulles sur les pastilles de décision et sur les badges de détection.\nUne légende d’une ligne sous les filtres.\nUn doublon relié à la CodeList principale seulement via un autre doublon affiche « lien indirect, via … » (voir Détection)."
+  },
+  {
+    "objectID": "modifications_recentes.html#ajout-en-lot",
+    "href": "modifications_recentes.html#ajout-en-lot",
+    "title": "Changements récents",
+    "section": "3.1 Ajout en lot",
+    "text": "3.1 Ajout en lot\nLes CodeLists sans doublon peuvent être ajoutées au registre nettoyé sans décision, avec replaces vide.\n\nUne case à cocher par ligne éligible ; les CodeLists avec doublons n’en ont pas.\nTout sélectionner : coche les CodeLists sans doublon de la page affichée. La sélection est conservée quand on change de page ou de filtre.\n➕ Ajouter la sélection : ajoute les CodeLists cochées, après confirmation.\n➕ Ajouter toutes les CodeLists sans doublon (N) : porte sur tout le registre chargé, quels que soient les filtres ; N est affiché sur le bouton.\nUne seule lecture et une seule écriture du fichier par action (un seul aller-retour S3), au lieu d’une écriture par CodeList."
+  },
+  {
+    "objectID": "modifications_recentes.html#retrait-dune-liste-ajoutée-par-erreur",
+    "href": "modifications_recentes.html#retrait-dune-liste-ajoutée-par-erreur",
+    "title": "Changements récents",
+    "section": "3.2 Retrait d’une liste ajoutée par erreur",
+    "text": "3.2 Retrait d’une liste ajoutée par erreur\nLe bouton « ↩︎ Retirer du registre nettoyé » apparaît dans le panneau de droite pour une CodeList sans doublon déjà présente dans le registre. Seules les entrées sans replaces sont retirables : les autres résultent de décisions approuvées et se corrigent en changeant la décision puis en sauvegardant.\nAu chargement d’un registre, l’interface lit le registre nettoyé existant : le ✅ d’une CodeList déjà ajoutée est donc correct d’une session à l’autre."
+  },
+  {
+    "objectID": "modifications_recentes.html#score-flou-symétrique",
+    "href": "modifications_recentes.html#score-flou-symétrique",
+    "title": "Changements récents",
+    "section": "4.1 Score flou symétrique",
+    "text": "4.1 Score flou symétrique\n_code_similarity (funnel.py) divisait le nombre de codes appariés par la taille de la première liste de la paire. Une liste incluse dans une plus grande obtenait 100 % si elle passait en premier, et la paire était écartée dans l’ordre inverse. Le score dépendait donc de l’ordre des listes.\nLe score est maintenant rapporté à la taille de la plus grande liste :\n\n\n\n\n\n\n\n\nCas\nAvant\nAprès\n\n\n\n\n13 codes inclus dans une liste de 22\n1,00 ou écartée selon l’ordre\n0,59, écartée\n\n\n85 codes identiques, 3 codes en plus\n1,00 ou 0,97 selon l’ordre\n0,97\n\n\nListes identiques\n1,00\n1,00"
+  },
+  {
+    "objectID": "modifications_recentes.html#confiance-100-réservé-à-lexact",
+    "href": "modifications_recentes.html#confiance-100-réservé-à-lexact",
+    "title": "Changements récents",
+    "section": "4.2 Confiance : 100 % réservé à l’exact",
+    "text": "4.2 Confiance : 100 % réservé à l’exact\nLa confiance des détections floues et sémantiques est plafonnée à 0,99. Un score de 100 % signifie désormais « signature exacte »."
+  },
+  {
+    "objectID": "modifications_recentes.html#double-signalement-entre-phases",
+    "href": "modifications_recentes.html#double-signalement-entre-phases",
+    "title": "Changements récents",
+    "section": "4.3 Double signalement entre phases",
+    "text": "4.3 Double signalement entre phases\nused.update(master.id, slave.id) ajoutait les caractères des identifiants au lieu des identifiants. Le filtre in used ne fonctionnait donc plus après la phase floue et une même paire pouvait ressortir aussi en « usage » ou « sémantique ». Les esclaves flous sont désormais marqués après la boucle floue : toutes les paires floues restent détectées (chaînes a→b→c comprises), mais les phases suivantes ne les re-signalent plus."
+  },
+  {
+    "objectID": "modifications_recentes.html#badges-propres-à-la-liste-principale",
+    "href": "modifications_recentes.html#badges-propres-à-la-liste-principale",
+    "title": "Changements récents",
+    "section": "4.4 Badges propres à la liste principale",
+    "text": "4.4 Badges propres à la liste principale\nLe registre est présenté « doublon par rapport à la CodeList principale », mais les types de détection et la confiance d’un doublon étaient fusionnés avec toutes les paires l’impliquant, y compris avec d’autres doublons. Un doublon pouvait ainsi afficher « exact » et 100 % alors que ses codes différaient de ceux de la liste principale.\n\nLes types et la confiance viennent d’abord de la paire directe avec la liste principale.\nSans paire directe (lien transitif), on garde les paires qui impliquent le doublon et on ajoute un champ optionnel via (ids des CodeLists réellement liées). La carte affiche « lien indirect, via … ».\nLes registres existants restent valides : via est absent quand il ne sert pas.\n\n\n\n\n\n\n\nWarningImpact sur les résultats\n\n\n\nLes scores et le nombre de paires détectées changent : les sous-ensembles ne ressortent plus en flou et certains scores baissent. Il est conseillé de relancer le pipeline sur BTS ou EAR et de comparer le nombre de candidats avant et après.\n\n\nLa note méthodologique a aussi été corrigée : la phase floue compare les codes un à un (pas une chaîne concaténée) avec un score hybride 0,6 × codes + 0,4 × noms."
   }
 ]
