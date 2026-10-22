@@ -257,12 +257,17 @@ function connectSSE(jobId) {
             const dupUrl = data.result.output_files['codelist_duplicates.json'];
             if (dupUrl) {
                 document.getElementById('registryPath').value = dupUrl;
-                // Boucle incrémentale : préremplir aussi les chemins du registre nettoyé
-                const cleanedUrl = dupUrl.replace(/codelist_duplicates\.json$/, 'cleaned_codelists.json');
-                document.getElementById('cleanedPath').value = cleanedUrl;
-                document.getElementById('pipelineRegistryPath').value = cleanedUrl;
+                // Boucle incrémentale : le registre nettoyé est partagé entre les runs
+                // (racine de sortie), il n'est pas dans le dossier daté du run.
+                const cleanedUrl = data.result.cleaned_registry_path;
+                if (cleanedUrl) {
+                    document.getElementById('cleanedPath').value = cleanedUrl;
+                    document.getElementById('pipelineRegistryPath').value = cleanedUrl;
+                }
             }
         }
+
+        renderRunWarnings(document.getElementById('resultWarnings'), data.result?.warnings);
 
         showToast('✅ Pipeline terminé avec succès !', 'success');
     }

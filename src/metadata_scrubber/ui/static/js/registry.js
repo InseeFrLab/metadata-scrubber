@@ -5,6 +5,10 @@
 let registryData = null;
 let currentPage = 0;
 let TOTAL_PAGES = 0;
+let selectedClId = null;   // CodeList (ou doublon) affichée dans la colonne de droite
+let lastNavItems = [];     // CodeLists affichées dans la liste de gauche
+const batchSelected = new Set();  // ids cochés pour l'ajout en lot (survit à la pagination)
+const inCleaned = new Set();      // ids ajoutés au registre nettoyé pendant cette session
 
 /* ------------------------------------------------------------------ */
 /* Loading / saving
@@ -33,7 +37,12 @@ async function loadRegistry() {
 
         updateStats();
         currentPage = 0;
+        selectedClId = null;
+        batchSelected.clear();
+        inCleaned.clear();
         renderCodelistsFiltered();
+        loadRunSummary();
+        loadCleanedIds();
 
         showToast(
             `✅ Registre chargé · ${Object.keys(registryData).length} CodeLists`,
@@ -45,6 +54,34 @@ async function loadRegistry() {
     } finally {
         btn.disabled = false;
         btn.textContent = '📂 Charger le registre';
+    }
+}
+
+/* Avertissements du run (run_summary.json à côté du registre) : étape sémantique sautée, etc. */
+async function loadRunSummary() {
+    const box = document.getElementById('runWarnings');
+    renderRunWarnings(box, []);
+    try {
+        const resp = await fetch(`${API_BASE}api/registry/run-summary`);
+        if (!resp.ok) return;   // ancien registre sans résumé : rien à afficher
+        const summary = await resp.json();
+        renderRunWarnings(box, summary.warnings);
+    } catch (err) {
+        console.warn('run-summary:', err);
+    }
+}
+
+/* Ids déjà présents dans le registre nettoyé : le ✅ reste fiable d'une session à l'autre */
+async function loadCleanedIds() {
+    try {
+        const resp = await fetch(`${API_BASE}api/registry/cleaned`);
+        if (!resp.ok) return;   // 404 : pas encore de registre nettoyé
+        const cleaned = await resp.json();
+        for (const id of Object.keys(cleaned.codelists || {})) inCleaned.add(id);
+        renderCodelistNav();
+        if (selectedClId) renderCodelistDetail(selectedClId);
+    } catch (err) {
+        console.warn('cleaned ids:', err);
     }
 }
 
@@ -181,44 +218,34 @@ function getFilters() {
 async function renderCodelistsFiltered() {
     if (!registryData) return;
     const { decisionFilter, originFilter, search, pageSize } = getFilters();
+    const searchLower = search.toLowerCase();
 
     let items = [];
     for (const [clId, clData] of Object.entries(registryData)) {
-        let cl = {
+        const cl = {
             id: clId,
             name: clData.name || clId,
-            label: clData.label || '',
-            codes_count: clData.codes_count || 0,
-            codes: clData.codes || [],
             origin: clData.origin || 'xml',
-            vars_count: (clData.vars || []).length,
-            vars: clData.vars || [],
-            cat_ids_count: (clData.cat_ids || []).length,
             duplicates: clData.duplicates || [],
-            decisions: (clData.duplicates || []).map(d => d.decision || 'pending'),
         };
+        const decisions = cl.duplicates.map(d => d.decision || 'pending');
 
         // Decision filter ("none" = listes sans doublon détecté)
         if (decisionFilter.length === 1 && decisionFilter[0] === 'none') {
             if (cl.duplicates.length) continue;
         } else if (decisionFilter.length < 3) {
-            if (!cl.decisions.some(d => decisionFilter.includes(d))) continue;
+            if (!decisions.some(d => decisionFilter.includes(d))) continue;
         }
 
         // Origin filter (listes issues du registre nettoyé)
         if (originFilter === 'registry' && cl.origin !== 'registry') continue;
 
-        // Search filter
+        // Search filter (nom ou ID de la liste, ou d'un de ses doublons)
         if (search) {
-            const searchLower = search.toLowerCase();
-            const nameLower = (cl.name || '').toLowerCase();
-            const dupNames = (cl.duplicates || [])
-                .map(d => d.name || '')
+            const haystack = [cl.name, clId]
+                .concat(cl.duplicates.flatMap(d => [d.name || '', d.id]))
                 .join(' ').toLowerCase();
-            if (!nameLower.includes(searchLower) &&
-                !dupNames.includes(searchLower)) {
-                continue;
-            }
+            if (!haystack.includes(searchLower)) continue;
         }
 
         items.push(cl);
@@ -232,96 +259,186 @@ async function renderCodelistsFiltered() {
     const paged = items.slice(start, start + pageSize);
     TOTAL_PAGES = Math.ceil(items.length / pageSize) || 1;
 
-    renderCodelistList(paged);
+    // Garde la sélection si elle est encore visible, sinon la première ligne
+    if (!paged.some(cl => cl.id === selectedClId)) selectedClId = paged[0]?.id || null;
+
+    renderCodelistNav(paged);
+    renderCodelistDetail(selectedClId);
     renderPagination(items.length, currentPage, pageSize);
 }
 
-function renderCodelistList(items) {
-    const container = document.getElementById('codelistContainer');
+/* Liste de gauche : une ligne compacte par CodeList.
+   Les compteurs sont lus dans registryData pour rester à jour après un changement de décision. */
+function renderCodelistNav(items) {
+    if (items) lastNavItems = items;
+    const nav = document.getElementById('codelistNav');
 
-    if (!items.length) {
-        container.innerHTML = '<div class="text-center py-4 text-muted">Aucune CodeList trouvée.</div>';
+    if (!lastNavItems.length) {
+        nav.innerHTML = '<div class="text-center py-4 text-muted">Aucune CodeList trouvée.</div>';
+        updateBatchBar();
         return;
     }
 
     let html = '';
-    for (const cl of items) {
-        html += renderCodeListCard(cl);
-    }
-    container.innerHTML = html;
-
-    // Set up decision select listeners
-    for (const cl of items) {
-        const addBtn = document.getElementById(`addclean_${cl.id}`);
-        if (addBtn) {
-            addBtn.addEventListener('click', () => addToCleaned(cl.id));
+    for (const cl of lastNavItems) {
+        const dups = registryData[cl.id]?.duplicates || [];
+        const added = inCleaned.has(cl.id);
+        html += `<a href="#" class="list-group-item list-group-item-action`;
+        html += `${cl.id === selectedClId ? ' active' : ''}${added ? ' in-cleaned' : ''}" data-id="${escapeHtml(cl.id)}">`;
+        html += `<div class="d-flex justify-content-between align-items-start gap-1">`;
+        html += `<div class="d-flex gap-2">`;
+        // Case d'ajout en lot : uniquement pour les listes sans doublon pas encore ajoutées
+        if (!dups.length && !added) {
+            html += `<input type="checkbox" class="form-check-input batch-check" `;
+            html += `data-id="${escapeHtml(cl.id)}"${batchSelected.has(cl.id) ? ' checked' : ''}>`;
         }
-        for (const dup of cl.duplicates || []) {
-            const select = document.getElementById(`decision_${cl.id}_${dup.id}`);
-            if (select) {
-                select.addEventListener('change', () => {
-                    updateDecision(cl.id, dup.id, select.value);
-                });
-            }
-
-            // Rendu paresseux du tableau comparatif à la première ouverture
-            const collapseEl = document.getElementById(`dup_${cl.id}_${dup.id}`);
-            if (collapseEl) {
-                collapseEl.addEventListener('show.bs.collapse', () => {
-                    const target = document.getElementById(`codes_${cl.id}_${dup.id}`);
-                    if (target && !target.dataset.rendered) {
-                        target.innerHTML = buildCodeComparisonHtml(
-                            cl.codes, dup.codes || [], cl.name, dup.name
-                        );
-                        target.dataset.rendered = '1';
-                    }
-                });
-            }
-        }
+        html += `<div class="text-break">${escapeHtml(cl.name || cl.id)}`;
+        if (cl.origin === 'registry') html += ` <span class="badge bg-primary">📘</span>`;
+        if (added) html += ` <span class="badge bg-success" title="Dans le registre nettoyé">✅</span>`;
+        html += `<br><code class="dup-id">${escapeHtml(cl.id)}</code></div></div>`;
+        html += `<div class="d-flex gap-1">${decisionBadgesHtml(dups)}</div></div></a>`;
     }
+    nav.innerHTML = html;
+
+    nav.querySelectorAll('.batch-check').forEach(box => {
+        // Cocher une case ne doit pas changer la CodeList affichée à droite
+        box.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (box.checked) batchSelected.add(box.dataset.id);
+            else batchSelected.delete(box.dataset.id);
+            updateBatchBar();
+        });
+    });
+    updateBatchBar();
+
+    nav.querySelectorAll('.list-group-item').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            selectCodelist(el.dataset.id);
+        });
+    });
 }
 
-function renderCodeListCard(cl) {
-    const dupCount = cl.duplicates?.length || 0;
-    const decApproved = (cl.decisions || []).filter(d => d === 'approve').length;
-    const decRejected = (cl.decisions || []).filter(d => d === 'reject').length;
-    const decPending = dupCount - decApproved - decRejected;
+function decisionBadgesHtml(dups) {
+    const count = (dec) => dups.filter(d => (d.decision || 'pending') === dec).length;
+    const approved = count('approve'), rejected = count('reject');
+    const pending = dups.length - approved - rejected;
+    return `<span class="badge bg-success" title="Doublons approuvés">${approved}</span>`
+        + `<span class="badge bg-danger" title="Doublons rejetés">${rejected}</span>`
+        + `<span class="badge bg-warning text-dark" title="Doublons en attente">${pending}</span>`
+        + `<span class="badge bg-secondary" title="Total des doublons détectés">${dups.length}</span>`;
+}
 
-    let html = `<div class="card mb-2">`;
-    html += `<div class="card-header d-flex justify-content-between align-items-center">`;
-    html += `<div><h6 class="mb-0">${escapeHtml(cl.name || cl.id)} <button class="btn btn-sm btn-link p-0 copy-id-btn" onclick="copyId('${escapeHtml(cl.id)}')" title="Copier l'ID">${escapeHtml(cl.id)}</button></h6>`;
-    if (cl.label) html += `<small class="text-muted">${cl.label}</small>`;
-    html += `</div>`;
-    html += `<div class="d-flex gap-1">`;
-    if (cl.origin === 'registry') {
-        html += `<span class="badge bg-primary">📘 registre</span>`;
-    }
-    html += `<span class="badge bg-success">${decApproved}</span>`;
-    html += `<span class="badge bg-danger">${decRejected}</span>`;
-    html += `<span class="badge bg-warning text-dark">${decPending}</span>`;
-    html += `<span class="badge bg-secondary">${dupCount}</span>`;
+function selectCodelist(id) {
+    selectedClId = id;
+    document.querySelectorAll('#codelistNav .list-group-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.id === id);
+    });
+    renderCodelistDetail(id);
+}
+
+/* En-tête de la CodeList affichée à droite (nom, ID, label, badges, volumétrie) */
+function renderDetailHeader(id) {
+    const cl = registryData[id];
+    if (!cl) return '';
+
+    let html = `<div class="card-header d-flex justify-content-between align-items-center">`;
+    html += `<div><h6 class="mb-0">${escapeHtml(cl.name || id)} <button class="btn btn-sm btn-link p-0 copy-id-btn" onclick="copyId('${escapeHtml(id)}')" title="Copier l'ID">${escapeHtml(id)}</button></h6>`;
+    if (cl.label) html += `<small class="text-muted">${escapeHtml(cl.label)}</small>`;
+    html += `</div><div class="d-flex gap-1">`;
+    if (cl.origin === 'registry') html += `<span class="badge bg-primary">📘 registre</span>`;
+    html += decisionBadgesHtml(cl.duplicates || []);
     html += `</div></div>`;
-
     html += `<div class="card-body py-1 small">`;
-    html += `${cl.codes_count || 0} codes · ${cl.vars_count || 0} variables`;
-    html += ` · ${cl.cat_ids_count || 0} catégories</div>`;
+    html += `${cl.codes_count || 0} codes · ${(cl.vars || []).length} variables`;
+    html += ` · ${(cl.cat_ids || []).length} catégories</div>`;
+    return html;
+}
 
-    if (cl.duplicates?.length) {
-        html += `<div class="card-body pt-0">`;
-        for (const dup of cl.duplicates) {
-            html += renderDuplicateCard(cl, dup);
-        }
-        html += `</div>`;
+/* Tableau des modalités (valeur | étiquette) d'une CodeList */
+function buildCodesTableHtml(codes) {
+    if (!codes || !codes.length) {
+        return '<small class="text-muted">Aucune modalité.</small>';
+    }
+    const truncate = (s) => escapeHtml(String(s || '').slice(0, 60));
+    let rows = '';
+    for (const pair of codes) {
+        rows += `<tr><td>${escapeHtml(pair[0])}</td><td>${truncate(pair.length > 1 ? pair[1] : '')}</td></tr>`;
+    }
+    let html = `<div class="code-compare-wrap">`;
+    html += `<table class="table table-sm table-bordered code-table mb-1">`;
+    html += `<thead><tr><th>Valeur</th><th>Étiquette</th></tr></thead>`;
+    html += `<tbody>${rows}</tbody></table></div>`;
+    return html;
+}
+
+/* Colonne de droite : modalités de la CodeList sélectionnée, puis ses doublons */
+function renderCodelistDetail(id) {
+    const detail = document.getElementById('codelistDetail');
+    const cl = id && registryData ? registryData[id] : null;
+    if (!cl) {
+        detail.innerHTML = '<div class="text-center py-4 text-muted">Sélectionnez une CodeList.</div>';
+        return;
+    }
+    const allDups = cl.duplicates || [];
+    // Le filtre de décision s'applique aussi aux doublons affichés (ex. « en attente »)
+    const { decisionFilter } = getFilters();
+    const dups = decisionFilter.length < 3 && decisionFilter[0] !== 'none'
+        ? allDups.filter(d => decisionFilter.includes(d.decision || 'pending'))
+        : allDups;
+
+    let html = `<div class="card"><div id="detailHeader">${renderDetailHeader(id)}</div>`;
+    html += `<div class="card-body">`;
+
+    html += `<details open class="mb-3"><summary class="fw-bold">Modalités (${(cl.codes || []).length})</summary>`;
+    html += `<div class="mt-2">${buildCodesTableHtml(cl.codes)}</div></details>`;
+
+    if (allDups.length) {
+        html += `<h6>Doublons détectés (${dups.length}${dups.length !== allDups.length ? ` sur ${allDups.length}, filtre actif` : ''})</h6>`;
+        for (const dup of dups) html += renderDuplicateCard({ ...cl, id }, dup);
     } else {
         // Liste sans doublon détecté → ajout manuel au registre nettoyé
-        html += `<div class="card-body pt-0 d-flex align-items-center gap-2">`;
+        html += `<div class="d-flex align-items-center gap-2">`;
         html += `<span class="text-muted small">Aucun doublon détecté.</span>`;
-        html += `<button class="btn btn-sm btn-outline-success" id="addclean_${cl.id}">`;
-        html += `➕ Ajouter au registre nettoyé</button></div>`;
+        if (inCleaned.has(id)) {
+            html += `<span class="badge bg-success">✅ Dans le registre</span>`;
+            html += `<button class="btn btn-sm btn-outline-danger" id="removeclean_${id}">`;
+            html += `↩ Retirer du registre nettoyé</button></div>`;
+        } else {
+            html += `<button class="btn btn-sm btn-outline-success" id="addclean_${id}">`;
+            html += `➕ Ajouter au registre nettoyé</button></div>`;
+        }
     }
+    html += `</div></div>`;
+    detail.innerHTML = html;
 
-    html += `</div>`;
-    return html;
+    const addBtn = document.getElementById(`addclean_${id}`);
+    if (addBtn) addBtn.addEventListener('click', () => addToCleaned(id));
+    const removeBtn = document.getElementById(`removeclean_${id}`);
+    if (removeBtn) removeBtn.addEventListener('click', () => removeFromCleaned([id], removeBtn));
+
+    for (const dup of dups) {
+        const select = document.getElementById(`decision_${id}_${dup.id}`);
+        if (select) {
+            select.addEventListener('change', () => {
+                updateDecision(id, dup.id, select.value);
+            });
+        }
+
+        // Rendu paresseux du tableau comparatif à la première ouverture
+        const collapseEl = document.getElementById(`dup_${id}_${dup.id}`);
+        if (collapseEl) {
+            collapseEl.addEventListener('show.bs.collapse', () => {
+                const target = document.getElementById(`codes_${id}_${dup.id}`);
+                if (target && !target.dataset.rendered) {
+                    target.innerHTML = buildCodeComparisonHtml(
+                        cl.codes || [], dup.codes || [], cl.name, dup.name
+                    );
+                    target.dataset.rendered = '1';
+                }
+            });
+        }
+    }
 }
 
 async function addToCleaned(clId) {
@@ -335,6 +452,7 @@ async function addToCleaned(clId) {
         if (resp.status === 409) {
             showToast('Déjà présente dans le registre nettoyé.', 'warning');
             if (btn) btn.disabled = true;
+            markInCleaned([clId]);
             return;
         }
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -345,9 +463,126 @@ async function addToCleaned(clId) {
             btn.textContent = '✅ Dans le registre';
         }
         if (data.path) document.getElementById('cleanedPath').value = data.path;
+        markInCleaned([clId]);
     } catch (err) {
         showToast(`Erreur: ${err.message}`, 'danger');
     }
+}
+
+/* ------------------------------------------------------------------ */
+/* Ajout en lot au registre nettoyé
+/* ------------------------------------------------------------------ */
+
+/* CodeLists sans doublon : seules éligibles à l'ajout en lot */
+function listsWithoutDuplicates() {
+    if (!registryData) return [];
+    return Object.keys(registryData).filter(id => !(registryData[id].duplicates || []).length);
+}
+
+/* Retire du registre nettoyé des listes ajoutées à la main (sans `replaces`) */
+async function removeFromCleaned(ids, btn) {
+    if (!confirm(`Retirer ${ids.length} CodeList(s) du registre nettoyé ?`)) return;
+    btn.disabled = true;
+    try {
+        const resp = await fetch(`${API_BASE}api/registry/remove-from-cleaned`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cl_ids: ids }),
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        let msg = `↩ ${data.removed.length} retirée(s) du registre nettoyé · ${data.count} entrées`;
+        if (data.protected.length) {
+            msg += ` · ${data.protected.length} protégée(s) (issues de décisions approuvées)`;
+        }
+        showToast(msg, data.protected.length ? 'warning' : 'success');
+
+        for (const id of [...data.removed, ...data.not_present]) inCleaned.delete(id);
+        renderCodelistNav();
+        renderCodelistDetail(selectedClId);
+    } catch (err) {
+        showToast(`Erreur: ${err.message}`, 'danger');
+        btn.disabled = false;
+    }
+}
+
+function markInCleaned(ids) {
+    for (const id of ids) {
+        inCleaned.add(id);
+        batchSelected.delete(id);
+    }
+    renderCodelistNav();
+    // Réaffiche le panneau de droite pour griser son bouton d'ajout
+    if (ids.includes(selectedClId)) renderCodelistDetail(selectedClId);
+}
+
+function updateBatchBar() {
+    const eligible = listsWithoutDuplicates().filter(id => !inCleaned.has(id));
+    document.getElementById('batchCount').textContent = batchSelected.size;
+    document.getElementById('batchAddBtn').disabled = batchSelected.size === 0;
+    document.getElementById('noDupCount').textContent = eligible.length;
+    document.getElementById('addAllNoDupBtn').disabled = eligible.length === 0;
+
+    // « Tout sélectionner » reflète les cases visibles de la page affichée
+    const boxes = [...document.querySelectorAll('#codelistNav .batch-check')];
+    const checked = boxes.filter(b => b.checked).length;
+    const all = document.getElementById('batchSelectAll');
+    all.disabled = boxes.length === 0;
+    all.checked = boxes.length > 0 && checked === boxes.length;
+    all.indeterminate = checked > 0 && checked < boxes.length;
+}
+
+function toggleSelectAllVisible(checked) {
+    document.querySelectorAll('#codelistNav .batch-check').forEach(box => {
+        box.checked = checked;
+        if (checked) batchSelected.add(box.dataset.id);
+        else batchSelected.delete(box.dataset.id);
+    });
+    updateBatchBar();
+}
+
+async function postBatchToCleaned(body, btn) {
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Traitement…';
+    try {
+        const resp = await fetch(`${API_BASE}api/registry/add-to-cleaned/batch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        let msg = `➕ ${data.added.length} ajoutée(s) au registre nettoyé · ${data.count} entrées`;
+        if (data.already_present.length) msg += ` · ${data.already_present.length} déjà présente(s)`;
+        const ignored = data.not_found.length + data.skipped_with_duplicates.length;
+        if (ignored) msg += ` · ${ignored} ignorée(s)`;
+        showToast(msg, ignored ? 'warning' : 'success');
+
+        if (data.path) document.getElementById('cleanedPath').value = data.path;
+        markInCleaned([...data.added, ...data.already_present]);
+    } catch (err) {
+        showToast(`Erreur: ${err.message}`, 'danger');
+    } finally {
+        btn.textContent = originalText;
+        updateBatchBar();   // recalcule l'état disabled des boutons
+    }
+}
+
+function addBatchToCleaned(btn) {
+    const ids = [...batchSelected];
+    if (!ids.length) return;
+    if (!confirm(`Ajouter ${ids.length} CodeList(s) au registre nettoyé ?`)) return;
+    return postBatchToCleaned({ cl_ids: ids }, btn);
+}
+
+function addAllWithoutDuplicates(btn) {
+    const count = listsWithoutDuplicates().filter(id => !inCleaned.has(id)).length;
+    if (!count) return;
+    if (!confirm(`Ajouter les ${count} CodeList(s) sans doublon au registre nettoyé ?`)) return;
+    return postBatchToCleaned({ all_without_duplicates: true }, btn);
 }
 
 function escapeHtml(s) {
@@ -454,9 +689,19 @@ function renderDuplicateCard(cl, dup) {
                 semantic_list: 'info text-dark',
                 usage: 'secondary',
             }[type] || 'secondary';
-            html += `<span class="badge badge-detection bg-${badgeClass} me-1">${type}</span>`;
+            html += `<span class="badge badge-detection bg-${badgeClass} me-1" `;
+            html += `title="Signal de détection : ${type}">${type}</span>`;
         }
         html += `</div>`;
+    }
+
+    // Lien indirect : aucune paire détectée directement avec la CodeList principale
+    if (dup.via?.length) {
+        const names = dup.via.map(id => {
+            const other = (cl.duplicates || []).find(d => d.id === id);
+            return escapeHtml(other?.name || id);
+        });
+        html += `<div class="small text-muted mt-1">↪ lien indirect, via ${names.join(', ')}</div>`;
     }
 
     // Confidence bar
@@ -567,6 +812,10 @@ async function updateDecision(clId, dupId, decision) {
         }
 
         updateStats();
+        // Rafraîchit seulement badges et en-tête : le select en cours d'édition reste en place
+        renderCodelistNav();
+        const header = document.getElementById('detailHeader');
+        if (header && selectedClId) header.innerHTML = renderDetailHeader(selectedClId);
         showToast(`✅ Décision mise à jour`, 'success');
     } catch (err) {
         console.error('Update decision:', err);
@@ -656,6 +905,27 @@ document.addEventListener('DOMContentLoaded', () => {
             currentPage = 0;
             renderCodelistsFiltered();
         });
+
+    // Filtres appliqués dès le changement (le bouton « Filtrer » reste disponible)
+    const applyNow = () => {
+        currentPage = 0;
+        renderCodelistsFiltered();
+    };
+    document.getElementById('decisionFilter').addEventListener('change', applyNow);
+    document.getElementById('originFilter').addEventListener('change', applyNow);
+    let searchTimer = null;
+    document.getElementById('searchFilter').addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(applyNow, 300);
+    });
+
+    // Ajout en lot au registre nettoyé
+    document.getElementById('batchSelectAll')
+        .addEventListener('change', (e) => toggleSelectAllVisible(e.target.checked));
+    document.getElementById('batchAddBtn')
+        .addEventListener('click', (e) => addBatchToCleaned(e.currentTarget));
+    document.getElementById('addAllNoDupBtn')
+        .addEventListener('click', (e) => addAllWithoutDuplicates(e.currentTarget));
 
     // Bulk actions
     document.getElementById('bulkApproveExact')
