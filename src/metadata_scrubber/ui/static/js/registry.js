@@ -295,7 +295,9 @@ function renderCodelistNav(items) {
         html += `<div class="text-break">${escapeHtml(cl.name || cl.id)}`;
         if (cl.origin === 'registry') html += ` <span class="badge bg-primary">📘</span>`;
         if (added) html += ` <span class="badge bg-success" title="Dans le registre nettoyé">✅</span>`;
-        html += `<br><code class="dup-id">${escapeHtml(cl.id)}</code></div></div>`;
+        const nVars = (registryData[cl.id]?.vars || []).length;
+        html += `<br><code class="dup-id">${escapeHtml(cl.id)}</code>`;
+        html += ` <small class="text-muted" title="Variables qui référencent cette CodeList">· ${nVars} var.</small></div></div>`;
         html += `<div class="d-flex gap-1">${decisionBadgesHtml(dups)}</div></div></a>`;
     }
     nav.innerHTML = html;

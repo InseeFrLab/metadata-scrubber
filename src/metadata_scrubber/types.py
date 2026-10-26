@@ -21,8 +21,6 @@ class CodeList:
     origin: str = "xml"                                         # "xml" ou "registry"
     description: str = ""                                       # texte depuis r:Description
     user_id: str = ""                                           # texte brut depuis r:UserID
-    description: str = ""                                       # texte depuis r:Description
-    user_id: str = ""                                           # texte brut depuis r:UserID
 
 
 @dataclass
