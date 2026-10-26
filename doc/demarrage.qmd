@@ -1,0 +1,152 @@
+---
+title: "Prise en main"
+format: html
+---
+
+Cette page accompagne une **première session de validation** dans l'application,
+sans installation. En un quart d'heure environ, vous lancez l'analyse d'un fichier
+DDI, prenez vos premières décisions et sauvegardez le registre nettoyé.
+
+Le principe : l'outil repère des **listes de codes probablement redondantes** et
+les regroupe autour d'une **liste maître**. C'est vous qui tranchez, doublon par
+doublon : les listes approuvées seront remplacées par la maître dans le **registre
+nettoyé** (`cleaned_codelists.json`).
+
+# Avant de commencer
+
+- Un navigateur.
+- L'adresse de l'application : <https://metadata-scrubber.lab.sspcloud.fr>.
+- Le **mot de passe partagé** de l'application, à demander à l'équipe RMéS.
+- Le chemin S3 du fichier DDI à analyser, par exemple
+  `s3://projet-metadonnees-rmes/BPE.xml`.
+
+# Étape 1 — Se connecter
+
+Ouvrez l'adresse de l'application. Le navigateur affiche une boîte
+d'authentification : l'**identifiant** est libre (votre nom, par exemple), le
+**mot de passe** est le mot de passe partagé.
+
+# Étape 2 — Lancer l'analyse
+
+Dans l'onglet **🚀 Pipeline**, vérifiez les champs :
+
+| Champ | Valeur conseillée |
+|---|---|
+| **Chemin DDI (XML)** | Le fichier à analyser, par exemple `s3://projet-metadonnees-rmes/BPE.xml` |
+| **Dossier de sortie** | Laisser la valeur proposée : `s3://projet-metadonnees-rmes/scrubber_output` |
+| **Registre nettoyé (optionnel)** | Laisser la valeur proposée (`…/scrubber_output/cleaned_codelists.json`) : les listes déjà validées lors des sessions précédentes restent maîtres et ne sont pas reproposées. Si le fichier n'existe pas encore, il est ignoré. |
+| **Exécuter les phases LLM / embeddings** | Laisser coché. Décocher pour un résultat plus rapide, sans la détection sémantique. |
+
+Cliquez sur **🚀 Lancer le pipeline**. La progression s'affiche ; comptez de
+quelques secondes à quelques minutes selon la taille du fichier. À la fin, cliquez
+sur **🔍 Aller à l'onglet Validation**.
+
+::: {.callout-note}
+Un **bandeau jaune** peut signaler que l'étape sémantique a été sautée (clés
+d'accès au modèle de langage absentes). Les résultats restent utilisables : les
+détections exactes, floues, hors échappement et par libellés ont bien tourné.
+:::
+
+# Étape 3 — Charger et lire les résultats
+
+Dans l'onglet **🔍 Validation des doublons**, le chemin du résultat est déjà
+rempli. Cliquez sur **📂 Charger le registre**.
+
+L'écran est en deux colonnes :
+
+- **à gauche**, une ligne par liste maître, avec ses pastilles de décision ;
+- **à droite**, la liste sélectionnée : ses modalités, puis une **carte par
+  doublon** détecté.
+
+Ce que signifient les marques :
+
+| Marque | Signification |
+|---|---|
+| Pastilles <span class="badge bg-success">vert</span> <span class="badge bg-danger">rouge</span> <span class="badge bg-warning text-dark">jaune</span> <span class="badge bg-secondary">gris</span> | Doublons approuvés, rejetés, en attente, total |
+| **exact** | Mêmes codes, valeurs et libellés |
+| **exact hors échappement** | Mêmes codes métier ; seuls les codes *sans objet*, *non réponse*… diffèrent (la carte les liste) |
+| **libellés** | Mêmes libellés, valeurs différentes (par exemple `1`/`0` et `oui`/`non`) |
+| **fuzzy** | Codes et noms proches, avec un score de confiance |
+| **usage** / **sémantique** | Mêmes variables référentes / proximité de sens |
+| ⚠ | Liste suspecte : renvoi vers une nomenclature, représentation numérique, code unique |
+| ↻ reprise | Décision prise lors d'une session précédente |
+| 🚫 | Liste écartée |
+| 📘 | Liste du registre nettoyé |
+
+# Étape 4 — Décider
+
+Sur chaque carte de doublon :
+
+1. Cliquez sur **Détails** pour comparer les codes avec ceux de la maître.
+2. Choisissez **✅ Approuver** (même liste, la maître la remplace), **❌ Rejeter**
+   (listes différentes) ou laissez **⏳ En attente** (à revoir, par exemple après
+   avoir consulté le producteur).
+3. Si le doublon est la meilleure version (par exemple une correction de forme de
+   la maître), cliquez sur **⇅ Définir comme maître** : il prend la place de la
+   maître, qui devient un doublon en attente.
+
+Quelques repères :
+
+- **Seuls les codes d'échappement diffèrent** : vérifiez auprès du producteur
+  si ces codes sont des valeurs d'échappement ou des codes métier avant d'approuver.
+- **Correction manifeste** (casse, accents, libellé recopié dans la valeur) :
+  approuvez.
+- **Variation volontaire** d'une année sur l'autre : rejetez, le producteur a fait
+  un choix.
+- Les boutons d'actions de masse (**✅ Approuver exactes**…) vont vite mais
+  s'appliquent à tout le registre : passez d'abord en revue les listes ⚠.
+
+Le filtre **Filtre décision → En attente uniquement** permet de retrouver ce qui
+reste à traiter.
+
+# Étape 5 — Les listes sans doublon
+
+Avec **Filtre décision → Sans doublon**, vous voyez les listes pour lesquelles aucun
+doublon n'a été trouvé :
+
+- **➕ Ajouter au registre nettoyé** pour une liste de référence à conserver ;
+- **🚫 Écarter** pour une liste à ne pas conserver (par exemple une liste des
+  départements qui n'est pas la liste officielle).
+
+Avant d'ajouter, jetez un œil au filtre **Origine → Listes suspectes ⚠** : une liste
+qui renvoie vers un dictionnaire ou qui décrit une plage de nombres n'a sans doute
+pas sa place dans le registre.
+
+# Étape 6 — Sauvegarder
+
+Cliquez sur **💾 Sauvegarder**, régulièrement et en fin de session. Sont écrits :
+
+- vos décisions dans le résultat du run (`codelist_duplicates.json`) ;
+- le **registre nettoyé** `cleaned_codelists.json` : les maîtres et les listes
+  qu'elles remplacent ;
+- `decisions.json` : vos décisions, listes écartées et maîtres choisies, reprises
+  automatiquement lors des prochains runs.
+
+Un message vert confirme la sauvegarde. Sans sauvegarde, rien n'est conservé.
+
+# Reprendre plus tard
+
+- **Même run** : dans l'onglet **🔍 Validation des doublons**, saisissez le chemin
+  du résultat (il se trouve dans un dossier daté, par exemple
+  `s3://projet-metadonnees-rmes/scrubber_output/20261022-140509/codelist_duplicates.json`)
+  et cliquez sur **📂 Charger le registre**.
+- **Nouveau run sur le même fichier** : les décisions déjà prises réapparaissent,
+  marquées **↻ reprise** ; il ne reste que les nouveautés et ce que vous aviez
+  laissé en attente.
+- **Fichier suivant** (une autre opération) : lancez le pipeline avec le registre
+  nettoyé renseigné (valeur proposée par défaut). Les doublons entre opérations
+  sont alors détectés.
+
+# Pour aller plus loin
+
+- [Guide utilisateur](guide_utilisateur.qmd) : le détail de chaque écran, notamment
+  [les filtres](guide_utilisateur.qmd#filtres),
+  [la comparaison côte à côte](guide_utilisateur.qmd#comparer),
+  [le changement de liste maître](guide_utilisateur.qmd#changer-maitre),
+  [les listes suspectes](guide_utilisateur.qmd#listes-suspectes),
+  [l'écart d'une liste](guide_utilisateur.qmd#ecarter),
+  [la sauvegarde](guide_utilisateur.qmd#sauvegarder) et
+  [le travail sur plusieurs fichiers](guide_utilisateur.qmd#workflow-iteratif).
+- [Note méthodologique](note_methodologique_dedoublonnage.qmd) : comment les
+  doublons sont détectés.
+- [Changements récents](modifications_recentes.qmd) : ce qui a changé dans l'outil.

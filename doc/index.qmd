@@ -10,12 +10,16 @@ Il analyse un fichier de métadonnées au format DDI, identifie les listes de co
 
 Le résultat est un **registre épuré** (`cleaned_codelists.json`) qui ne conserve qu'une CodeList maître par groupe de redondances — injectable de manière itérative via l'option `--registry` pour traiter les fichiers suivants.
 
+**Première utilisation ?** Commencez par la [prise en main](demarrage.qmd) : une
+première session de validation, pas à pas, en un quart d'heure.
+
 ---
 
 ### Documentation
 
 | Document | Description |
 |---|---|
+| [**Prise en main**](demarrage.qmd) | Première session de validation pas à pas : se connecter, lancer l'analyse, décider, sauvegarder. |
 | [**Guide Utilisateur**](guide_utilisateur.qmd) | Comment utiliser l'interface web : lancer le pipeline, examiner les paires, prendre des décisions, sauvegarder le registre. |
 | [**Note Méthodologique**](note_methodologique_dedoublonnage.qmd) | Algorithme de détection en trois niveaux, walkthrough avec les datasets démo, schéma du registre v2. |
 | [**Changements récents**](modifications_recentes.qmd) | Ce qui a changé depuis le dernier push : onglet Validation en deux colonnes, ajout en lot, correctifs de détection, sorties datées par run. |

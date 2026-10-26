@@ -45,7 +45,7 @@ Au premier chargement, un formulaire de navigateur demande :
 
 ---
 
-# Lancer le pipeline
+# Lancer le pipeline {#lancer-pipeline}
 
 Le premier onglet de l'interface (**🚀 Pipeline**) sert à configurer et lancer
 l'exécution automatique du dédoublonnage sur un fichier DDI.
@@ -101,7 +101,7 @@ potentiellement redondantes (liste des CodeLists à gauche, doublons de la
 CodeList sélectionnée à droite), avec des filtres, des
 actions par paire et des actions de masse.
 
-## Charger le registre
+## Charger le registre {#charger-registre}
 
 Si un pipeline n'a pas été lancé depuis l'interface, chargez un registre
 préexistant :
@@ -151,7 +151,7 @@ cocher dans la colonne de gauche (les CodeLists avec doublons n'en ont pas) :
 Les CodeLists déjà présentes dans le registre nettoyé sont ignorées. Une fois
 ajoutée, une CodeList est marquée ✅ dans la liste.
 
-### Listes suspectes ⚠
+### Listes suspectes ⚠ {#listes-suspectes}
 
 Certaines listes ne devraient probablement pas être des listes de codes. Elles
 portent un badge ⚠, détaillé dans l'en-tête :
@@ -165,7 +165,7 @@ portent un badge ⚠, détaillé dans l'en-tête :
 Le filtre origine *Listes suspectes ⚠* les regroupe. Ajouter une liste suspecte
 au registre nettoyé demande une confirmation.
 
-### Écarter une CodeList sans doublon
+### Écarter une CodeList sans doublon {#ecarter}
 
 Une CodeList sans doublon qu'on ne veut pas ajouter au registre nettoyé (par
 exemple une liste des départements qui n'est pas la liste officielle) peut être
@@ -196,7 +196,7 @@ Chaque doublon est présenté sous forme de **carte** comportant :
 
 ![Vue en cartes du registre avec indicateurs](img/app_view_duplicates.png){width="700px"}
 
-## Comparer côte à côte
+## Comparer côte à côte {#comparer}
 
 Cliquez sur **Voir** (à côté du nom de la CodeList) pour ouvrir le panneau de
 comparaison en deux colonnes :
@@ -224,7 +224,7 @@ Sous chaque paire de CodeLists, trois boutons permettent de prendre une décisio
 
 Chaque changement de décision met à jour le badge coloré de la carte.
 
-## Changer la liste maître
+## Changer la liste maître {#changer-maitre}
 
 Un doublon peut devenir la maître de son groupe, par exemple quand il corrige
 la forme de la maître proposée. Le bouton **⇅ Définir comme maître** de sa
@@ -257,7 +257,7 @@ avec d'autres doublons du groupe. Si on le rejette par rapport à la maître
 alors qu'il reste lié à un autre doublon, le définir comme maître permet
 d'examiner ces liens.
 
-## Actions de masse
+## Actions de masse {#actions-masse}
 
 Quatre boutons en haut de la page permettent d'appliquer des décisions à
 plusieurs paires simultanément :
@@ -269,7 +269,7 @@ plusieurs paires simultanément :
 | **❌ Tout rejeter** | Applique *Rejeter* à toutes les paires restées en attente |
 | **🔄 Tout remettre en attente** | Remet toutes les décisions en état *En attente* (permet de reprendre le parcours) |
 
-## Filtres
+## Filtres {#filtres}
 
 Pour se concentrer sur un sous-ensemble de CodeLists :
 
@@ -279,7 +279,7 @@ Pour se concentrer sur un sous-ensemble de CodeLists :
 - **Recherche** : champ texte — recherche par nom de la CodeList
 - **Afficher** : 20 / 50 / 100 éléments par page
 
-## Sauvegarder les décisions
+## Sauvegarder les décisions {#sauvegarder}
 
 Après examen, cliquez sur **💾 sauvegarder**. L'interface :
 
@@ -406,7 +406,7 @@ Le circuit se décompose en 5 étapes :
 > sont conservées. Le bouton **🔄 Tout remettre en attente** permet de reprendre
 > le parcours depuis le début sans perdre les modifications intermédiaires.
 
-## Workflow itératif
+## Workflow itératif {#workflow-iteratif}
 
 Les runs successifs s'enrichissent mutuellement grâce au registre propre :
 
