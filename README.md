@@ -72,7 +72,7 @@ scrubber_output/
 
 `run_summary.json` signale notamment l'étape sémantique sautée (variables
 `OPENAI_BASE_URL` / `OPENAI_API_KEY` absentes) et les CodeLists exclues de la
-détection floue (> 100 codes).
+détection floue (> 5 000 codes).
 
 **Arguments CLI :**
 
