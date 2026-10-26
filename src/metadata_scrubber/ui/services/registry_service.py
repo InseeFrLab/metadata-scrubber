@@ -16,7 +16,18 @@ from metadata_scrubber.registry_io import (  # noqa: F401
     write_json_registry as write_registry,
 )
 
+from metadata_scrubber.reporting.duplicates_registry import detection_against_parent
+
 logger = logging.getLogger(__name__)
+
+# Champs d'une CodeList communs à un parent et à un doublon du registre
+_MEMBER_FIELDS = (
+    "id", "name", "label", "codes_count", "codes", "cat_ids", "vars", "origin", "links",
+)
+
+
+class SwapParentError(ValueError):
+    """Changement de maître impossible (maître du registre nettoyé, registre ancien)."""
 
 
 def get_stats(registry: dict[str, Any]) -> dict[str, Any]:
@@ -229,3 +240,64 @@ def save_registry(
     # Chercher un registry_path existant côté client via le premier cl_id
     # (géré côté client en pratique)
     raise ValueError("Chemin de sauvegarde requis — aucune destination connue")
+
+
+def swap_parent(registry: dict[str, Any], parent_id: str, new_parent_id: str) -> dict[str, Any]:
+    """Fait d'un doublon la maître de son groupe ; l'ancienne maître devient doublon.
+
+    Types de détection, confiance et `via` de chaque doublon sont recalculés
+    par rapport à la nouvelle maître à partir des `links`. Les décisions des
+    autres doublons sont conservées ; l'ancienne maître est mise en attente.
+    La nouvelle entrée porte `master_chosen` (choix conservé entre les runs)
+    et `previous_parent` (pour la synchronisation du registre nettoyé).
+    L'entrée est remplacée à la même position dans le registre.
+
+    Raises:
+        KeyError: maître ou doublon introuvable.
+        SwapParentError: maître issue du registre nettoyé, ou registre sans `links`
+            (produit par une version antérieure du pipeline).
+
+    Returns:
+        La nouvelle entrée.
+    """
+    old = registry.get(parent_id)
+    if old is None:
+        raise KeyError(parent_id)
+    if old.get("origin") == "registry":
+        raise SwapParentError(
+            "La maître vient du registre nettoyé : modifiez-la depuis l'onglet Registre nettoyé."
+        )
+    duplicates = old.get("duplicates", [])
+    promoted = next((d for d in duplicates if d.get("id") == new_parent_id), None)
+    if promoted is None:
+        raise KeyError(new_parent_id)
+    if "links" not in promoted or "links" not in old:
+        raise SwapParentError(
+            "Registre produit par une version antérieure (sans liens) : relancez le pipeline."
+        )
+
+    old_as_dup = {k: old[k] for k in _MEMBER_FIELDS if k in old}
+    old_as_dup["decision"] = "pending"
+    new_dups = []
+    for dup in [old_as_dup] + [d for d in duplicates if d.get("id") != new_parent_id]:
+        types, conf, via = detection_against_parent(dup.get("links", []), new_parent_id)
+        new_dup = {k: v for k, v in dup.items() if k != "via"}
+        new_dup["detection_types"] = types
+        new_dup["confidence"] = conf
+        if via:
+            new_dup["via"] = via
+        new_dups.append(new_dup)
+
+    entry = {k: promoted[k] for k in _MEMBER_FIELDS if k in promoted}
+    entry["master_chosen"] = True
+    entry["previous_parent"] = parent_id
+    entry["duplicates"] = new_dups
+
+    items = list(registry.items())
+    registry.clear()
+    for cl_id, data in items:
+        if cl_id == parent_id:
+            registry[new_parent_id] = entry
+        else:
+            registry[cl_id] = data
+    return entry

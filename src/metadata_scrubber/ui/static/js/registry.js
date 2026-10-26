@@ -355,6 +355,7 @@ function renderDetailHeader(id) {
     if (cl.label) html += `<small class="text-muted">${escapeHtml(cl.label)}</small>`;
     html += `</div><div class="d-flex gap-1">`;
     if (cl.origin === 'registry') html += `<span class="badge bg-primary">📘 registre</span>`;
+    if (cl.master_chosen) html += `<span class="badge bg-info text-dark" title="Maître choisie par l'utilisateur, conservée aux runs suivants">⇅ maître choisie</span>`;
     html += decisionBadgesHtml(cl.duplicates || []);
     html += `</div></div>`;
     html += `<div class="card-body py-1 small">`;
@@ -443,6 +444,8 @@ function renderCodelistDetail(id) {
                 updateDecision(id, dup.id, select.value);
             });
         }
+        const swapBtn = document.getElementById(`swap_${id}_${dup.id}`);
+        if (swapBtn) swapBtn.addEventListener('click', () => swapParent(id, dup.id, swapBtn));
 
         // Rendu paresseux du tableau comparatif à la première ouverture
         const collapseEl = document.getElementById(`dup_${id}_${dup.id}`);
@@ -536,6 +539,41 @@ function markInCleaned(ids) {
     renderCodelistNav();
     // Réaffiche le panneau de droite pour griser son bouton d'ajout
     if (ids.includes(selectedClId)) renderCodelistDetail(selectedClId);
+}
+
+/* Fait d'un doublon la maître de son groupe ; persisté à la sauvegarde */
+async function swapParent(parentId, newParentId, btn) {
+    const newName = registryData[parentId]?.duplicates?.find(d => d.id === newParentId)?.name || newParentId;
+    if (!confirm(`Définir « ${newName} » comme maître du groupe ? L'ancienne maître devient un doublon en attente.`)) return;
+    btn.disabled = true;
+    try {
+        const resp = await fetch(`${API_BASE}api/registry/swap-parent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ parent_id: parentId, new_parent_id: newParentId }),
+        });
+        if (!resp.ok) {
+            const detail = (await resp.json().catch(() => ({}))).detail;
+            throw new Error(detail || `HTTP ${resp.status}`);
+        }
+        const data = await resp.json();
+
+        // Remplace l'entrée en gardant l'ordre du registre
+        const rebuilt = {};
+        for (const [clId, clData] of Object.entries(registryData)) {
+            if (clId === parentId) rebuilt[newParentId] = data.entry;
+            else rebuilt[clId] = clData;
+        }
+        registryData = rebuilt;
+        selectedClId = newParentId;
+
+        showToast('⇅ Maître changée · sauvegardez pour la conserver', 'success');
+        updateStats();
+        renderCodelistsFiltered();
+    } catch (err) {
+        showToast(`Erreur: ${err.message}`, 'danger');
+        btn.disabled = false;
+    }
 }
 
 /* Écarte (ou réintègre) une CodeList sans doublon ; persisté à la sauvegarde */
@@ -758,6 +796,27 @@ function renderDuplicateCard(cl, dup) {
             return escapeHtml(other?.name || id);
         });
         html += `<div class="small text-muted mt-1">↪ lien indirect, via ${names.join(', ')}</div>`;
+    }
+
+    // Autres liens du doublon dans le groupe (paires avec d'autres doublons)
+    const otherLinks = (dup.links || []).filter(lk => lk.id !== cl.id && !(dup.via || []).includes(lk.id));
+    if (otherLinks.length) {
+        const parts = otherLinks.map(lk => {
+            const other = (cl.duplicates || []).find(d => d.id === lk.id);
+            return `${escapeHtml(other?.name || lk.id)} (${escapeHtml(lk.detection_types.join(', '))})`;
+        });
+        html += `<div class="small text-muted mt-1">🔗 lié aussi à ${parts.join(', ')}</div>`;
+        if (dup.decision === 'reject') {
+            html += `<div class="small text-warning-emphasis">Rejeté par rapport à la maître : `;
+            html += `définissez-le comme maître pour examiner ces liens.</div>`;
+        }
+    }
+
+    // Promotion en maître (impossible pour une maître du registre nettoyé
+    // ou un registre produit sans liens par une version antérieure)
+    if (cl.origin !== 'registry' && dup.links) {
+        html += `<button class="btn btn-sm btn-outline-primary mt-1" id="swap_${cl.id}_${dup.id}" `;
+        html += `title="Faire de ce doublon la CodeList maître du groupe">⇅ Définir comme maître</button>`;
     }
 
     // Confidence bar

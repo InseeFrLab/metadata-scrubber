@@ -37,6 +37,7 @@ class DuplicateInfo:
     confidence: float = 0.0
     origin: str = "xml"
     via: list[str] = field(default_factory=list)
+    links: list[dict] = field(default_factory=list)
 
 
 def _serialize_minimal(cl) -> dict:
@@ -53,23 +54,55 @@ def _serialize_minimal(cl) -> dict:
     }
 
 
+def detection_against_parent(
+    links: list[dict], parent_id: str
+) -> tuple[list[str], float, list[str]]:
+    """Types de détection, confiance et `via` d'un membre de groupe vis-à-vis du parent.
+
+    La paire directe avec le parent est ce que l'interface présente. À défaut
+    (lien transitif via un autre membre), on retombe sur toutes les paires du
+    membre et `via` liste les membres avec lesquels il est réellement lié.
+
+    Args:
+        links: Liens du membre ({id, detection_types, confidence}), un par
+            autre membre du groupe avec lequel une paire a été détectée.
+        parent_id: Id du parent du groupe.
+
+    Returns:
+        (detection_types triés, confidence, via).
+    """
+    direct = [lk for lk in links if lk["id"] == parent_id]
+    used = direct or links
+    types = sorted({t for lk in used for t in lk["detection_types"]})
+    conf = max((lk["confidence"] for lk in used), default=0.0)
+    via = [] if direct else [lk["id"] for lk in links]
+    return types, conf, via
+
+
 def build_duplicates_registry(
     candidates,  # list[CandidateFusion]
     codelists,  # list[CodeList] — garde l'ordre XML
+    preferred_parents: set[str] | frozenset[str] = frozenset(),
 ) -> dict:
     """Construit le registre JSON « doublons par CodeList ».
 
     Chaque paire/groupe de doublons n'apparaît qu'UNE fois : les paires sont
-    regroupées par composante connexe, et le parent est la liste la plus tôt
-    dans l'ordre de `codelists` (les entrées du registre nettoyé, prépendées,
-    restent donc toujours parents). Les autres membres du groupe sont ses
-    « duplicates » et n'ont pas d'entrée top-level. Les détections multiples
-    sur une même paire sont fusionnées (union des `detection_types`, max des
-    `confidence`). Les listes sans doublon ont une entrée avec `duplicates: []`.
+    regroupées par composante connexe. Le parent d'un groupe est, dans
+    l'ordre : une entrée du registre nettoyé, une liste choisie comme maître
+    par l'utilisateur (`preferred_parents`, marquée `master_chosen`), sinon la
+    liste la plus tôt dans l'ordre de `codelists`. Les autres membres du
+    groupe sont ses « duplicates » et n'ont pas d'entrée top-level. Les
+    détections multiples sur une même paire sont fusionnées (union des
+    `detection_types`, max des `confidence`). Chaque membre d'un groupe porte
+    ses `links` : toutes ses paires avec les autres membres, ce qui permet de
+    changer de parent sans relancer le pipeline. Les listes sans doublon ont
+    une entrée avec `duplicates: []`.
 
     Args:
         candidates: Liste de `CandidateFusion` issue de `_build_candidates()`.
         codelists: Liste des `CodeList` dans l'ordre d'apparition XML.
+        preferred_parents: Ids choisis comme maîtres lors de validations
+            précédentes (decisions.json).
 
     Returns:
         Dict {cl_id: {id, name, label, codes, cat_ids, vars, duplicates: [...]}}
@@ -110,10 +143,25 @@ def build_duplicates_registry(
         partners[a_id].add(b_id)
         partners[b_id].add(a_id)
 
+    def links_of(member: str, component: set[str]) -> list[dict]:
+        """Paires détectées entre `member` et les autres membres du groupe."""
+        links = []
+        for other in sorted(component, key=lambda i: xml_order.get(i, 9999)):
+            data = pair_data.get((member, other))
+            if other != member and data:
+                links.append({
+                    "id": other,
+                    "detection_types": sorted(data["types"]),
+                    "confidence": data["confidence"],
+                })
+        return links
+
+    def parent_rank(cl_id: str) -> tuple:
+        cl = cl_by_id.get(cl_id)
+        from_registry = cl is not None and getattr(cl, "origin", "xml") == "registry"
+        return (not from_registry, cl_id not in preferred_parents, xml_order.get(cl_id, 9999))
+
     # ── 4. Construire les entrées par CL — une paire n'apparaît qu'une fois ──
-    # Parcours dans l'ordre du document : la première liste rencontrée d'une
-    # composante connexe devient le parent, tous les autres membres deviennent
-    # ses duplicates (et n'ont pas d'entrée top-level).
     entries: dict[str, dict] = {}
     visited: set[str] = set()
 
@@ -138,31 +186,18 @@ def build_duplicates_registry(
                     stack.append(nb)
         visited |= component
 
+        parent_id = min((i for i in component if i in cl_by_id), key=parent_rank)
+        parent = cl_by_id[parent_id]
+
         dupes_infos: list[DuplicateInfo] = []
         for tid in component:
-            if tid == cl.id:
+            if tid == parent_id:
                 continue
             target_cl = cl_by_id.get(tid)
             if target_cl is None:
                 continue
-            # Détections avec le parent (deux sens) : c'est ce que l'interface
-            # présente. À défaut (lien transitif via un autre satellite), on
-            # retombe sur les paires impliquant ce membre et on note `via`.
-            types: set = set()
-            conf = 0.0
-            for key in ((cl.id, tid), (tid, cl.id)):
-                if key in pair_data:
-                    types |= pair_data[key]["types"]
-                    conf = max(conf, pair_data[key]["confidence"])
-            via: list[str] = []
-            if not types:
-                for other in component:
-                    for key in ((other, tid), (tid, other)):
-                        if key in pair_data:
-                            types |= pair_data[key]["types"]
-                            conf = max(conf, pair_data[key]["confidence"])
-                            if other != tid and other not in via:
-                                via.append(other)
+            links = links_of(tid, component)
+            types, conf, via = detection_against_parent(links, parent_id)
             dupes_infos.append(
                 DuplicateInfo(
                     id=tid,
@@ -176,14 +211,17 @@ def build_duplicates_registry(
                     confidence=conf,
                     origin=getattr(target_cl, "origin", "xml"),
                     via=via,
+                    links=links,
                 )
             )
 
         # Trier les duplicates par ordre XML
         dupes = sorted(dupes_infos, key=lambda d: xml_order.get(d.id, 9999))
 
-        entries[cl.id] = {
-            **_serialize_minimal(cl),
+        entries[parent_id] = {
+            **_serialize_minimal(parent),
+            "links": links_of(parent_id, component),
+            **({"master_chosen": True} if parent_id in preferred_parents else {}),
             "duplicates": [
                 {
                     "id": d.id,
@@ -199,6 +237,7 @@ def build_duplicates_registry(
                     "decision": "pending",
                     # Présent seulement pour un lien indirect (pas de paire avec le parent)
                     **({"via": d.via} if d.via else {}),
+                    "links": d.links,
                 }
                 for d in dupes
             ],

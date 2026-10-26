@@ -100,6 +100,8 @@ def sync_cleaned_registry(
         appartient aux duplicates de CE parent dans le registre courant
         (les ids issus d'autres runs ou ajoutés à la main sont préservés) ;
       - une entrée dont `replaces` devient vide est supprimée ;
+      - après un changement de maître (`previous_parent`), l'entrée de
+        l'ancienne maître perd les listes du groupe (supprimée si vide) ;
       - name/label/codes/vars des entrées existantes ne sont JAMAIS modifiés
         (les éditions manuelles sont préservées).
 
@@ -129,6 +131,23 @@ def sync_cleaned_registry(
         approuves = {
             did: d for did, d in dups_ici.items() if d.get("decision") == "approve"
         }
+
+        # Changement de maître : le groupe ne reste pas rattaché à l'ancienne
+        prev = cl_data.get("previous_parent")
+        if prev and prev != cl_id and prev in entries:
+            groupe = {cl_id, *dups_ici}
+            prev_entry = entries[prev]
+            restants = [r for r in prev_entry.get("replaces", []) if r.get("id") not in groupe]
+            retires = len(prev_entry.get("replaces", [])) - len(restants)
+            if retires:
+                stats["replaces_removed"] += retires
+                if restants:
+                    prev_entry["replaces"] = restants
+                    prev_entry["updated_at"] = now
+                else:
+                    del entries[prev]
+                    stats["entries_deleted"] += 1
+
         entry = entries.get(cl_id)
 
         if entry is None:

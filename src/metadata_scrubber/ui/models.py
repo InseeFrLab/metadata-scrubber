@@ -50,6 +50,12 @@ class DismissRequest(BaseModel):
     dismissed: bool = Field(True, description="True pour écarter, False pour annuler l'écart.")
 
 
+class SwapParentRequest(BaseModel):
+    """Faire d'un doublon la CodeList maître de son groupe."""
+    parent_id: str = Field(..., description="Maître actuelle du groupe.")
+    new_parent_id: str = Field(..., description="Doublon à promouvoir maître.")
+
+
 class PipelineResponse(BaseModel):
     """Réponse lors du lancement d'un pipeline."""
     job_id: str
