@@ -172,7 +172,8 @@ Chaque doublon est présenté sous forme de **carte** comportant :
 Cliquez sur **Voir** (à côté du nom de la CodeList) pour ouvrir le panneau de
 comparaison en deux colonnes :
 
-- **Colonne gauche** : la CodeList maître (la plus récente, ou celle retenue)
+- **Colonne gauche** : la CodeList maître (la première du groupe dans l'ordre du
+  fichier XML, ou l'entrée du registre nettoyé si le groupe en contient une)
 - **Colonne droite** : la CodeList candidate détectée comme redondante
 - **Lignes colorées** : les lignes où les valeurs ou libellés diffèrent entre
   les deux listes (mise en évidence rouge)

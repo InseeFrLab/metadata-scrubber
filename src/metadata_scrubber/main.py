@@ -3,7 +3,7 @@
 Pipeline :
   1. Lecture + parsing XML
   2. Extraction CodeLists + Catégories
-  3. Extraction références Variables
+  3. Extraction références Variables (rattachement aux CodeLists)
   4. Calcul signatures
   5. Détection exacte
   6. Détection floue
@@ -33,6 +33,7 @@ from lxml import etree  # noqa: E402
 
 from .extractor import (  # noqa: E402
     extract_codelists,
+    extract_variables,
     parse_xml,
     read_bytes,
 )
@@ -61,39 +62,6 @@ from .types import CandidateFusion, CodeList  # noqa: E402
 
 # La confiance 1.0 est réservée à la signature exacte
 MAX_NON_EXACT_CONFIDENCE = 0.99
-
-
-# ────────────────────────────────────────────────────────────────────────
-# Utilitaires XPath
-# ────────────────────────────────────────────────────────────────────────
-
-
-def _local(el: etree._Element) -> str:
-    """Nom de balise sans namespace."""
-    return etree.QName(el).localname
-
-
-def _child(el: etree._Element, name: str) -> etree._Element | None:
-    """Premier enfant direct dont le nom local est `name`."""
-    for c in el:
-        if _local(c) == name:
-            return c
-    return None
-
-
-def _text_of(el: etree._Element, name: str) -> str:
-    """Texte d'un enfant direct."""
-    c = _child(el, name)
-    return (c.text or "").strip() if c is not None else ""
-
-
-def _localized(el: etree._Element, name: str) -> str:
-    """Texte d'un conteneur (CodeListName, r:Label...) → son r:String."""
-    c = _child(el, name)
-    if c is None:
-        return ""
-    kids = list(c)
-    return (kids[0].text or "").strip() if kids else (c.text or "").strip()
 
 
 # ────────────────────────────────────────────────────────────────────────
@@ -186,7 +154,6 @@ def _run_pipeline_body(
     print("\n[1/9] Lecture et parsing XML...")
     raw = read_bytes(xml_source)
     objects = parse_xml(raw)
-    root = etree.fromstring(raw)
 
     # ------------------------------------------------------------------
     # 2. Extraction CodeLists + Catégories
@@ -219,34 +186,7 @@ def _run_pipeline_body(
     # 3. Extraction références Variables
     # ------------------------------------------------------------------
     print("[3/9] Extraction des références Variables...")
-    variable_map: dict[str, list[str]] = {}
-    for frag in root.iter():
-        if _local(frag) != "Fragment":
-            continue
-        for obj in frag:
-            tag = _local(obj)
-            if tag not in ("Variable", "RepresentedVariable"):
-                continue
-            var_name = (
-                _localized(obj, "VariableName")
-                or _localized(obj, "RepresentedVariableName")
-                or _text_of(obj, "ID")
-            )
-            code_repr = _child(obj, "CodeRepresentation")
-            if code_repr is None:
-                continue
-            cl_ref = _child(code_repr, "CodeListReference")
-            if cl_ref is None:
-                continue
-            cl_id = _text_of(cl_ref, "ID")
-            if cl_id:
-                variable_map.setdefault(cl_id, []).append(var_name)
-
-    linked = 0
-    for cl in codelists:
-        if cl.id in variable_map:
-            cl.vars = variable_map[cl.id]
-            linked += 1
+    linked = _link_variables(codelists, objects)
     print(f"  {linked}/{len(codelists)} CodeLists ont des variables référentes.")
 
     # ------------------------------------------------------------------
@@ -396,6 +336,28 @@ def _run_pipeline_body(
     print("\n" + "=" * 60)
     print("  Pipeline terminé !")
     print("=" * 60)
+
+
+def _link_variables(codelists: list[CodeList], objects: list[etree._Element]) -> int:
+    """Renseigne `cl.vars` (noms des variables qui référencent chaque CodeList).
+
+    S'appuie sur `extract_variables`, qui lit la référence sous
+    `VariableRepresentation` (DDI 3.3) comme directement sous la variable.
+
+    Returns:
+        Nombre de CodeLists ayant au moins une variable référente.
+    """
+    variable_map: dict[str, list[str]] = {}
+    for var in extract_variables(objects):
+        if var.cl_id:
+            variable_map.setdefault(var.cl_id, []).append(var.name)
+
+    linked = 0
+    for cl in codelists:
+        if cl.id in variable_map:
+            cl.vars = variable_map[cl.id]
+            linked += 1
+    return linked
 
 
 # ────────────────────────────────────────────────────────────────────────

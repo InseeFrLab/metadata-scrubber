@@ -149,6 +149,18 @@ Toutes 18 partagent **exactement la même signature** → doublons exacts. Proba
 
 Sur BTS.xml : **29 groupes** détectés, **54** CodeLists redondantes.
 
+### Choix de la CodeList maître
+
+Aucune distance ni aucun score n'intervient dans le choix de la maître. Toutes les
+paires détectées (exactes, floues, usage, sémantiques) sont réunies en
+**composantes connexes** (`build_duplicates_registry`). Dans chaque composante, la
+maître est la **première CodeList rencontrée dans l'ordre du fichier XML** ; les
+autres membres sont ses doublons. Les entrées du registre nettoyé
+(`--registry`) sont placées en tête de cet ordre et restent donc toujours maîtres.
+
+Un doublon relié à la maître seulement via un autre doublon affiche « lien
+indirect, via … ».
+
 ## Phase 1 bis — Quasi-Doublons (Similarité Floue)
 
 **Méthode :**
