@@ -47,6 +47,67 @@ def detect_exact_duplicates(codelists: list[CodeList]) -> dict[tuple, list[CodeL
     return {sig: g for sig, g in groups.items() if len(g) > 1}
 
 
+def _representatives(group: list[CodeList], key) -> list[CodeList]:
+    """Première CodeList de `group` pour chaque valeur distincte de `key`."""
+    reps: dict = {}
+    for cl in group:
+        reps.setdefault(key(cl), cl)
+    return list(reps.values())
+
+
+def detect_business_duplicates(
+    codelists: list[CodeList], *, min_codes: int = 2
+) -> list[list[CodeList]]:
+    """
+    Phase 1 ter — Mêmes codes métier, codes d'échappement différents.
+
+    Regroupe les CodeLists de même `sig_business` (signature hors codes
+    d'échappement) mais de signatures complètes différentes : une seule
+    représentante par signature complète (les doublons exacts sont déjà traités).
+    Au moins `min_codes` codes métier : sur EAR, des dizaines de listes
+    d'indicateurs n'ont que « Cohérent » comme code métier.
+
+    Returns:
+        Groupes d'au moins deux CodeLists, dans l'ordre de `codelists`.
+    """
+    groups: dict[tuple, list[CodeList]] = {}
+    for cl in codelists:
+        if len(cl.sig_business) >= min_codes:
+            groups.setdefault(cl.sig_business, []).append(cl)
+    result = []
+    for group in groups.values():
+        reps = _representatives(group, lambda cl: cl.sig)
+        if len(reps) > 1:
+            result.append(reps)
+    return result
+
+
+def detect_label_duplicates(
+    codelists: list[CodeList], *, min_codes: int = 2
+) -> list[list[CodeList]]:
+    """
+    Phase 1 quater — Mêmes libellés métier, valeurs différentes.
+
+    Regroupe les CodeLists de même `sig_labels` (libellés normalisés des codes
+    métier) mais de `sig_business` différentes, par exemple `1/0` et `oui/non`
+    pour « présence / absence », ou `A` et `Acceptable`. Au moins `min_codes`
+    libellés, pour ne pas regrouper toutes les listes à un code.
+
+    Returns:
+        Groupes d'au moins deux CodeLists, dans l'ordre de `codelists`.
+    """
+    groups: dict[tuple, list[CodeList]] = {}
+    for cl in codelists:
+        if len(cl.sig_labels) >= min_codes:
+            groups.setdefault(cl.sig_labels, []).append(cl)
+    result = []
+    for group in groups.values():
+        reps = _representatives(group, lambda cl: cl.sig_business)
+        if len(reps) > 1:
+            result.append(reps)
+    return result
+
+
 def _text_for_dedup(cl: CodeList) -> str:
     """Version normalisee concatenee d'une codelist (nom + label + desc + codes)."""
     return concat_text(cl.name, cl.label, cl.codes, cl.description)

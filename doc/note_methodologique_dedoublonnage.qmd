@@ -210,6 +210,36 @@ indirect, via … ».
 > des listes métier comme les types d'équipements de la BPE (150 à 232 codes)
 > échappaient à la phase floue.
 
+## Phase 1 ter — Codes d'échappement et libellés
+
+Beaucoup de listes ajoutent directement leurs codes d'échappement (*sans
+objet*, *non réponse*, *non concerné*, *indéterminé*…) au lieu d'utiliser un
+`MissingCodeRepresentation`. Deux listes aux mêmes codes métier ne sont alors
+plus des doublons exacts, et leur score flou peut tomber sous le seuil.
+
+`quality.split_codes` sépare les codes métier des codes d'échappement. Un code
+est d'échappement si son libellé normalisé **commence** par un motif connu
+(« sans objet », « non concerné », « non renseigné », « non réponse »,
+« indéterminé », « hors champ », « valeur manquante »…) ou si sa valeur est du
+type `_Z`, `_U` ou `/`. L'ancrage en début de libellé évite les faux positifs
+(« Contrat à durée indéterminée » reste un code métier).
+
+Deux détections en découlent, après la phase floue :
+
+| Type | Règle | Confiance |
+|---|---|---|
+| `exact_business` (« exact hors échappement ») | Même signature des codes métier, signatures complètes différentes, au moins 2 codes métier | 0,98 |
+| `labels` (« libellés ») | Mêmes libellés de codes métier, valeurs différentes (ex. `1`/`0` et `oui`/`non`, `A` et `Acceptable`), au moins 2 libellés | 0,95 |
+
+Le minimum de 2 codes évite de regrouper les listes d'indicateurs d'EAR dont le
+seul code métier est « Cohérent ». Le registre indique pour chaque liste ses
+`escape_codes`, affichés sur la carte du doublon.
+
+Sur BPE.xml : 7 doublons « hors échappement » (dont `L_QUALITE_ZONAGE` /
+`L_QUALITE_ZONAGE_2023` et `L_VAR_SPECIF_2023` / `L_PRESENCE_ABSENCE`) et 5 par
+libellés (dont `L_VAR_SPECIF_2023` / `L_VAR_SPECIF_2021` et
+`L_QUALITE_XY_2022` / `L_QUALITE_XY_2024`, valeurs `Acceptable` et `A`).
+
 ## Phase 2 — Doublons Sémantiques (Embeddings + LLM)
 
 Les deux phases précédentes ne comprennent **pas le sens** : possible de "Sexe" vs "Genre" avec codes différents.

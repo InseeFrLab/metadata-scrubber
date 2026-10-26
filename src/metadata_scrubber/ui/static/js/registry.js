@@ -762,6 +762,17 @@ function buildCodeComparisonHtml(srcCodes, dstCodes, srcName, dupName) {
     return html;
 }
 
+/* Libellé affiché et infobulle de chaque type de détection */
+const DETECTION_LABELS = {
+    exact: ['exact', 'mêmes codes (valeurs et libellés)'],
+    exact_business: ['exact hors échappement', 'mêmes codes métier ; seuls les codes d\'échappement (sans objet, non réponse…) diffèrent'],
+    labels: ['libellés', 'mêmes libellés de codes métier, valeurs différentes (ex. 1/0 et oui/non)'],
+    fuzzy: ['fuzzy', 'codes et noms proches'],
+    usage: ['usage', 'mêmes variables référentes'],
+    semantic_list: ['sémantique', 'proximité sémantique des listes (embeddings)'],
+    semantic_var: ['sémantique (variables)', 'proximité sémantique via les variables'],
+};
+
 function renderDuplicateCard(cl, dup) {
     const conf = dup.confidence || 0;
     const confClass = conf >= 0.95 ? 'confidence-high' : conf >= 0.7 ? 'confidence-medium' : 'confidence-low';
@@ -779,14 +790,28 @@ function renderDuplicateCard(cl, dup) {
         for (const type of dup.detection_types) {
             const badgeClass = {
                 exact: 'success',
+                exact_business: 'success',
+                labels: 'primary',
                 fuzzy: 'warning text-dark',
                 semantic_list: 'info text-dark',
                 usage: 'secondary',
             }[type] || 'secondary';
+            const [label, help] = DETECTION_LABELS[type] || [type, type];
             html += `<span class="badge badge-detection bg-${badgeClass} me-1" `;
-            html += `title="Signal de détection : ${type}">${type}</span>`;
+            html += `title="Signal de détection : ${escapeHtml(help)}">${escapeHtml(label)}</span>`;
         }
         html += `</div>`;
+    }
+
+    // Codes d'échappement (sans objet, non réponse…) de part et d'autre
+    const escMaster = cl.escape_codes || [];
+    const escDup = dup.escape_codes || [];
+    if (escMaster.length || escDup.length) {
+        const fmt = codes => codes.length
+            ? codes.map(c => escapeHtml(`${c[0]} ${c[1] || ''}`.trim())).join(' · ')
+            : 'aucun';
+        html += `<div class="small text-muted mt-1">Codes d'échappement — maître : ${fmt(escMaster)}`;
+        html += ` | doublon : ${fmt(escDup)}</div>`;
     }
 
     // Lien indirect : aucune paire détectée directement avec la CodeList principale

@@ -14,6 +14,8 @@ class CodeList:
     label: str
     codes: list[tuple[str, str]] = field(default_factory=list)  # (valeur, libellé)
     sig: tuple[tuple[str, str], ...] = field(default_factory=tuple)  # signature de contenu
+    sig_business: tuple[tuple[str, str], ...] = field(default_factory=tuple)  # hors codes d'échappement
+    sig_labels: tuple[str, ...] = field(default_factory=tuple)  # libellés des codes métier
     vars: list[str] = field(default_factory=list)               # noms de variables référentes
     var_ids: set[str] = field(default_factory=set)              # IDs des variables référentes
     cat_ids: set[str] = field(default_factory=set)              # IDs des catégories présentes
@@ -36,7 +38,7 @@ class VariableRef:
 class CandidateFusion:
     """Candidat de fusion entre une CodeList master et plusieurs slaves."""
     fusion_id: str
-    detection_type: str  # "exact", "fuzzy", "semantic_list", "semantic_var", "semantic_userid", "usage"
+    detection_type: str  # "exact", "fuzzy", "exact_business", "labels", "semantic_list", "semantic_var", "semantic_userid", "usage"
     master_cl: CodeList
     slave_cls: list[CodeList]
     confidence: float  # 0.0 – 1.0

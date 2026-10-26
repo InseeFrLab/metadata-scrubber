@@ -22,7 +22,8 @@ logger = logging.getLogger(__name__)
 
 # Champs d'une CodeList communs à un parent et à un doublon du registre
 _MEMBER_FIELDS = (
-    "id", "name", "label", "codes_count", "codes", "cat_ids", "vars", "origin", "links",
+    "id", "name", "label", "codes_count", "codes", "escape_codes", "cat_ids", "vars",
+    "origin", "links",
 )
 
 

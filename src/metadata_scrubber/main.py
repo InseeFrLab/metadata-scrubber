@@ -39,8 +39,10 @@ from .extractor import (  # noqa: E402
 )
 from .funnel import (  # noqa: E402
     MAX_CODES_FOR_FUZZY,
+    detect_business_duplicates,
     detect_exact_duplicates,
     detect_fuzzy_duplicates,
+    detect_label_duplicates,
 )
 from .normalize import normalize, signature_from_codes  # noqa: E402
 from .reporting.duplicates_registry import (  # noqa: E402
@@ -57,6 +59,7 @@ from .semantic import (  # noqa: E402
     llm_judge,
 )
 from .decisions import apply_decisions, decisions_path, load_decisions  # noqa: E402
+from .quality import split_codes  # noqa: E402
 from .registry_io import write_json_registry  # noqa: E402
 from .run_output import RunLogCapture, make_run_dir  # noqa: E402
 from .types import CandidateFusion, CodeList  # noqa: E402
@@ -196,6 +199,9 @@ def _run_pipeline_body(
     print("[4/9] Calcul des signatures de contenu...")
     for cl in codelists:
         cl.sig = signature_from_codes(cl.codes)
+        business, _escape = split_codes(cl.codes)
+        cl.sig_business = signature_from_codes(business)
+        cl.sig_labels = tuple(sorted({normalize(label) for _v, label in business if label}))
 
     # ------------------------------------------------------------------
     # 5. Détection exacte
@@ -204,6 +210,12 @@ def _run_pipeline_body(
     exact_groups = detect_exact_duplicates(codelists)
     n_exact_dups = sum(len(g) - 1 for g in exact_groups.values())
     print(f"  [exact] {len(exact_groups)} groupes, {n_exact_dups} redondantes.")
+    business_groups = detect_business_duplicates(codelists)
+    label_groups = detect_label_duplicates(codelists)
+    print(
+        f"  [hors échappement] {len(business_groups)} groupes ; "
+        f"[libellés] {len(label_groups)} groupes."
+    )
 
     # ------------------------------------------------------------------
     # 6. Détection floue
@@ -326,6 +338,7 @@ def _run_pipeline_body(
     print("\n[9/9] Génération du registre des doublons...")
     candidates = _build_candidates(
         exact_groups, detected, codelists, usage_groups, pairs_semantic,
+        business_groups=business_groups, label_groups=label_groups,
     )
     print(f"  {len(candidates)} candidats totaux.")
     summary["counts"]["candidates"] = len(candidates)
@@ -383,6 +396,9 @@ def _build_candidates(
     codelists: list[CodeList],
     usage_groups: dict,
     semantic_pairs: list[tuple[CodeList, CodeList, float, str]] | None = None,
+    *,
+    business_groups: list[list[CodeList]] | None = None,
+    label_groups: list[list[CodeList]] | None = None,
 ) -> list[CandidateFusion]:
     """
     Assemble un unique list de CandidateFusion depuis tous
@@ -438,6 +454,28 @@ def _build_candidates(
         )
         fuzzy_slaves.add(slave.id)
     used.update(fuzzy_slaves)
+
+    # Phase 1 ter — mêmes codes métier (hors échappement), puis mêmes libellés
+    for det_type, groups, confidence in (
+        ("exact_business", business_groups or [], 0.98),
+        ("labels", label_groups or [], 0.95),
+    ):
+        for group in groups:
+            master_cl = group[0]
+            for slave in group[1:]:
+                if slave.id in used or slave.id == master_cl.id:
+                    continue
+                results.append(
+                    CandidateFusion(
+                        fusion_id=f"{det_type}-{master_cl.id[:8]}-{slave.id[:8]}",
+                        detection_type=det_type,
+                        master_cl=master_cl,
+                        slave_cls=[slave],
+                        confidence=confidence,
+                        evidence={"a_codes": len(master_cl.codes), "b_codes": len(slave.codes)},
+                    )
+                )
+                used.add(slave.id)
 
     # Phase 1 bis — usage
     for _sig, group in usage_groups.items():

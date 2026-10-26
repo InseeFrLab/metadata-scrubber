@@ -21,6 +21,8 @@ import os
 from collections import defaultdict
 from dataclasses import dataclass, field
 
+from metadata_scrubber.quality import split_codes
+
 
 @dataclass
 class DuplicateInfo:
@@ -48,6 +50,7 @@ def _serialize_minimal(cl) -> dict:
         "label": cl.label or "",
         "codes_count": len(cl.codes),
         "codes": [list(pair) for pair in cl.codes],
+        "escape_codes": [list(pair) for pair in split_codes(cl.codes)[1]],
         "cat_ids": sorted(cl.cat_ids),
         "vars": cl.vars or [],
         "origin": getattr(cl, "origin", "xml"),
@@ -229,6 +232,7 @@ def build_duplicates_registry(
                     "label": d.label,
                     "codes_count": d.codes_count,
                     "codes": [list(c) for c in d.codes],
+                    "escape_codes": [list(c) for c in split_codes(d.codes)[1]],
                     "cat_ids": d.cat_ids,
                     "vars": d.vars,
                     "detection_types": sorted(d.detection_types),
