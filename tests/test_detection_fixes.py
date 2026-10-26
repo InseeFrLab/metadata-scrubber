@@ -39,6 +39,51 @@ class TestSymmetricSimilarity:
         assert _code_similarity(a, b) == pytest.approx(85 / 88)
 
 
+class TestLargeLists:
+    """Listes de plus de 100 codes (ex. L_TYPEQU de la BPE : 229 ⊂ 232)."""
+
+    def test_large_lists_are_compared(self):
+        from metadata_scrubber.funnel import detect_fuzzy_duplicates
+
+        a, b = _cl("a", 229, name="L_TYPEQU_2024_DIFF"), _cl("b", 229, extra=3, name="L_TYPEQU_2024")
+        detected, _, _, excluded = detect_fuzzy_duplicates([a, b])
+        assert excluded == []
+        assert len(detected) == 1
+        assert detected[0]["code_similarity"] == pytest.approx(229 / 232, abs=1e-4)
+
+    def test_same_value_with_different_label_is_matched_by_label(self):
+        a = CodeList(id="a", name="a", label="", codes=[("1", "Oui"), ("2", "Non")])
+        b = CodeList(id="b", name="b", label="", codes=[("1", "Oui"), ("2", "Sans objet")])
+        assert _code_similarity(a, b) == pytest.approx(0.5)
+
+    def test_remaining_codes_still_use_pairwise_search(self):
+        # Valeurs proches mais non identiques : appariées par la 2e passe
+        a = CodeList(id="a", name="a", label="", codes=[("A0101", "Gendarmerie"), ("A0102", "Police")])
+        b = CodeList(id="b", name="b", label="", codes=[("A0101 ", "Gendarmerie"), ("A0102 ", "Police")])
+        assert _code_similarity(a, b) == 1.0
+
+    def test_pairwise_search_is_skipped_on_large_remainders(self):
+        a = CodeList(id="a", name="a", label="", codes=[(f"val{i:04d}", f"L{i}") for i in range(150)])
+        b = CodeList(id="b", name="b", label="", codes=[(f"val{i:04d} ", f"L{i}") for i in range(150)])
+        assert _code_similarity(a, b) == 0.0
+        assert _code_similarity(a, b, max_pairwise=200) == 1.0
+
+    def test_size_ratio_prefilter(self):
+        from metadata_scrubber.funnel import detect_fuzzy_duplicates
+
+        # 13 codes contre 22 : ratio 0.59 < min_code_sim, paire écartée sans calcul
+        detected, nearby, _, _ = detect_fuzzy_duplicates([_cl("a", 13), _cl("b", 13, extra=9)])
+        assert detected == [] and nearby == {}
+
+    def test_large_pair_is_fast(self):
+        import time
+
+        a, b = _cl("a", 300), _cl("b", 290, extra=10)
+        start = time.perf_counter()
+        _code_similarity(a, b)
+        assert time.perf_counter() - start < 1.0
+
+
 class TestBuildCandidates:
     def _fuzzy_pair(self, a, b, score):
         return {"a": a, "b": b, "score": score, "a_codes": len(a.codes), "b_codes": len(b.codes)}

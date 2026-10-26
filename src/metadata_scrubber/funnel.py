@@ -9,11 +9,17 @@ from .normalize import concat_text
 from .types import CodeList
 
 # Nombre de codes maximum d'une CodeList pour être comparée en phase floue.
-# _code_similarity est en O(len(a.codes) * len(b.codes)) avec des appels
-# SequenceMatcher par paire de codes : au-delà de ce seuil, une seule paire
-# peut prendre plusieurs dizaines de minutes (ex. nomenclature des communes,
-# ~35 000 codes).
-MAX_CODES_FOR_FUZZY = 100
+# Les codes de même valeur sont appariés directement (coût linéaire) ; seuls
+# les très grands référentiels (communes ~35 000 codes, IRIS) sont exclus.
+MAX_CODES_FOR_FUZZY = 5000
+
+# Nombre maximum de codes restants (sans valeur identique dans l'autre liste)
+# pour la recherche du meilleur appariement, en O(n * m) appels SequenceMatcher.
+# Au-delà, ces codes restent non appariés.
+MAX_CODES_PAIRWISE = 100
+
+# Score minimal d'appariement de deux codes
+_CODE_MATCH_THRESHOLD = 0.65
 
 
 def _group_by_sig(codelists: list[CodeList]) -> dict[tuple, list[CodeList]]:
@@ -51,20 +57,43 @@ def _text_map(codelists: list[CodeList]) -> dict[str, str]:
     return {cl.id: _text_for_dedup(cl) for cl in codelists}
 
 
-def _code_similarity(a: CodeList, b: CodeList) -> float:
+def _pair_score(va: str, la: str, vb: str, lb: str) -> float:
+    """Score d'appariement de deux codes (valeur, libellé)."""
+    # Similarite des valeurs
+    val_sim = 1.0 if va == vb else SequenceMatcher(None, va, vb).ratio()
+
+    # Similarite des libelles
+    lbl_sim = 1.0 if la == lb else SequenceMatcher(None, la.lower(), lb.lower()).ratio()
+
+    if val_sim >= 0.9:
+        # Valeurs similaires → combiner valeurs + libelles
+        return val_sim * 0.3 + lbl_sim * 0.7
+    if val_sim >= 0.6:
+        # Valeurs partiellement similaires → penaliser
+        return val_sim * 0.2 + lbl_sim * 0.2
+    # Valeurs totalement differentes → penaliser fortement
+    return 0.0
+
+
+def _code_similarity(
+    a: CodeList,
+    b: CodeList,
+    max_pairwise: int = MAX_CODES_PAIRWISE,
+) -> float:
     """Score de similarite entre deux listes de codes.
 
-    Pour chaque code de `a`, on cherche le meilleur match dans `b`
-    (sur la valeur + libelle), chaque code de `b` ne servant qu'une fois.
+    Chaque code de `a` est apparié à au plus un code de `b`, en deux temps :
+      1. codes de même valeur (index par valeur, coût linéaire) ;
+      2. codes restants : meilleur appariement parmi les codes restants de `b`
+         (O(n * m)), seulement si les deux restes comptent au plus
+         `max_pairwise` codes.
     Le score est le nombre de codes apparies rapporte a la taille de la
     PLUS GRANDE liste : il est symetrique et une liste incluse dans une
-    plus grande n'obtient plus 100 %.
+    plus grande n'obtient pas 100 %.
 
-    Un match est valide si les valeurs sont identiques ET les libelles
-    ont une similarite élevée (> 0.6 par defaut).
+    Un match est valide si son score d'appariement atteint 0.65 (pour deux
+    valeurs identiques : libellés similaires a plus de 0.5).
     """
-    from difflib import SequenceMatcher
-
     codes_a = [(v, lab) for v, lab in a.codes]
     codes_b = [(v, lab) for v, lab in b.codes]
 
@@ -73,43 +102,47 @@ def _code_similarity(a: CodeList, b: CodeList) -> float:
     if not codes_a or not codes_b:
         return 0.0
 
-    # Pour chaque code de a, trouver le meilleur match dans b
     matches = 0
     used_b: set[int] = set()
-    for i, (va, la) in enumerate(codes_a):
+
+    # 1. Codes de même valeur
+    by_value: dict[str, list[int]] = {}
+    for j, (vb, _) in enumerate(codes_b):
+        by_value.setdefault(vb, []).append(j)
+
+    rest_a: list[tuple[str, str]] = []
+    for va, la in codes_a:
         best = 0.0
         best_j = -1
-        for j, (vb, lb) in enumerate(codes_b):
+        for j in by_value.get(va, ()):
             if j in used_b:
                 continue
-
-            # Similarite des valeurs
-            val_sim = 1.0 if va == vb else SequenceMatcher(None, va, vb).ratio()
-
-            # Similarite des libelles
-            lbl_sim = (
-                1.0
-                if la == lb
-                else SequenceMatcher(None, la.lower(), lb.lower()).ratio()
-            )
-
-            if val_sim >= 0.9:
-                # Valeurs similaires → combiner valeurs + libelles
-                score = val_sim * 0.3 + lbl_sim * 0.7
-            elif val_sim >= 0.6:
-                # Valeurs partiellement similaires → penaliser
-                score = val_sim * 0.2 + lbl_sim * 0.2
-            else:
-                # Valeurs totalement differentes → penaliser fortement
-                score = 0.0
-
+            score = _pair_score(va, la, *codes_b[j])
             if score > best:
                 best = score
                 best_j = j
-
-        if best >= 0.65:
+        if best >= _CODE_MATCH_THRESHOLD:
             matches += 1
             used_b.add(best_j)
+        else:
+            rest_a.append((va, la))
+
+    # 2. Codes restants : meilleur appariement, si les restes sont petits
+    rest_b = [j for j in range(len(codes_b)) if j not in used_b]
+    if rest_a and rest_b and len(rest_a) <= max_pairwise and len(rest_b) <= max_pairwise:
+        for va, la in rest_a:
+            best = 0.0
+            best_j = -1
+            for j in rest_b:
+                if j in used_b:
+                    continue
+                score = _pair_score(va, la, *codes_b[j])
+                if score > best:
+                    best = score
+                    best_j = j
+            if best >= _CODE_MATCH_THRESHOLD:
+                matches += 1
+                used_b.add(best_j)
 
     return matches / max(len(codes_a), len(codes_b))
 
@@ -181,8 +214,9 @@ def detect_fuzzy_duplicates(
     Phase 2 — Quasi-doublons (similarite hybride).
 
     Ne compare que les representatives uniques (1 par signature exacte),
-    et seulement celles dont le nombre de codes ne depasse pas `max_codes`
-    (_code_similarity est en O(len(a.codes) * len(b.codes))).
+    et seulement celles dont le nombre de codes ne depasse pas `max_codes`.
+    Une paire dont le rapport des tailles est sous `min_code_sim` est ecartee
+    sans calcul : sa similarite de codes ne peut pas l'atteindre.
 
     Score hybride = 0.6 * similarite_codes + 0.4 * similarite_noms.
     Boost : si code_sim >= 0.90, le score minimum est élever a 0.95 pour
@@ -211,6 +245,10 @@ def detect_fuzzy_duplicates(
 
     nearby: list = []
     for a, b in itertools.combinations(eligible, 2):
+        # Au plus min(len) codes apparies sur max(len) : borne de code_sim
+        if min(len(a.codes), len(b.codes)) < min_code_sim * max(len(a.codes), len(b.codes)):
+            continue
+
         code_sim = _code_similarity(a, b)
 
         # Filtre prealable : similarite codes minimale

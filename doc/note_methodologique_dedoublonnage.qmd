@@ -188,14 +188,20 @@ indirect, via … ».
 | Faux négatifs | Différence > ~10 % du texte                 |
 | Faux positifs | Deux listes de plages de valeurs similaires |
 
-> **Seuil `MAX_CODES_FOR_FUZZY` (défaut 100)** : la comparaison code-à-code
-> (`_code_similarity`) est en $O(\text{len}(a.codes) \times \text{len}(b.codes))$,
-> indépendamment du nombre de CodeLists. Une seule liste volumineuse (ex. la
-> nomenclature des communes, ~35 000 codes) suffit à rendre une paire
-> impraticable (plusieurs dizaines de minutes). Les CodeLists dépassant ce
-> seuil sont donc exclues de la phase floue et listées explicitement dans les
-> logs — un vrai doublon parmi elles serait de toute façon capté par la phase
-> exacte (§ précédent).
+> **Appariement des codes et seuils** : `_code_similarity` apparie d'abord les
+> codes de **même valeur** (index par valeur, coût linéaire), puis cherche le
+> meilleur appariement des codes restants en
+> $O(\text{restants}_a \times \text{restants}_b)$, seulement si chaque reste
+> compte au plus `MAX_CODES_PAIRWISE` (100) codes. Une paire dont le rapport des
+> tailles est inférieur à `min_code_sim` (0,75) est écartée sans calcul, car sa
+> similarité de codes ne peut pas atteindre ce seuil.
+>
+> Les CodeLists de plus de `MAX_CODES_FOR_FUZZY` (5 000) codes, comme les
+> communes (~35 000 codes) ou les IRIS, sont exclues de la phase floue et
+> listées dans les logs et dans `run_summary.json`. Un vrai doublon parmi elles
+> reste capté par la phase exacte (§ précédent). Avant, ce seuil valait 100 :
+> des listes métier comme les types d'équipements de la BPE (150 à 232 codes)
+> échappaient à la phase floue.
 
 ## Phase 2 — Doublons Sémantiques (Embeddings + LLM)
 
