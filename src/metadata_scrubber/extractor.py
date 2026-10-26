@@ -120,6 +120,13 @@ def extract_codelists(objects: list[etree._Element]) -> list[CodeList]:
             if cat_id_val:
                 cat_ids.add(cat_id_val)
 
+        based_on_el = _child(o, "BasedOnObject")
+        based_on = [
+            _text_of(ref, "ID")
+            for ref in (based_on_el if based_on_el is not None else [])
+            if _local(ref) == "BasedOnReference" and _text_of(ref, "ID")
+        ]
+
         cl_id = _text_of(o, "ID")
         cl_name = _localized(o, "CodeListName")
         cl_label = _localized(o, "Label")
@@ -137,10 +144,35 @@ def extract_codelists(objects: list[etree._Element]) -> list[CodeList]:
                     cat_ids=cat_ids,
                     description=cl_description,
                     user_id=cl_user_id,
+                    agency=_text_of(o, "Agency"),
+                    version=_text_of(o, "Version"),
+                    based_on=based_on,
                 )
             )
 
-    return codelists
+    return latest_versions(codelists)
+
+
+def _version_key(version: str) -> tuple:
+    """Clé de tri d'une version DDI : absente < numérique (comparée en entier) < autre."""
+    if not version:
+        return (-1, 0, "")
+    return (0, int(version), "") if version.isdigit() else (1, 0, version)
+
+
+def latest_versions(codelists: list[CodeList]) -> list[CodeList]:
+    """Ne garde que la version la plus récente de chaque CodeList (même ID).
+
+    Un fichier peut contenir plusieurs versions d'une même CodeList (BPE :
+    versions 5 et 6 d'un même identifiant). La plus récente prend la place de
+    la première occurrence, pour conserver l'ordre du document.
+    """
+    latest: dict[str, CodeList] = {}
+    for cl in codelists:
+        kept = latest.get(cl.id)
+        if kept is None or _version_key(cl.version) > _version_key(kept.version):
+            latest[cl.id] = cl
+    return list(latest.values())
 
 
 def extract_variables(objects: list[etree._Element]) -> list[VariableRef]:

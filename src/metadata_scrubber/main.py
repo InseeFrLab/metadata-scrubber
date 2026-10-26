@@ -165,6 +165,10 @@ def _run_pipeline_body(
     print("[2/9] Extraction des CodeLists et Catégories...")
     codelists = extract_codelists(objects)
     print(f"  {len(codelists)} CodeLists ({sum(len(cl.codes) for cl in codelists)} codes).")
+    n_old_versions = sum(1 for o in objects if etree.QName(o).localname == "CodeList") - len(codelists)
+    if n_old_versions:
+        print(f"  {n_old_versions} version(s) antérieure(s) de CodeList ignorée(s).")
+    summary["counts"]["older_versions_ignored"] = n_old_versions
 
     # ------------------------------------------------------------------
     # 2 bis. Injection du registre nettoyé (priorité aux entrées du registre)

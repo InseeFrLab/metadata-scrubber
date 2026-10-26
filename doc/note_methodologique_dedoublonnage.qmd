@@ -75,6 +75,20 @@ Le libellé est stocké séparément :
 </Variable>
 ```
 
+### Versions et filiation
+
+Pour chaque CodeList, l'extraction lit aussi `r:Agency`, `r:Version` et les
+identifiants des `r:BasedOnObject/r:BasedOnReference`. Quand un fichier
+contient plusieurs versions d'une même CodeList (BPE : versions 5 et 6 d'un
+même identifiant), seule la plus récente est gardée (`latest_versions`,
+comparaison numérique) ; `run_summary.json` compte les versions ignorées
+(`older_versions_ignored`).
+
+`BasedOnObject` est un **indicateur**, sans effet sur la détection : la carte
+d'un doublon indique « basé sur … » quand il dérive d'une autre liste du groupe
+(43 cas dans les groupes de BPE.xml). Faut-il rejeter automatiquement une liste
+dérivée d'une liste rejetée ? La question reste ouverte côté métier.
+
 ## Pipeline d'extraction (4 phases)
 
 ```

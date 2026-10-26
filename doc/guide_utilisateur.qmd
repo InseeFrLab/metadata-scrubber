@@ -242,6 +242,14 @@ nettoyé, elle perd les listes du groupe ; les listes approuvées sont rattaché
 à la nouvelle maître. Une maître issue du registre nettoyé (📘) ne peut pas être
 remplacée depuis cet onglet.
 
+### Versions et filiation DDI
+
+L'en-tête de la CodeList affiche sa référence DDI `agence:id:version`. Une carte
+de doublon indique **↳ basé sur …** quand le doublon a été créé à partir d'une
+autre liste (`BasedOnObject`), et **↰ la maître est basée sur ce doublon** dans
+le sens inverse. Si un fichier contient plusieurs versions d'une même CodeList,
+seule la plus récente est examinée.
+
 ### Liens entre doublons
 
 Une carte indique aussi **🔗 lié aussi à …** quand le doublon a été détecté
