@@ -4,14 +4,15 @@ Le fichier decisions.json se trouve à la racine des sorties, à côté de
 cleaned_codelists.json. La sauvegarde du registre des doublons l'alimente ; le
 pipeline le relit pour réappliquer les décisions aux paires de nouveau
 détectées. Les CodeLists écartées (sans doublon, à ne pas ajouter au registre
-nettoyé) y sont aussi conservées.
+nettoyé) et les maîtres choisies par l'utilisateur y sont aussi conservées.
 
 Schéma :
 {
   "version": 1,
   "updated_at": "<iso utc>",
   "pairs": {"<id_a>|<id_b>": {"decision": "approve" | "reject", "updated_at"}},
-  "dismissed": {"<cl_id>": {"updated_at"}}
+  "dismissed": {"<cl_id>": {"updated_at"}},
+  "masters": {"<cl_id>": {"updated_at"}}
 }
 
 Les clés de paire sont les deux ids triés : la décision vaut quel que soit
@@ -45,7 +46,7 @@ def pair_key(id_a: str, id_b: str) -> str:
 
 
 def empty_decisions_doc() -> dict[str, Any]:
-    return {"version": 1, "updated_at": _now(), "pairs": {}, "dismissed": {}}
+    return {"version": 1, "updated_at": _now(), "pairs": {}, "dismissed": {}, "masters": {}}
 
 
 def read_decisions(path: str) -> dict[str, Any]:
@@ -60,6 +61,7 @@ def read_decisions(path: str) -> dict[str, Any]:
         return empty_decisions_doc()
     doc.setdefault("pairs", {})
     doc.setdefault("dismissed", {})
+    doc.setdefault("masters", {})
     return doc
 
 
@@ -81,6 +83,7 @@ def update_decisions(doc: dict[str, Any], registry: dict[str, Any]) -> None:
     now = _now()
     pairs: dict[str, Any] = doc.setdefault("pairs", {})
     dismissed: dict[str, Any] = doc.setdefault("dismissed", {})
+    masters: dict[str, Any] = doc.setdefault("masters", {})
 
     for cl_id, cl_data in registry.items():
         if cl_data.get("dismissed"):
@@ -88,9 +91,15 @@ def update_decisions(doc: dict[str, Any], registry: dict[str, Any]) -> None:
         else:
             dismissed.pop(cl_id, None)
 
+        if cl_data.get("master_chosen"):
+            masters.setdefault(cl_id, {"updated_at": now})
+        else:
+            masters.pop(cl_id, None)
+
         for dup in cl_data.get("duplicates", []):
             if not dup.get("id"):
                 continue
+            masters.pop(dup["id"], None)
             key = pair_key(cl_id, dup["id"])
             decision = dup.get("decision", "pending")
             if decision in _KEPT_DECISIONS:

@@ -331,10 +331,13 @@ def _run_pipeline_body(
     summary["counts"]["candidates"] = len(candidates)
 
     out_path = f"{run_dir}/codelist_duplicates.json"
-    registry = build_duplicates_registry(candidates, codelists)
-
-    # Décisions et écarts des runs précédents (decisions.json, racine des sorties)
-    carried = apply_decisions(registry, load_decisions(decisions_path(out_path)))
+    # Décisions, écarts et maîtres choisies des runs précédents
+    # (decisions.json, racine des sorties)
+    decisions = load_decisions(decisions_path(out_path))
+    registry = build_duplicates_registry(
+        candidates, codelists, preferred_parents=set(decisions["masters"])
+    )
+    carried = apply_decisions(registry, decisions)
     summary["counts"]["decisions_carried"] = carried
     if carried:
         print(f"  {carried} décision(s) reprise(s) des runs précédents.")

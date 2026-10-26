@@ -158,6 +158,13 @@ maître est la **première CodeList rencontrée dans l'ordre du fichier XML** ; 
 autres membres sont ses doublons. Les entrées du registre nettoyé
 (`--registry`) sont placées en tête de cet ordre et restent donc toujours maîtres.
 
+L'utilisateur peut changer la maître d'un groupe depuis l'interface
+(`swap_parent`). Chaque membre porte ses `links` (toutes ses paires avec les
+autres membres), ce qui permet de recalculer badges, confiance et `via` sans
+relancer le pipeline. Le choix est conservé dans `decisions.json` (`masters`) :
+au run suivant, la priorité devient registre nettoyé, puis maître choisie, puis
+ordre du XML.
+
 Un doublon relié à la maître seulement via un autre doublon affiche « lien
 indirect, via … ».
 
@@ -439,7 +446,8 @@ La sauvegarde écrit aussi `decisions.json` à la racine des sorties, à côté 
 {
   "version": 1,
   "pairs": {"<id_a>|<id_b>": {"decision": "reject", "updated_at": "..."}},
-  "dismissed": {"<cl_id>": {"updated_at": "..."}}
+  "dismissed": {"<cl_id>": {"updated_at": "..."}},
+  "masters": {"<cl_id>": {"updated_at": "..."}}
 }
 ```
 
@@ -448,6 +456,7 @@ La sauvegarde écrit aussi `decisions.json` à la racine des sorties, à côté 
   retirée. Les paires absentes du registre sauvegardé (autres fichiers sources)
   sont gardées.
 - `dismissed` : CodeLists sans doublon écartées du registre nettoyé.
+- `masters` : CodeLists choisies comme maîtres (voir *Choix de la CodeList maître*).
 
 À l'étape 9, le pipeline réapplique ces décisions (`apply_decisions`) : le
 doublon reçoit `decision_carried: true`, la liste écartée `dismissed: true`, et

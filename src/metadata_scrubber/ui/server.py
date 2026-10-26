@@ -32,6 +32,7 @@ from metadata_scrubber.ui.models import (
     BulkDecision,
     CodelistFilter,
     DismissRequest,
+    SwapParentRequest,
     DecisionUpdate,
     FilteredResult,
     PipelineRequest,
@@ -59,6 +60,8 @@ from metadata_scrubber.ui.services.registry_service import (
     get_stats,
     read_registry,
     set_decision,
+    swap_parent,
+    SwapParentError,
     write_registry,
 )
 from metadata_scrubber.ui.services.upload_service import upload_file_to_s3
@@ -594,6 +597,21 @@ async def dismiss_codelists(req: DismissRequest):
                     cl_data.pop("dismissed", None)
                 result["updated"].append(cl_id)
     return {**result, "dismissed": req.dismissed}
+
+
+@app.post("/api/registry/swap-parent")
+async def swap_parent_route(req: SwapParentRequest):
+    """Fait d'un doublon la maître de son groupe ; persisté à la sauvegarde."""
+    with _registry_lock:
+        if _registry_state is None:
+            raise HTTPException(status_code=400, detail="No registry loaded")
+        try:
+            entry = swap_parent(_registry_state, req.parent_id, req.new_parent_id)
+        except KeyError as e:
+            raise HTTPException(status_code=404, detail=f"CodeList introuvable : {e}")
+        except SwapParentError as e:
+            raise HTTPException(status_code=409, detail=str(e))
+    return {"old_parent_id": req.parent_id, "entry": entry}
 
 
 @app.get("/api/registry/codelists", response_model=FilteredResult)

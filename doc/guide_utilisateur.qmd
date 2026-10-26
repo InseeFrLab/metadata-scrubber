@@ -206,6 +206,31 @@ Sous chaque paire de CodeLists, trois boutons permettent de prendre une décisio
 
 Chaque changement de décision met à jour le badge coloré de la carte.
 
+## Changer la liste maître
+
+Un doublon peut devenir la maître de son groupe, par exemple quand il corrige
+la forme de la maître proposée. Le bouton **⇅ Définir comme maître** de sa
+carte, après confirmation :
+
+- en fait la maître (badge **⇅ maître choisie**) ; l'ancienne maître devient un
+  doublon **en attente** ;
+- recalcule les badges et le score de chaque doublon par rapport à la nouvelle
+  maître (« lien indirect, via … » s'il n'y a pas de paire directe) ;
+- conserve les décisions déjà prises sur les autres doublons.
+
+Le choix est enregistré à la sauvegarde et repris aux runs suivants
+(`decisions.json`). Si l'ancienne maître avait une entrée dans le registre
+nettoyé, elle perd les listes du groupe ; les listes approuvées sont rattachées
+à la nouvelle maître. Une maître issue du registre nettoyé (📘) ne peut pas être
+remplacée depuis cet onglet.
+
+### Liens entre doublons
+
+Une carte indique aussi **🔗 lié aussi à …** quand le doublon a été détecté
+avec d'autres doublons du groupe. Si on le rejette par rapport à la maître
+alors qu'il reste lié à un autre doublon, le définir comme maître permet
+d'examiner ces liens.
+
 ## Actions de masse
 
 Quatre boutons en haut de la page permettent d'appliquer des décisions à
