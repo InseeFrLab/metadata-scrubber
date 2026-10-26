@@ -6,6 +6,7 @@ import itertools
 from difflib import SequenceMatcher
 
 from .normalize import concat_text
+from .quality import PLACEHOLDER
 from .types import CodeList
 
 # Nombre de codes maximum d'une CodeList pour être comparée en phase floue.
@@ -276,6 +277,8 @@ def detect_fuzzy_duplicates(
 
     Ne compare que les representatives uniques (1 par signature exacte),
     et seulement celles dont le nombre de codes ne depasse pas `max_codes`.
+    Les listes « placeholder » (quality.py) sont ignorées : leurs codes
+    renvoient ailleurs et ne sont pas comparables.
     Une paire dont le rapport des tailles est sous `min_code_sim` est ecartee
     sans calcul : sa similarite de codes ne peut pas l'atteindre.
 
@@ -302,7 +305,10 @@ def detect_fuzzy_duplicates(
     uniques = [g[0] for g in groups.values()]
 
     excluded = [cl for cl in uniques if len(cl.codes) > max_codes]
-    eligible = [cl for cl in uniques if len(cl.codes) <= max_codes]
+    eligible = [
+        cl for cl in uniques
+        if len(cl.codes) <= max_codes and PLACEHOLDER not in cl.quality_flags
+    ]
 
     nearby: list = []
     for a, b in itertools.combinations(eligible, 2):

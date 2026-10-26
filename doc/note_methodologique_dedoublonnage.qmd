@@ -126,6 +126,11 @@ Chacune contient un seul code :
 Toutes 18 partagent **exactement la même signature** → doublons exacts. Probablement des **codes génériques** « consulter le dictionnaire » dupliqués par l'outil de modélisation (Colectica).
 
 
+> **Traitement actuel** : ces listes sont marquées `placeholder` (voir *Listes
+> suspectes* ci-dessous) et comparées sur leur **nom** normalisé au lieu de
+> leurs codes : `N-region` et `N-REGION` restent doublons, mais plus `N-region`
+> et `N-conv_coll`.
+>
 > **Limite connue** : ce ne sont pas de vrais doublons conceptuels. Il s'agit d'un
 > raccourci arbitraire du producteur, qui — au lieu de créer ou référencer les
 > listes de codes spécifiques (existantes ou à créer) — a renvoyé vers un
@@ -209,6 +214,24 @@ indirect, via … ».
 > reste capté par la phase exacte (§ précédent). Avant, ce seuil valait 100 :
 > des listes métier comme les types d'équipements de la BPE (150 à 232 codes)
 > échappaient à la phase floue.
+
+## Listes suspectes (`quality_flags`)
+
+`quality.quality_flags` signale à l'étape 4 les listes qui ne devraient
+probablement pas être des listes de codes, sur leurs codes métier :
+
+| Indicateur | Règle | Exemples |
+|---|---|---|
+| `placeholder` (« renvoi ») | Valeur `cf` ou `xxx…` ; valeur ou libellé commençant par « voir », contenant « cliquer ici » ou « sur N positions » ; commençant par « code » si la liste a au plus 2 codes métier | « Voir dictionnaire des nomenclatures », « Code quartier du QVA », « Code sur 6 positions » |
+| `numeric_range` (« numérique ») | Au plus 2 codes métier, dont un motif de bornes | « 0 à 7 », « 00 à 23 », « de 0 à N » |
+| `single_code` (« code unique ») | Un seul code métier | |
+
+Une liste `placeholder` a pour signature son nom normalisé (`quality.name_key`)
+et est exclue des comparaisons de codes (hors échappement, libellés, flou) :
+ses codes renvoient ailleurs et ne sont pas comparables. Les indicateurs sont
+écrits dans le registre (`quality_flags`) ; l'interface les affiche (⚠), permet
+de filtrer les listes suspectes et demande confirmation avant d'en ajouter une
+au registre nettoyé.
 
 ## Phase 1 ter — Codes d'échappement et libellés
 

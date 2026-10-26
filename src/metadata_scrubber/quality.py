@@ -29,12 +29,15 @@ _ESCAPE_LABEL = re.compile(
     r"|nsp|refus|indéterminé|hors champ|valeur manquante|non disponible|inconnu"
     r"|secret|non déclaré|non applicable)"
 )
-_ESCAPE_VALUE = re.compile(r"^(_[a-z]|/|)$")
+_ESCAPE_VALUE = re.compile(r"^(_[a-z]|/)$")
 
 _PLACEHOLDER_VALUE = re.compile(r"^(cf|x{3,})$")
-_PLACEHOLDER_LABEL = re.compile(
-    r"^(voir\b|code\b)|cliquer ici|\bsur \d+ positions\b|\bà \d+ caractères\b"
+_PLACEHOLDER_TEXT = re.compile(
+    r"^voir\b|cliquer ici|\bsur \d+ positions\b|\bà \d+ caractères\b"
 )
+# « Code … » seulement pour les listes d'au plus 2 codes métier : « Code à
+# barres trouvé… » est un vrai libellé dans une liste de 5 codes (EAR).
+_PLACEHOLDER_SHORT = re.compile(r"^code\b")
 _NUMERIC_RANGE = re.compile(r"^(de\s+)?\d+\s*(à|a|-)\s*(\d+|n)\b")
 
 PLACEHOLDER = "placeholder"
@@ -62,9 +65,13 @@ def quality_flags(codes: list[tuple[str, str]]) -> list[str]:
     """Indicateurs de liste suspecte (voir l'en-tête du module)."""
     business, _ = split_codes(codes)
     flags = []
+    texts = [(normalize(v), normalize(lab)) for v, lab in business]
     if any(
-        _PLACEHOLDER_VALUE.match(normalize(v)) or _PLACEHOLDER_LABEL.search(normalize(lab))
-        for v, lab in business
+        _PLACEHOLDER_VALUE.match(v)
+        or _PLACEHOLDER_TEXT.search(v)
+        or _PLACEHOLDER_TEXT.search(lab)
+        or (len(business) <= 2 and (_PLACEHOLDER_SHORT.match(v) or _PLACEHOLDER_SHORT.match(lab)))
+        for v, lab in texts
     ):
         flags.append(PLACEHOLDER)
     if len(business) <= 2 and any(

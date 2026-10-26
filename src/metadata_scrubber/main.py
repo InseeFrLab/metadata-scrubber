@@ -59,7 +59,7 @@ from .semantic import (  # noqa: E402
     llm_judge,
 )
 from .decisions import apply_decisions, decisions_path, load_decisions  # noqa: E402
-from .quality import split_codes  # noqa: E402
+from .quality import PLACEHOLDER, name_key, quality_flags, split_codes  # noqa: E402
 from .registry_io import write_json_registry  # noqa: E402
 from .run_output import RunLogCapture, make_run_dir  # noqa: E402
 from .types import CandidateFusion, CodeList  # noqa: E402
@@ -198,10 +198,21 @@ def _run_pipeline_body(
     # ------------------------------------------------------------------
     print("[4/9] Calcul des signatures de contenu...")
     for cl in codelists:
+        cl.quality_flags = quality_flags(cl.codes)
+        if PLACEHOLDER in cl.quality_flags:
+            # Ses codes renvoient ailleurs (« Voir dictionnaire… ») : seul le nom
+            # de la liste est signifiant. Signature sur le nom normalisé, et pas
+            # de comparaison des codes (hors échappement, libellés, flou).
+            cl.sig = (("__placeholder__", name_key(cl.name, cl.label, cl.id)),)
+            continue
         cl.sig = signature_from_codes(cl.codes)
         business, _escape = split_codes(cl.codes)
         cl.sig_business = signature_from_codes(business)
         cl.sig_labels = tuple(sorted({normalize(label) for _v, label in business if label}))
+    n_placeholder = sum(1 for cl in codelists if PLACEHOLDER in cl.quality_flags)
+    if n_placeholder:
+        print(f"  {n_placeholder} CodeList(s) « placeholder » comparées sur leur nom.")
+    summary["counts"]["placeholder"] = n_placeholder
 
     # ------------------------------------------------------------------
     # 5. Détection exacte
