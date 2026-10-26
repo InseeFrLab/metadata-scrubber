@@ -173,6 +173,10 @@ Chaque doublon est présenté sous forme de **carte** comportant :
   *synonyme* n'est pas un signal séparé mais une manifestation du signal
   *semantic* (juge LLM) ; le détail des définitions est dans la
   [note méthodologique](note_methodologique_dedoublonnage.qmd), §2-3)
+- Les badges **exact hors échappement** (mêmes codes métier, seuls les codes
+  *sans objet*, *non réponse*… diffèrent) et **libellés** (mêmes libellés,
+  valeurs différentes, par exemple `1`/`0` et `oui`/`non`). La carte rappelle
+  alors les **codes d'échappement** de la maître et du doublon.
 - Un bouton **📋 Détails** affichant une liste `(valeur → libellé)` pour chaque
   CodeList du groupe
 
