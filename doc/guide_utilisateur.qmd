@@ -151,6 +151,17 @@ cocher dans la colonne de gauche (les CodeLists avec doublons n'en ont pas) :
 Les CodeLists déjà présentes dans le registre nettoyé sont ignorées. Une fois
 ajoutée, une CodeList est marquée ✅ dans la liste.
 
+### Écarter une CodeList sans doublon
+
+Une CodeList sans doublon qu'on ne veut pas ajouter au registre nettoyé (par
+exemple une liste des départements qui n'est pas la liste officielle) peut être
+**écartée** avec le bouton **🚫 Écarter** du panneau de droite. Elle est alors
+marquée 🚫, n'a plus de case à cocher et n'est pas prise par **Ajouter toutes
+les CodeLists sans doublon**. **↩ Annuler l'écart** la réintègre.
+
+L'écart est conservé à la sauvegarde et repris aux runs suivants (voir
+*Sauvegarder les décisions*). Le filtre décision *Écartées* les affiche.
+
 Chaque doublon est présenté sous forme de **carte** comportant :
 
 - Le **nom** de la CodeList et un bouton **Voir** à côté (pour la comparaison)
@@ -211,7 +222,8 @@ plusieurs paires simultanément :
 
 Pour se concentrer sur un sous-ensemble de CodeLists :
 
-- **Filtre décision** : *Toutes* / *En attente* / *Approuvés* / *Rejetés* / *Sans doublon*
+- **Filtre décision** : *Toutes* / *En attente* / *Approuvés* / *Rejetés* /
+  *Sans doublon* (hors listes écartées) / *Écartées*
 - **Filtre origine** : *Toutes* / *Registre uniquement* (uniquement les CodeLists qui sont des maîtres d'un registre existant)
 - **Recherche** : champ texte — recherche par nom de la CodeList
 - **Afficher** : 20 / 50 / 100 éléments par page
@@ -222,6 +234,14 @@ Après examen, cliquez sur **💾 sauvegarder**. L'interface :
 
 1. Met à jour les états `decision` dans le registre `codelist_duplicates.json`
 2. Génère ou met à jour le **registre nettoyé** `cleaned_codelists.json`
+3. Met à jour `decisions.json`, à la racine des sorties : décisions *approuvé* et
+   *rejeté* de chaque paire, et listes écartées
+
+Au run suivant, le pipeline relit `decisions.json` : une paire déjà tranchée qui
+est de nouveau détectée reprend sa décision, marquée **↻ reprise** sur la carte,
+et une liste écartée reste écartée. Seules les paires nouvelles ou laissées en
+attente sont donc à examiner. Une paire est reconnue quel que soit le sens
+(maître / doublon). Changer une décision reprise efface la marque ↻.
 
 Une notification (toast) verte apparaît en confirmation :
 
@@ -396,7 +416,8 @@ session de travail pour que les décisions et le registre propre soient écrits.
 
 **Reprendre une session** — recharger le registre avec **📂 Charger** (onglet
 Validation ou Registre nettoyé) restaure les décisions précédentes.
-Tout est conservé dans le fichier JSON.
+Tout est conservé dans le fichier JSON. Un nouveau run reprend aussi les
+décisions sauvegardées (`decisions.json`).
 
 **Documentation API automatique** — la documentation OpenAPI complète de l'API
 REST est disponible à l'URL `/docs` (Swagger UI) et `/redoc`. Elle liste

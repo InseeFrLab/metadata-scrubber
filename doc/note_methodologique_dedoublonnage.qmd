@@ -430,6 +430,32 @@ Lors de `/api/registry/save` :
 
 ---
 
+## Décisions conservées entre les runs (`decisions.json`)
+
+La sauvegarde écrit aussi `decisions.json` à la racine des sorties, à côté de
+`cleaned_codelists.json` :
+
+```json
+{
+  "version": 1,
+  "pairs": {"<id_a>|<id_b>": {"decision": "reject", "updated_at": "..."}},
+  "dismissed": {"<cl_id>": {"updated_at": "..."}}
+}
+```
+
+- Clé de paire : les deux ids triés, la décision vaut dans les deux sens.
+- Seules *approuvé* et *rejeté* sont conservées ; une paire remise en attente est
+  retirée. Les paires absentes du registre sauvegardé (autres fichiers sources)
+  sont gardées.
+- `dismissed` : CodeLists sans doublon écartées du registre nettoyé.
+
+À l'étape 9, le pipeline réapplique ces décisions (`apply_decisions`) : le
+doublon reçoit `decision_carried: true`, la liste écartée `dismissed: true`, et
+`run_summary.json` compte `decisions_carried`. Les paires approuvées dont le
+doublon figure déjà dans les `replaces` du registre nettoyé n'apparaissent pas,
+puisque `--registry` exclut ces listes de la détection : la reprise sert donc
+surtout aux rejets.
+
 # Walkthrough : Exemples avec les Datasets Demo
 
 Le dossier `demo/` contient des fichiers XML de petite taille, générés depuis les sources S3, avec des paires connues pour illustrer et tester le pipeline.

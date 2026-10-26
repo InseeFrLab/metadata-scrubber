@@ -108,7 +108,8 @@ async function saveRegistry() {
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
         showToast(
-            `💾 Registre sauvegardé · registre nettoyé synchronisé (${data.cleaned_count ?? 0} entrées)`,
+            `💾 Registre sauvegardé · registre nettoyé synchronisé (${data.cleaned_count ?? 0} entrées)`
+            + ` · ${data.decisions_count ?? 0} décision(s) conservée(s) pour les prochains runs`,
             'success'
         );
         // Préremplir l'onglet Registre nettoyé
@@ -227,12 +228,15 @@ async function renderCodelistsFiltered() {
             name: clData.name || clId,
             origin: clData.origin || 'xml',
             duplicates: clData.duplicates || [],
+            dismissed: !!clData.dismissed,
         };
         const decisions = cl.duplicates.map(d => d.decision || 'pending');
 
-        // Decision filter ("none" = listes sans doublon détecté)
+        // Decision filter ("none" = listes sans doublon non écartées, "dismissed" = écartées)
         if (decisionFilter.length === 1 && decisionFilter[0] === 'none') {
-            if (cl.duplicates.length) continue;
+            if (cl.duplicates.length || cl.dismissed) continue;
+        } else if (decisionFilter.length === 1 && decisionFilter[0] === 'dismissed') {
+            if (!cl.dismissed) continue;
         } else if (decisionFilter.length < 3) {
             if (!decisions.some(d => decisionFilter.includes(d))) continue;
         }
@@ -283,18 +287,20 @@ function renderCodelistNav(items) {
     for (const cl of lastNavItems) {
         const dups = registryData[cl.id]?.duplicates || [];
         const added = inCleaned.has(cl.id);
+        const dismissed = !!registryData[cl.id]?.dismissed;
         html += `<a href="#" class="list-group-item list-group-item-action`;
         html += `${cl.id === selectedClId ? ' active' : ''}${added ? ' in-cleaned' : ''}" data-id="${escapeHtml(cl.id)}">`;
         html += `<div class="d-flex justify-content-between align-items-start gap-1">`;
         html += `<div class="d-flex gap-2">`;
         // Case d'ajout en lot : uniquement pour les listes sans doublon pas encore ajoutées
-        if (!dups.length && !added) {
+        if (!dups.length && !added && !dismissed) {
             html += `<input type="checkbox" class="form-check-input batch-check" `;
             html += `data-id="${escapeHtml(cl.id)}"${batchSelected.has(cl.id) ? ' checked' : ''}>`;
         }
         html += `<div class="text-break">${escapeHtml(cl.name || cl.id)}`;
         if (cl.origin === 'registry') html += ` <span class="badge bg-primary">📘</span>`;
         if (added) html += ` <span class="badge bg-success" title="Dans le registre nettoyé">✅</span>`;
+        if (dismissed) html += ` <span class="badge bg-secondary" title="Écartée : ne pas ajouter au registre nettoyé">🚫</span>`;
         const nVars = (registryData[cl.id]?.vars || []).length;
         html += `<br><code class="dup-id">${escapeHtml(cl.id)}</code>`;
         html += ` <small class="text-muted" title="Variables qui référencent cette CodeList">· ${nVars} var.</small></div></div>`;
@@ -385,7 +391,7 @@ function renderCodelistDetail(id) {
     const allDups = cl.duplicates || [];
     // Le filtre de décision s'applique aussi aux doublons affichés (ex. « en attente »)
     const { decisionFilter } = getFilters();
-    const dups = decisionFilter.length < 3 && decisionFilter[0] !== 'none'
+    const dups = decisionFilter.length < 3 && !['none', 'dismissed'].includes(decisionFilter[0])
         ? allDups.filter(d => decisionFilter.includes(d.decision || 'pending'))
         : allDups;
 
@@ -406,9 +412,16 @@ function renderCodelistDetail(id) {
             html += `<span class="badge bg-success">✅ Dans le registre</span>`;
             html += `<button class="btn btn-sm btn-outline-danger" id="removeclean_${id}">`;
             html += `↩ Retirer du registre nettoyé</button></div>`;
+        } else if (cl.dismissed) {
+            html += `<span class="badge bg-secondary">🚫 Écartée</span>`;
+            html += `<button class="btn btn-sm btn-outline-secondary" id="undismiss_${id}">`;
+            html += `↩ Annuler l'écart</button></div>`;
         } else {
             html += `<button class="btn btn-sm btn-outline-success" id="addclean_${id}">`;
-            html += `➕ Ajouter au registre nettoyé</button></div>`;
+            html += `➕ Ajouter au registre nettoyé</button>`;
+            html += `<button class="btn btn-sm btn-outline-secondary" id="dismiss_${id}" `;
+            html += `title="Ne pas ajouter cette liste au registre nettoyé (conservé à la sauvegarde)">`;
+            html += `🚫 Écarter</button></div>`;
         }
     }
     html += `</div></div>`;
@@ -418,6 +431,10 @@ function renderCodelistDetail(id) {
     if (addBtn) addBtn.addEventListener('click', () => addToCleaned(id));
     const removeBtn = document.getElementById(`removeclean_${id}`);
     if (removeBtn) removeBtn.addEventListener('click', () => removeFromCleaned([id], removeBtn));
+    const dismissBtn = document.getElementById(`dismiss_${id}`);
+    if (dismissBtn) dismissBtn.addEventListener('click', () => setDismissed(id, true, dismissBtn));
+    const undismissBtn = document.getElementById(`undismiss_${id}`);
+    if (undismissBtn) undismissBtn.addEventListener('click', () => setDismissed(id, false, undismissBtn));
 
     for (const dup of dups) {
         const select = document.getElementById(`decision_${id}_${dup.id}`);
@@ -475,10 +492,12 @@ async function addToCleaned(clId) {
 /* Ajout en lot au registre nettoyé
 /* ------------------------------------------------------------------ */
 
-/* CodeLists sans doublon : seules éligibles à l'ajout en lot */
+/* CodeLists sans doublon et non écartées : seules éligibles à l'ajout en lot */
 function listsWithoutDuplicates() {
     if (!registryData) return [];
-    return Object.keys(registryData).filter(id => !(registryData[id].duplicates || []).length);
+    return Object.keys(registryData).filter(
+        id => !(registryData[id].duplicates || []).length && !registryData[id].dismissed
+    );
 }
 
 /* Retire du registre nettoyé des listes ajoutées à la main (sans `replaces`) */
@@ -517,6 +536,38 @@ function markInCleaned(ids) {
     renderCodelistNav();
     // Réaffiche le panneau de droite pour griser son bouton d'ajout
     if (ids.includes(selectedClId)) renderCodelistDetail(selectedClId);
+}
+
+/* Écarte (ou réintègre) une CodeList sans doublon ; persisté à la sauvegarde */
+async function setDismissed(clId, dismissed, btn) {
+    btn.disabled = true;
+    try {
+        const resp = await fetch(`${API_BASE}api/registry/dismiss`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cl_ids: [clId], dismissed }),
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        if (!data.updated.includes(clId)) throw new Error('CodeList non modifiable');
+
+        if (dismissed) {
+            registryData[clId].dismissed = true;
+            batchSelected.delete(clId);
+        } else {
+            delete registryData[clId].dismissed;
+        }
+        showToast(
+            dismissed ? '🚫 CodeList écartée · sauvegardez pour la conserver'
+                      : '↩ Écart annulé · sauvegardez pour le conserver',
+            'success'
+        );
+        renderCodelistNav();
+        renderCodelistDetail(selectedClId);
+    } catch (err) {
+        showToast(`Erreur: ${err.message}`, 'danger');
+        btn.disabled = false;
+    }
 }
 
 function updateBatchBar() {
@@ -728,7 +779,11 @@ function renderDuplicateCard(cl, dup) {
     html += `<option value="pending" ${['approve','reject','pending'].indexOf(dup.decision)===2 ? 'selected' : ''}>⏳ En attente</option>`;
     html += `<option value="approve" ${['approve','reject','pending'].indexOf(dup.decision)===0 ? 'selected' : ''}>✅ Approuver</option>`;
     html += `<option value="reject" ${['approve','reject','pending'].indexOf(dup.decision)===1 ? 'selected' : ''}>❌ Rejeter</option>`;
-    html += `</select></div></div>`;
+    html += `</select>`;
+    if (dup.decision_carried) {
+        html += `<small class="text-muted" title="Décision reprise d'un run précédent (decisions.json)">↻ reprise</small>`;
+    }
+    html += `</div></div>`;
 
     // Details collapsible
     html += `<div class="mt-2">`;
@@ -811,6 +866,7 @@ async function updateDecision(clId, dupId, decision) {
             for (const dup of cl.duplicates || []) {
                 if (dup.id === dupId) {
                     dup.decision = decision;
+                    delete dup.decision_carried;
                     break;
                 }
             }
@@ -872,7 +928,10 @@ async function bulkDecision(action, criteria) {
                     } else if (criteria === 'high-confidence') {
                         should = (dup.confidence || 0) >= 0.95;
                     }
-                    if (should) dup.decision = action;
+                    if (should) {
+                        dup.decision = action;
+                        delete dup.decision_carried;
+                    }
                 }
             }
         }

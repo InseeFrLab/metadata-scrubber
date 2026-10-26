@@ -31,6 +31,7 @@ from metadata_scrubber.ui.models import (
     RemoveFromCleanedRequest,
     BulkDecision,
     CodelistFilter,
+    DismissRequest,
     DecisionUpdate,
     FilteredResult,
     PipelineRequest,
@@ -50,6 +51,7 @@ from metadata_scrubber.cleaned_registry import (
     validate_cleaned_doc,
     write_cleaned_registry,
 )
+from metadata_scrubber.decisions import write_decisions
 from metadata_scrubber.ui.services.registry_service import (
     bulk_set_decisions,
     filter_codelists,
@@ -373,6 +375,7 @@ async def save_registry(path: str | None = Query(None)):
     try:
         write_registry(data, path)
         cleaned_path, cleaned_count = write_cleaned_registry(data, path)
+        decisions_file, decisions_count = write_decisions(data, path)
         with _registry_lock:
             _registry_path = path
         return {
@@ -380,6 +383,8 @@ async def save_registry(path: str | None = Query(None)):
             "path": path,
             "cleaned_path": cleaned_path,
             "cleaned_count": cleaned_count,
+            "decisions_path": decisions_file,
+            "decisions_count": decisions_count,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving registry: {e}")
@@ -567,6 +572,28 @@ async def bulk_decisions(bulk: BulkDecision):
             raise HTTPException(status_code=400, detail="No registry loaded")
         count = bulk_set_decisions(_registry_state, bulk.criteria, bulk.action)
     return {"message": f"{count} duplicates updated", "count": count}
+
+
+@app.post("/api/registry/dismiss")
+async def dismiss_codelists(req: DismissRequest):
+    """Écarte (ou réintègre) des CodeLists sans doublon ; persisté à la sauvegarde."""
+    result: dict[str, list[str]] = {"updated": [], "not_found": [], "skipped_with_duplicates": []}
+    with _registry_lock:
+        if _registry_state is None:
+            raise HTTPException(status_code=400, detail="No registry loaded")
+        for cl_id in dict.fromkeys(req.cl_ids):
+            cl_data = _registry_state.get(cl_id)
+            if cl_data is None:
+                result["not_found"].append(cl_id)
+            elif cl_data.get("duplicates"):
+                result["skipped_with_duplicates"].append(cl_id)
+            else:
+                if req.dismissed:
+                    cl_data["dismissed"] = True
+                else:
+                    cl_data.pop("dismissed", None)
+                result["updated"].append(cl_id)
+    return {**result, "dismissed": req.dismissed}
 
 
 @app.get("/api/registry/codelists", response_model=FilteredResult)
