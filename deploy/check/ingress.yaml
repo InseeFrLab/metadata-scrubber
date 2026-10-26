@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: scrubber-check
+  namespace: projet-metadonnees-rmes
+  annotations:
+    # Fichiers DDI reçus jusqu'à SCRUBBER_CHECK_MAX_MB (50 Mo)
+    nginx.ingress.kubernetes.io/proxy-body-size: "55m"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: scrubber-check.lab.sspcloud.fr
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: scrubber-check
+                port: { number: 80 }

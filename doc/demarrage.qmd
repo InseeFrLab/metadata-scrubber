@@ -5,7 +5,7 @@ format: html
 
 Cette page accompagne une **première session de validation** dans l'application,
 sans installation. En un quart d'heure environ, vous lancez l'analyse d'un fichier
-DDI, prenez vos premières décisions et sauvegardez le registre nettoyé.
+DDI, prenez vos premières décisions et mettez à jour le registre nettoyé.
 
 Le principe : l'outil repère des **listes de codes probablement redondantes** et
 les regroupe autour d'une **liste maître**. C'est vous qui tranchez, doublon par
@@ -32,14 +32,13 @@ Dans l'onglet **🚀 Pipeline**, vérifiez les champs :
 
 | Champ | Valeur conseillée |
 |---|---|
-| **Chemin DDI (XML)** | Le fichier à analyser, par exemple `s3://projet-metadonnees-rmes/BPE.xml` |
-| **Dossier de sortie** | Laisser la valeur proposée : `s3://projet-metadonnees-rmes/scrubber_output` |
-| **Registre nettoyé (optionnel)** | Laisser la valeur proposée (`…/scrubber_output/cleaned_codelists.json`) : les listes déjà validées lors des sessions précédentes restent maîtres et ne sont pas reproposées. Si le fichier n'existe pas encore, il est ignoré. |
+| **Source des CodeLists** | **Fichier DDI (XML)** avec son chemin, par exemple `s3://projet-metadonnees-rmes/BPE.xml` ; ou **API Métadonnées de l'Insee** avec une série (ex. `s1998`) ou des opérations (ex. `s2219, s2297`) |
+| **Dossier de sortie** | Laisser la valeur proposée : `s3://projet-metadonnees-rmes/scrubber_output`. Le registre nettoyé de ce dossier est utilisé automatiquement : les listes déjà validées restent maîtres. |
 | **Exécuter les phases LLM / embeddings** | Laisser coché. Décocher pour un résultat plus rapide, sans la détection sémantique. |
 
 Cliquez sur **🚀 Lancer le pipeline**. La progression s'affiche ; comptez de
 quelques secondes à quelques minutes selon la taille du fichier. À la fin, cliquez
-sur **🔍 Aller à l'onglet Validation**.
+sur **🔍 Valider ce run**.
 
 ::: {.callout-note}
 Un **bandeau jaune** peut signaler que l'étape sémantique a été sautée (clés
@@ -49,12 +48,13 @@ détections exactes, floues, hors échappement et par libellés ont bien tourné
 
 # Étape 3 — Charger et lire les résultats
 
-Dans l'onglet **🔍 Validation des doublons**, le chemin du résultat est déjà
-rempli. Cliquez sur **📂 Charger le registre**.
+L'onglet **🔍 Validation des doublons** s'ouvre sur le run. Pour un autre run,
+choisissez-le dans la liste **Run** puis cliquez sur **📂 Ouvrir**.
 
 L'écran est en deux colonnes :
 
-- **à gauche**, une ligne par liste maître, avec ses pastilles de décision ;
+- **à gauche**, une ligne par liste maître, avec le nombre de doublons en attente
+  (pastille jaune) ou ✓ quand tout est décidé ;
 - **à droite**, la liste sélectionnée : ses modalités, puis une **carte par
   doublon** détecté.
 
@@ -62,7 +62,9 @@ Ce que signifient les marques :
 
 | Marque | Signification |
 |---|---|
-| Pastilles <span class="badge bg-success">vert</span> <span class="badge bg-danger">rouge</span> <span class="badge bg-warning text-dark">jaune</span> <span class="badge bg-secondary">gris</span> | Doublons approuvés, rejetés, en attente, total |
+| Pastille <span class="badge bg-warning text-dark">3</span> / <span class="badge bg-success">✓ 3</span> | Doublons en attente / tous décidés |
+| **lignée** | Liste copiée de la maître (`BasedOnObject`) puis modifiée |
+| niveau (*officielle*, *commune ?*…) | Niveau validé, ou suggéré avec « ? » |
 | **exact** | Mêmes codes, valeurs et libellés |
 | **exact hors échappement** | Mêmes codes métier ; seuls les codes *sans objet*, *non réponse*… diffèrent (la carte les liste) |
 | **libellés** | Mêmes libellés, valeurs différentes (par exemple `1`/`0` et `oui`/`non`) |
@@ -77,10 +79,13 @@ Ce que signifient les marques :
 
 Sur chaque carte de doublon :
 
-1. Cliquez sur **Détails** pour comparer les codes avec ceux de la maître.
-2. Choisissez **✅ Approuver** (même liste, la maître la remplace), **❌ Rejeter**
+1. Lisez le résumé des différences ; **▸ Comparer les codes** affiche le tableau
+   (ouvert d'office pour le premier doublon en attente).
+2. Choisissez **✓ Approuver** (même liste, la maître la remplace), **✗ Rejeter**
    (listes différentes) ou laissez **⏳ En attente** (à revoir, par exemple après
-   avoir consulté le producteur).
+   avoir consulté le producteur). Au clavier : `a`, `r`, `p`, puis `n` pour la
+   liste suivante à traiter (`?` affiche tous les raccourcis). Chaque décision
+   est enregistrée aussitôt.
 3. Si le doublon est la meilleure version (par exemple une correction de forme de
    la maître), cliquez sur **⇅ Définir comme maître** : il prend la place de la
    maître, qui devient un doublon en attente.
@@ -93,15 +98,15 @@ Quelques repères :
   approuvez.
 - **Variation volontaire** d'une année sur l'autre : rejetez, le producteur a fait
   un choix.
-- Les boutons d'actions de masse (**✅ Approuver exactes**…) vont vite mais
-  s'appliquent à tout le registre : passez d'abord en revue les listes ⚠.
+- Les actions de masse (**✅ Approuver les exacts en attente**…) ne portent que
+  sur les doublons affichés par les filtres, et s'annulent juste après ; passez
+  d'abord en revue les listes ⚠.
 
-Le filtre **Filtre décision → En attente uniquement** permet de retrouver ce qui
-reste à traiter.
+Le filtre **Afficher → À traiter** (par défaut) montre ce qui reste à traiter.
 
 # Étape 5 — Les listes sans doublon
 
-Avec **Filtre décision → Sans doublon**, vous voyez les listes pour lesquelles aucun
+Avec **Afficher → Sans doublon**, vous voyez les listes pour lesquelles aucun
 doublon n'a été trouvé :
 
 - **➕ Ajouter au registre nettoyé** pour une liste de référence à conserver ;
@@ -112,24 +117,21 @@ Avant d'ajouter, jetez un œil au filtre **Origine → Listes suspectes ⚠** : 
 qui renvoie vers un dictionnaire ou qui décrit une plage de nombres n'a sans doute
 pas sa place dans le registre.
 
-# Étape 6 — Sauvegarder
+# Étape 6 — Mettre à jour le registre nettoyé
 
-Cliquez sur **💾 Sauvegarder**, régulièrement et en fin de session. Sont écrits :
+Vos décisions, listes écartées et maîtres choisies sont **enregistrées à chaque
+clic** dans `decisions.json` (« ✓ Enregistré à … » en haut de l'onglet) et
+reprises lors des prochains runs.
 
-- vos décisions dans le résultat du run (`codelist_duplicates.json`) ;
-- le **registre nettoyé** `cleaned_codelists.json` : les maîtres et les listes
-  qu'elles remplacent ;
-- `decisions.json` : vos décisions, listes écartées et maîtres choisies, reprises
-  automatiquement lors des prochains runs.
-
-Un message vert confirme la sauvegarde. Sans sauvegarde, rien n'est conservé.
+En fin de session, cliquez sur **🧹 Mettre à jour le registre nettoyé** : les
+doublons approuvés sont reportés dans `cleaned_codelists.json` (les maîtres et
+les listes qu'elles remplacent), et le résultat du run est mis à jour.
 
 # Reprendre plus tard
 
-- **Même run** : dans l'onglet **🔍 Validation des doublons**, saisissez le chemin
-  du résultat (il se trouve dans un dossier daté, par exemple
-  `s3://projet-metadonnees-rmes/scrubber_output/20261022-140509/codelist_duplicates.json`)
-  et cliquez sur **📂 Charger le registre**.
+- **Même run** : rechargez la page, ou choisissez le run dans la liste **Run** de
+  l'onglet **🔍 Validation des doublons** et cliquez sur **📂 Ouvrir** ; vos
+  décisions sont là.
 - **Nouveau run sur le même fichier** : les décisions déjà prises réapparaissent,
   marquées **↻ reprise** ; il ne reste que les nouveautés et ce que vous aviez
   laissé en attente.
@@ -145,7 +147,8 @@ Un message vert confirme la sauvegarde. Sans sauvegarde, rien n'est conservé.
   [le changement de liste maître](guide_utilisateur.qmd#changer-maitre),
   [les listes suspectes](guide_utilisateur.qmd#listes-suspectes),
   [l'écart d'une liste](guide_utilisateur.qmd#ecarter),
-  [la sauvegarde](guide_utilisateur.qmd#sauvegarder) et
+  [l'enregistrement des décisions](guide_utilisateur.qmd#sauvegarder),
+  [le pré-contrôle d'une opération](guide_utilisateur.qmd#precontrole) et
   [le travail sur plusieurs fichiers](guide_utilisateur.qmd#workflow-iteratif).
 - [Note méthodologique](note_methodologique_dedoublonnage.qmd) : comment les
   doublons sont détectés.

@@ -21,6 +21,7 @@ import os
 from collections import defaultdict
 from dataclasses import dataclass, field
 
+from metadata_scrubber.levels import suggest_level
 from metadata_scrubber.quality import split_codes
 
 
@@ -55,6 +56,11 @@ def _serialize_minimal(cl) -> dict:
         "agency": getattr(cl, "agency", ""),
         "version": getattr(cl, "version", ""),
         "based_on": list(getattr(cl, "based_on", [])),
+        "urn": getattr(cl, "urn", ""),
+        "operations": sorted(getattr(cl, "operations", ())),
+        "series": sorted(getattr(cl, "series", ())),
+        "level": getattr(cl, "level", ""),
+        "level_suggested": suggest_level(cl) if hasattr(cl, "series") else "",
         "cat_ids": sorted(cl.cat_ids),
         "vars": cl.vars or [],
         "origin": getattr(cl, "origin", "xml"),

@@ -5,8 +5,8 @@ from __future__ import annotations
 import itertools
 from difflib import SequenceMatcher
 
-from .normalize import concat_text
-from .quality import PLACEHOLDER
+from .normalize import concat_text, normalize, signature_from_codes
+from .quality import PLACEHOLDER, name_key, quality_flags, split_codes
 from .types import CodeList
 
 # Nombre de codes maximum d'une CodeList pour être comparée en phase floue.
@@ -21,6 +21,51 @@ MAX_CODES_PAIRWISE = 100
 
 # Score minimal d'appariement de deux codes
 _CODE_MATCH_THRESHOLD = 0.65
+
+
+def prepare_signatures(codelists: list[CodeList]) -> int:
+    """Calcule `quality_flags` et les signatures (`sig`, `sig_business`, `sig_labels`).
+
+    Une liste « placeholder » (« Voir dictionnaire… ») n'a de signifiant que son
+    nom : sa signature porte sur le nom normalisé, et ses codes ne sont pas
+    comparés (hors échappement, libellés, flou).
+
+    Returns:
+        Nombre de listes « placeholder ».
+    """
+    n_placeholder = 0
+    for cl in codelists:
+        cl.quality_flags = quality_flags(cl.codes)
+        if PLACEHOLDER in cl.quality_flags:
+            cl.sig = (("__placeholder__", name_key(cl.name, cl.label, cl.id)),)
+            cl.sig_business = ()
+            cl.sig_labels = ()
+            n_placeholder += 1
+            continue
+        cl.sig = signature_from_codes(cl.codes)
+        business, _escape = split_codes(cl.codes)
+        cl.sig_business = signature_from_codes(business)
+        cl.sig_labels = tuple(sorted({normalize(label) for _v, label in business if label}))
+    return n_placeholder
+
+
+def detect_lineage(codelists: list[CodeList]) -> list[tuple[CodeList, CodeList, float]]:
+    """Filiation DDI : listes copiées d'une autre liste présente (`BasedOnObject`).
+
+    Chaque millésime d'une opération recrée souvent ses listes à partir de
+    celles du millésime précédent, en gardant le lien `BasedOnReference`.
+
+    Returns:
+        (liste d'origine, liste dérivée, similarité des codes), dans l'ordre de `codelists`.
+    """
+    by_id = {cl.id: cl for cl in codelists}
+    pairs = []
+    for child in codelists:
+        for parent_id in child.based_on:
+            parent = by_id.get(parent_id)
+            if parent is not None and parent is not child:
+                pairs.append((parent, child, _code_similarity(parent, child)))
+    return pairs
 
 
 def _group_by_sig(codelists: list[CodeList]) -> dict[tuple, list[CodeList]]:
@@ -232,6 +277,32 @@ def _name_similarity(a: CodeList, b: CodeList) -> tuple[float, bool]:
     return name_sim, True
 
 
+def fuzzy_score(
+    a: CodeList, b: CodeList, *, min_code_sim: float = 0.75
+) -> tuple[float, float, float] | None:
+    """Score hybride de deux listes : (score, similarité des codes, similarité des noms).
+
+    Score = 0.6 * codes + 0.4 * noms (codes seuls si un nom est trop court).
+    Boost : codes quasi identiques (≥ 0.95) et noms différents → au moins 0.95.
+
+    Returns:
+        None si la similarité des codes est sous `min_code_sim` (une paire dont
+        le rapport des tailles est sous ce seuil est écartée sans calcul).
+    """
+    # Au plus min(len) codes apparies sur max(len) : borne de code_sim
+    if min(len(a.codes), len(b.codes)) < min_code_sim * max(len(a.codes), len(b.codes)):
+        return None
+    code_sim = _code_similarity(a, b)
+    if code_sim < min_code_sim:
+        return None
+
+    name_sim, name_is_trustworthy = _name_similarity(a, b)
+    score = 0.6 * code_sim + 0.4 * name_sim if name_is_trustworthy else code_sim
+    if code_sim >= 0.95 and name_sim < 0.5:
+        score = max(score, 0.95)
+    return score, code_sim, name_sim
+
+
 def _has_context_link(a: CodeList, b: CodeList) -> bool:
     """Verifie si deux CodeLists partagent un contexte DDI (Variable ou Catégorie)."""
     if not a.var_ids or not b.var_ids:
@@ -312,28 +383,10 @@ def detect_fuzzy_duplicates(
 
     nearby: list = []
     for a, b in itertools.combinations(eligible, 2):
-        # Au plus min(len) codes apparies sur max(len) : borne de code_sim
-        if min(len(a.codes), len(b.codes)) < min_code_sim * max(len(a.codes), len(b.codes)):
+        scored = fuzzy_score(a, b, min_code_sim=min_code_sim)
+        if scored is None:
             continue
-
-        code_sim = _code_similarity(a, b)
-
-        # Filtre prealable : similarite codes minimale
-        if code_sim < min_code_sim:
-            continue
-
-        name_sim, name_is_trustworthy = _name_similarity(a, b)
-
-        # Score hybride : si nom non fiable (trop court), compte uniquement les codes
-        if not name_is_trustworthy:
-            hybrid_score = code_sim
-        else:
-            hybrid_score = 0.6 * code_sim + 0.4 * name_sim
-
-        # Boost : codes quasi-identiques + noms differents → suspect
-        if code_sim >= 0.95 and name_sim < 0.5:
-            hybrid_score = max(hybrid_score, 0.95)
-
+        hybrid_score, code_sim, name_sim = scored
         if hybrid_score < inspect_threshold:
             continue
 

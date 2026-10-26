@@ -147,3 +147,36 @@ def apply_decisions(registry: dict[str, Any], doc: dict[str, Any]) -> int:
                 dup["decision_carried"] = True
                 carried += 1
     return carried
+
+
+def reapply_decisions(registry: dict[str, Any], doc: dict[str, Any]) -> int:
+    """Remet le registre chargé dans l'appli à l'état de decisions.json.
+
+    Les décisions sont enregistrées dans decisions.json à chaque changement,
+    sans réécrire le registre des doublons : au chargement, decisions.json
+    fait foi. Contrairement à `apply_decisions` (début de run), les décisions
+    ne sont pas marquées `decision_carried` ; une décision reprise en début de
+    run puis remise en attente (absente de decisions.json) repasse en attente.
+
+    Returns:
+        Nombre de décisions et d'écarts modifiés.
+    """
+    pairs = doc.get("pairs", {})
+    dismissed = doc.get("dismissed", {})
+    changed = 0
+    for cl_id, cl_data in registry.items():
+        if cl_id in dismissed and not cl_data.get("dismissed"):
+            cl_data["dismissed"] = True
+            changed += 1
+        for dup in cl_data.get("duplicates", []):
+            saved = pairs.get(pair_key(cl_id, dup.get("id", "")))
+            if saved and saved.get("decision") in _KEPT_DECISIONS:
+                if dup.get("decision") != saved["decision"]:
+                    dup["decision"] = saved["decision"]
+                    dup.pop("decision_carried", None)
+                    changed += 1
+            elif dup.get("decision_carried"):
+                dup["decision"] = "pending"
+                dup.pop("decision_carried")
+                changed += 1
+    return changed

@@ -145,7 +145,7 @@ def client(tmp_path, monkeypatch):
         "c": {"id": "c", "name": "C", "codes": [["2", "y"]], "duplicates": []},
     }
     path = str(run_dir / "codelist_duplicates.json")
-    monkeypatch.setattr(server, "_registry_state", registry)
+    monkeypatch.setattr(server, "_registries", {path: registry})
     monkeypatch.setattr(server, "_registry_path", path)
     return TestClient(server.app, headers=AUTH), tmp_path, registry
 

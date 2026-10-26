@@ -84,3 +84,30 @@ def write_text(text: str, path: str) -> None:
         with open(path, "w", encoding="utf-8") as f:
             f.write(text)
         logger.info("Document écrit en local: %s", path)
+
+
+def read_text(path: str) -> str:
+    """Lit un texte (UTF-8) depuis un chemin local ou S3.
+
+    Raises:
+        FileNotFoundError: fichier absent (local ou S3).
+    """
+    if _is_s3_path(path):
+        from metadata_scrubber.s3 import make_s3_filesystem
+
+        with make_s3_filesystem().open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
+
+def write_bytes(data: bytes, path: str) -> None:
+    """Écrit des octets vers un chemin local ou S3, en créant le dossier parent."""
+    if _is_s3_path(path):
+        from metadata_scrubber.s3 import make_s3_filesystem
+
+        with make_s3_filesystem().open(path, "wb") as f:
+            f.write(data)
+    else:
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        Path(path).write_bytes(data)

@@ -6,7 +6,7 @@
    (identifiants des listes remplacées) sont en lecture seule — leur cycle
    de vie appartient au sync de validation.
 
-   Réutilise escapeHtml/copyId (registry.js) et showToast (main.js). */
+   Réutilise escapeHtml, copyId (data-copy-id), showToast et confirmDialog (main.js). */
 
 let cleanedDoc = null;
 let cleanedDirty = false;
@@ -118,9 +118,13 @@ function renderCleaned() {
         `${entries.length} entrée${entries.length > 1 ? 's' : ''}`;
 
     const search = document.getElementById('cleanedSearch').value.trim().toLowerCase();
+    const levelFilter = document.getElementById('cleanedLevelFilter').value;
     let shown = entries;
+    if (levelFilter) {
+        shown = shown.filter(e => (e.level || 'none') === levelFilter);
+    }
     if (search) {
-        shown = entries.filter(e =>
+        shown = shown.filter(e =>
             (e.name || '').toLowerCase().includes(search) ||
             (e.label || '').toLowerCase().includes(search) ||
             (e.id || '').toLowerCase().includes(search)
@@ -133,6 +137,22 @@ function renderCleaned() {
         return;
     }
     container.innerHTML = shown.map(renderCleanedEntry).join('');
+}
+
+const CLEANED_SOURCES = {
+    validation: 'validation des doublons',
+    manuel: 'ajout manuel',
+    'api-geo': 'API Insee (COG)',
+    'api-structures': 'API Insee (Colectica)',
+};
+
+/* Niveau validé de l'entrée ; la suggestion (provenance) est rappelée en option vide */
+function levelSelectHtml(entry) {
+    const suggested = entry.level_suggested ? ` (suggéré : ${LEVEL_LABELS[entry.level_suggested] || entry.level_suggested})` : '';
+    const options = [['', `À classer${suggested}`], ['officielle', 'Officielle'], ['commune', 'Commune'], ['specifique', 'Spécifique']];
+    return `<select class="form-select form-select-sm" data-field="level" aria-label="Niveau">`
+        + options.map(([v, l]) => `<option value="${v}"${(entry.level || '') === v ? ' selected' : ''}>${escapeHtml(l)}</option>`).join('')
+        + `</select>`;
 }
 
 function _confidenceTag(confidence) {
@@ -153,12 +173,13 @@ function renderCleanedEntry(entry) {
     // Header : nom + label éditables, id copiable, suppression
     html += `<div class="card-header">`;
     html += `<div class="row g-2 align-items-center">`;
-    html += `<div class="col-md-4"><input type="text" class="form-control form-control-sm" `;
-    html += `data-field="name" value="${escapeHtml(entry.name || '')}" placeholder="Nom"></div>`;
-    html += `<div class="col-md-4"><input type="text" class="form-control form-control-sm" `;
-    html += `data-field="label" value="${escapeHtml(entry.label || '')}" placeholder="Libellé"></div>`;
-    html += `<div class="col-md-4 text-end">`;
-    html += `<a class="copy-id-btn" onclick="copyId('${id}')" title="Copier l'id">${id.substring(0, 12)}…</a> `;
+    html += `<div class="col-md-3"><input type="text" class="form-control form-control-sm" `;
+    html += `data-field="name" value="${escapeHtml(entry.name || '')}" placeholder="Nom" aria-label="Nom"></div>`;
+    html += `<div class="col-md-3"><input type="text" class="form-control form-control-sm" `;
+    html += `data-field="label" value="${escapeHtml(entry.label || '')}" placeholder="Libellé" aria-label="Libellé"></div>`;
+    html += `<div class="col-md-3">${levelSelectHtml(entry)}</div>`;
+    html += `<div class="col-md-3 text-end">`;
+    html += `<a href="#" class="copy-id-btn" data-copy-id="${id}" title="Copier l'id">${escapeHtml(entry.id.substring(0, 12))}…</a> `;
     html += `<span class="badge bg-secondary ms-1">${(entry.codes || []).length} codes</span> `;
     html += `<button class="btn btn-sm btn-outline-danger ms-1" data-action="delete-entry" title="Supprimer l'entrée">🗑️</button>`;
     html += `</div></div></div>`;
@@ -166,7 +187,11 @@ function renderCleanedEntry(entry) {
     // ID complet (copiable) — directement sous le header
     html += `<div class="px-3 pb-2 small"><span class="text-muted">ID : </span>`;
     html += `<code class="font-monospace small">${id}</code>`;
-    html += ` <a class="copy-id-btn" onclick="copyId('${id}')" title="Copier l'ID">📋</a></div>`;
+    html += ` <a href="#" class="copy-id-btn" data-copy-id="${id}" title="Copier l'ID" aria-label="Copier l'ID">📋</a>`;
+    if (entry.source) html += ` · <span class="text-muted">source : ${escapeHtml(CLEANED_SOURCES[entry.source] || entry.source)}</span>`;
+    if (entry.urn) html += ` · <code class="small">${escapeHtml(entry.urn)}</code>`;
+    if ((entry.series || []).length) html += ` · <span class="text-muted">séries ${escapeHtml(entry.series.join(', '))}</span>`;
+    html += `</div>`;
 
     html += `<div class="card-body py-2">`;
 
@@ -175,13 +200,11 @@ function renderCleanedEntry(entry) {
         html += '<div class="mb-2">';
         for (let r = 0; r < replaces.length; r++) {
             const rep = replaces[r];
-            const rid = (rep.id || '').replace(/'/g, "\\'");
             const ridEsc = escapeHtml(rep.id || '');
-            const rname = escapeHtml(rep.name || '');
-            const rnameShort = rname.length > 20
-                ? rname.slice(0, 20) + '…'
-                : rname;
-            const collapsibleId = `replace-detail-cl-${rep.id}`;
+            const rawName = rep.name || '';
+            // Tronquer avant d'échapper : une entité HTML ne doit pas être coupée
+            const rnameShort = escapeHtml(rawName.length > 20 ? rawName.slice(0, 20) + '…' : rawName);
+            const collapsibleId = `replace-detail-cl-${ridEsc}`;
             const codes = _replacedCache[rep.id];
             const tableHTML = _buildReplaceTableHTML(codes, rep.id);
             const summaryLabel = tableHTML
@@ -191,7 +214,7 @@ function renderCleanedEntry(entry) {
             html += `<div class="replace-badge badge bg-primary text-white me-1 mb-1" `;
             html += `data-replace-id="${ridEsc}" role="button" tabindex="0" `;
             html += `title="${ridEsc}" `;
-            html += `onclick="toggleReplaceCodes('${rid}', '${collapsibleId}')">`;
+            html += `data-toggle-replace="${collapsibleId}">`;
             html += `📘 ${rnameShort}`;
             html += _confidenceTag(rep.confidence);
             html += '</div>';
@@ -256,7 +279,7 @@ function handleCleanedInput(ev) {
     const field = ev.target.dataset.field;
     if (!field) return;
 
-    if (field === 'name' || field === 'label') {
+    if (field === 'name' || field === 'label' || field === 'level') {
         entry[field] = ev.target.value;
     } else if (field === 'code-value' || field === 'code-label') {
         const idx = parseInt(ev.target.dataset.codeIdx, 10);
@@ -283,11 +306,17 @@ function handleCleanedClick(ev) {
         if (rid) copyReplaceCodes(rid);
         return;
     }
+    // Badge d'une liste remplacée : ouvre / ferme son tableau de codes
+    const toggle = ev.target.closest('[data-toggle-replace]');
+    if (toggle) {
+        toggleReplaceCodes(toggle.dataset.toggleReplace);
+        return;
+    }
     // Bouton switch-to-validation (fallback)
     const switchBtn = ev.target.closest('.js-switch-to-validation');
     if (switchBtn) {
         ev.preventDefault();
-        document.getElementById('validationTab').click();
+        switchTab('validation');
         return;
     }
 }
@@ -295,10 +324,13 @@ function handleCleanedClick(ev) {
 function _handleCleanedAction(btn, clId, entry) {
     const action = btn.dataset.action;
     if (action === 'delete-entry') {
-        if (!confirm(`Supprimer l'entrée « ${entry.name || clId} » du registre nettoyé ?`)) return;
-        delete cleanedDoc.codelists[clId];
-        setCleanedDirty(true);
-        renderCleaned();
+        confirmDialog(`Supprimer l'entrée « ${entry.name || clId} » du registre nettoyé ?`,
+            { confirmLabel: 'Supprimer', danger: true }).then((ok) => {
+            if (!ok) return;
+            delete cleanedDoc.codelists[clId];
+            setCleanedDirty(true);
+            renderCleaned();
+        });
     } else if (action === 'add-code') {
         entry.codes = entry.codes || [];
         entry.codes.push(['', '']);
@@ -404,7 +436,7 @@ function copyReplaceCodes(rid) {
 /* Toggle des collapsibles (simple — contenu déjà en DOM au render)
 /* ------------------------------------------------------------------ */
 
-function toggleReplaceCodes(rid, collapsibleId) {
+function toggleReplaceCodes(collapsibleId) {
     const el = document.getElementById(collapsibleId);
     if (!el) return;
     if (el.hasAttribute('open')) {
@@ -423,8 +455,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('saveCleanedBtn').addEventListener('click', saveCleaned);
     document.getElementById('downloadCleanedFileBtn').addEventListener('click', downloadCleanedFile);
     document.getElementById('cleanedSearch').addEventListener('input', renderCleaned);
+    document.getElementById('cleanedLevelFilter').addEventListener('change', renderCleaned);
 
     const container = document.getElementById('cleanedContainer');
     container.addEventListener('input', handleCleanedInput);
     container.addEventListener('click', handleCleanedClick);
+
+    // Éditions non sauvegardées : avertir avant de quitter la page
+    window.addEventListener('beforeunload', (e) => {
+        if (!cleanedDirty) return;
+        e.preventDefault();
+        e.returnValue = '';
+    });
 });

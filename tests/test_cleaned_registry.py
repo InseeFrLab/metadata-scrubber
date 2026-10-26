@@ -54,7 +54,7 @@ def test_sync_cree_entree_avec_replaces():
     assert [r["id"] for r in entry["replaces"]] == ["dup-1"]
     assert entry["replaces"][0]["detection_types"] == ["exact"]
     assert entry["first_added_at"] == entry["updated_at"]
-    assert cleaned["version"] == 2
+    assert cleaned["version"] == 3
 
 
 def test_sync_pas_dentree_sans_approbation():
@@ -172,7 +172,7 @@ def test_migration_merged_duplicates_vers_replaces():
         },
     }
     doc = migrate_cleaned_doc(doc)
-    assert doc["version"] == 2
+    assert doc["version"] == 3
     assert doc["codelists"]["a"]["replaces"] == [{"id": "b"}]
     assert "merged_duplicates" not in doc["codelists"]["a"]
 

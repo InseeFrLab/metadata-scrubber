@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 _MEMBER_FIELDS = (
     "id", "name", "label", "codes_count", "codes", "escape_codes", "quality_flags",
     "agency", "version", "based_on", "cat_ids", "vars", "origin", "links",
+    "urn", "operations", "series",
 )
 
 
@@ -63,6 +64,14 @@ def get_stats(registry: dict[str, Any]) -> dict[str, Any]:
         "pending": n_pending,
         "by_detection_type": type_counts,
     }
+
+
+def get_decision(registry: dict[str, Any], cl_id: str, dup_id: str) -> str | None:
+    """Décision courante d'un doublon ("pending" par défaut), None s'il est introuvable."""
+    for dup in (registry.get(cl_id) or {}).get("duplicates", []):
+        if dup.get("id") == dup_id:
+            return dup.get("decision", "pending")
+    return None
 
 
 def set_decision(registry: dict[str, Any], cl_id: str, dup_id: str, decision: str) -> bool:

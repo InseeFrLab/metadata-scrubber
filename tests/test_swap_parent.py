@@ -200,8 +200,9 @@ def test_pipeline_keeps_chosen_master(tmp_path):
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     registry = _chain_registry()
-    monkeypatch.setattr(server, "_registry_state", registry)
-    monkeypatch.setattr(server, "_registry_path", str(tmp_path / "codelist_duplicates.json"))
+    path = str(tmp_path / "codelist_duplicates.json")
+    monkeypatch.setattr(server, "_registries", {path: registry})
+    monkeypatch.setattr(server, "_registry_path", path)
     return TestClient(server.app, headers=AUTH), registry
 
 
@@ -220,7 +221,9 @@ def test_swap_route(client):
 def test_swap_route_refuses_registry_master(tmp_path, monkeypatch):
     r, x = _cl("r", origin="registry"), _cl("x")
     registry = build_duplicates_registry([_candidate("exact", r, x, 1.0)], [r, x])
-    monkeypatch.setattr(server, "_registry_state", registry)
+    path = str(tmp_path / "codelist_duplicates.json")
+    monkeypatch.setattr(server, "_registries", {path: registry})
+    monkeypatch.setattr(server, "_registry_path", path)
     c = TestClient(server.app, headers=AUTH)
     resp = c.post("/api/registry/swap-parent", json={"parent_id": "r", "new_parent_id": "x"})
     assert resp.status_code == 409

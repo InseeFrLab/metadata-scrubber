@@ -7,21 +7,53 @@
 
 /* ------------------------------------------------------------------ */
 
+function sourceIsApi() {
+    return document.getElementById('sourceApi').checked;
+}
+
+/* Champs de la source choisie (XML ou API) ; séries de l'API chargées une fois */
+let seriesLoaded = false;
+function toggleSourceFields() {
+    const api = sourceIsApi();
+    document.getElementById('sourceXmlFields').classList.toggle('d-none', api);
+    document.getElementById('sourceApiFields').classList.toggle('d-none', !api);
+    if (api && !seriesLoaded) {
+        seriesLoaded = true;
+        fetch(`${API_BASE}api/insee/series`)
+            .then(r => (r.ok ? r.json() : []))
+            .then(series => {
+                document.getElementById('seriesOptions').innerHTML = series
+                    .map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.label)}</option>`)
+                    .join('');
+            })
+            .catch(() => { seriesLoaded = false; });
+    }
+}
+
 async function launchPipeline() {
     const xmlSource = document.getElementById('xmlSource').value.trim();
     const outputBase = document.getElementById('outputBase').value.trim();
     const registryPath = document.getElementById('pipelineRegistryPath').value.trim();
     const runLlm = document.getElementById('runLlm').checked;
     const verbose = document.getElementById('verbose').checked;
+    const api = sourceIsApi();
+    const apiSeries = parseIds(document.getElementById('apiSeries').value);
+    const apiOperations = parseIds(document.getElementById('apiOperations').value);
+    const apiAll = document.getElementById('apiAll').checked;
 
-    if (!xmlSource) {
+    if (!api && !xmlSource) {
         showToast('Veuillez saisir un chemin DDI (local ou S3).', 'warning');
+        return;
+    }
+    if (api && !apiSeries.length && !apiOperations.length && !apiAll) {
+        showToast('Indiquez au moins une série ou une opération, ou cochez « Toute la base ».', 'warning');
         return;
     }
     if (!outputBase) {
         showToast('Veuillez saisir un dossier de sortie (local ou S3).', 'warning');
         return;
     }
+    setOutputRoot(outputBase);
 
     // --- UI: loading ---
     const launchBtn = document.getElementById('launchBtn');
@@ -31,6 +63,7 @@ async function launchPipeline() {
     const progressSection = document.getElementById('progressSection');
     progressSection.classList.remove('d-none');
     document.getElementById('resultSection').classList.add('d-none');
+    lastRunRegistryPath = null;
 
     // --- API call ---
     try {
@@ -38,7 +71,10 @@ async function launchPipeline() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                xml_source: xmlSource,
+                xml_source: api ? null : xmlSource,
+                api_series: api ? apiSeries : [],
+                api_operations: api ? apiOperations : [],
+                api_all_operations: api && apiAll,
                 output_base: outputBase,
                 run_llm: runLlm,
                 verbose: verbose,
@@ -237,6 +273,9 @@ function connectSSE(jobId) {
         progressBar.textContent = '100%';
 
         resultSection.classList.remove('d-none');
+        document.getElementById('resultAlert').classList.remove('d-none');
+        document.getElementById('resultError').classList.add('d-none');
+        document.getElementById('goToValidationBtn').classList.remove('d-none');
 
         const dur = data.result?.duration_seconds;
         document.getElementById('resultDuration').textContent = dur
@@ -249,25 +288,16 @@ function connectSSE(jobId) {
             for (const [name, url] of Object.entries(data.result.output_files)) {
                 const div = document.createElement('div');
                 div.className = 'mb-2';
-                div.innerHTML = `<strong>${name}</strong><br><code class="text-break">${url}</code>`;
+                div.innerHTML = `<strong>${escapeHtml(name)}</strong><br><code class="text-break">${escapeHtml(url)}</code>`;
                 fileLinks.appendChild(div);
             }
 
-            // Pre-fill registry path in validation tab
-            const dupUrl = data.result.output_files['codelist_duplicates.json'];
-            if (dupUrl) {
-                document.getElementById('registryPath').value = dupUrl;
-                // Boucle incrémentale : le registre nettoyé est partagé entre les runs
-                // (racine de sortie), il n'est pas dans le dossier daté du run.
-                const cleanedUrl = data.result.cleaned_registry_path;
-                if (cleanedUrl) {
-                    document.getElementById('cleanedPath').value = cleanedUrl;
-                    document.getElementById('pipelineRegistryPath').value = cleanedUrl;
-                }
-            }
+            // « Valider ce run » ouvre directement le registre du run
+            lastRunRegistryPath = data.result.output_files['codelist_duplicates.json'] || null;
         }
 
         renderRunWarnings(document.getElementById('resultWarnings'), data.result?.warnings);
+        refreshRunsTable();
 
         showToast('✅ Pipeline terminé avec succès !', 'success');
     }
@@ -278,22 +308,71 @@ function connectSSE(jobId) {
         progressBar.textContent = '❌';
 
         resultSection.classList.remove('d-none');
-        resultSection.querySelector('.alert').className = 'alert alert-danger';
-        document.getElementById('resultAlert').innerHTML = `
-            <h5>❌ Pipeline échoué</h5>
-            <p>${data.error || data.error_message || 'Erreur inconnue'}</p>
-        `;
+        document.getElementById('resultAlert').classList.add('d-none');
+        document.getElementById('goToValidationBtn').classList.add('d-none');
+        const errorBox = document.getElementById('resultError');
+        errorBox.classList.remove('d-none');
+        errorBox.querySelector('p').textContent = data.error || data.error_message || 'Erreur inconnue';
+        refreshRunsTable();
 
-        showToast('❌ Pipeline échoué', 'danger');
+        showToast('❌ Pipeline échoué — le journal du run est dans son dossier daté', 'danger');
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Historique des runs (dossiers datés de la racine de sortie)
+/* ------------------------------------------------------------------ */
+
+const RUN_STATUS_BADGES = {
+    success: ['bg-success', 'terminé'],
+    error: ['bg-danger', 'en erreur'],
+    unknown: ['bg-secondary', 'inconnu'],
+};
+
+async function refreshRunsTable() {
+    const body = document.getElementById('runsTableBody');
+    if (!body) return;
+    const root = getOutputRoot();
+    try {
+        const runs = await fetchRuns(root);
+        if (!runs.length) {
+            body.innerHTML = `<tr><td colspan="5" class="text-muted small p-3">Aucun run dans ${escapeHtml(root)}.</td></tr>`;
+            return;
+        }
+        body.innerHTML = runs.map(run => {
+            const [cls, label] = RUN_STATUS_BADGES[run.status] || RUN_STATUS_BADGES.unknown;
+            const source = (run.xml_source || '').startsWith('api:')
+                ? `API ${run.xml_source.slice(4)}`
+                : (run.xml_source || '').split('/').pop() || '—';
+            const candidates = run.counts?.candidates ?? '—';
+            const warn = (run.warnings || []).length
+                ? ` <span class="badge bg-warning text-dark" title="${escapeHtml(run.warnings.map(w => w.reason).join(' · '))}">⚠ ${run.warnings.length}</span>`
+                : '';
+            return `<tr>
+                <td class="text-nowrap">${escapeHtml(formatRunId(run.run_id))}</td>
+                <td class="text-break" title="${escapeHtml(run.xml_source || '')}">${escapeHtml(source)}</td>
+                <td><span class="badge ${cls}">${label}</span>${warn}</td>
+                <td class="text-end">${escapeHtml(candidates)}</td>
+                <td class="text-end"><button class="btn btn-sm btn-outline-primary" type="button"
+                    data-open-registry="${escapeHtml(run.registry_path)}"
+                    ${run.status === 'error' ? 'disabled' : ''}>Ouvrir</button></td>
+            </tr>`;
+        }).join('');
+    } catch (err) {
+        body.innerHTML = `<tr><td colspan="5" class="text-danger small p-3">Liste des runs indisponible : ${escapeHtml(err.message)}</td></tr>`;
     }
 }
 
 /* ------------------------------------------------------------------ */
 
+let lastRunRegistryPath = null;   // registre du dernier run terminé (« Valider ce run »)
+
 function goToValidation() {
-    const tab = document.getElementById('validation-tab');
-    const bsTab = new bootstrap.Tab(tab);
-    bsTab.show();
+    if (lastRunRegistryPath) {
+        openRegistry(lastRunRegistryPath);
+    } else {
+        switchTab('validation');
+    }
 }
 
 /* ------------------------------------------------------------------ */
@@ -308,17 +387,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Go to validation
     document.getElementById('goToValidationBtn').addEventListener('click', goToValidation);
 
-    // Health check
-    fetch(API_BASE + 'health')
-        .then(r => r.json())
-        .then(d => {
-            const el = document.getElementById('health-status');
-            el.textContent = `● ${d.jobs_active} job(s)`;
-            el.className = 'navbar-text ms-auto text-success small';
-        })
-        .catch(() => {
-            const el = document.getElementById('health-status');
-            el.textContent = '● Déconnecté';
-            el.className = 'navbar-text ms-auto text-danger small';
-        });
+    // La racine de sortie est commune aux onglets
+    document.getElementById('outputBase').addEventListener('change', (e) => {
+        setOutputRoot(e.target.value);
+        refreshRunsTable();
+    });
+
+    // Source : fichier XML ou API Insee
+    for (const id of ['sourceXml', 'sourceApi']) {
+        document.getElementById(id).addEventListener('change', toggleSourceFields);
+    }
+
+    // Historique des runs
+    document.getElementById('refreshRunsBtn').addEventListener('click', refreshRunsTable);
+    document.getElementById('runsTableBody').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-open-registry]');
+        if (btn) openRegistry(btn.dataset.openRegistry);
+    });
+    refreshRunsTable();
 });

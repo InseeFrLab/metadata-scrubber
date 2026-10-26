@@ -46,14 +46,21 @@ def _localized(el: etree._Element, name: str) -> str:
     return (kids[0].text or "").strip() if kids else (c.text or "").strip()
 
 
+# Fichiers reçus d'utilisateurs ou de l'API : ni résolution d'entités (XXE,
+# expansion), ni accès réseau pendant le parsing.
+SAFE_PARSER = etree.XMLParser(resolve_entities=False, no_network=True)
+
+
 def parse_xml(raw: bytes) -> list[etree._Element]:
     """Parse le XML et retourne tous les objets (enfants des Fragments)."""
-    root = etree.fromstring(raw)
+    root = etree.fromstring(raw, SAFE_PARSER)
+    # Éléments seulement : commentaires et entités non résolues sont ignorés
     objects = [
         obj
-        for frag in root.iter()
+        for frag in root.iter(etree.Element)
         if _local(frag) == "Fragment"
         for obj in frag
+        if isinstance(obj.tag, str)
     ]
     return objects
 

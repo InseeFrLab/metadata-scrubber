@@ -27,6 +27,16 @@ class CodeList:
     based_on: list[str] = field(default_factory=list)           # ids des BasedOnReference
     description: str = ""                                       # texte depuis r:Description
     user_id: str = ""                                           # texte brut depuis r:UserID
+    operations: set[str] = field(default_factory=set)           # opérations utilisatrices (API)
+    series: set[str] = field(default_factory=set)               # séries utilisatrices (API)
+    level: str = ""                                             # niveau validé (levels.py)
+
+    @property
+    def urn(self) -> str:
+        """URN DDI (agence:id:version) ; vide sans agence ou version."""
+        if self.agency and self.version:
+            return f"urn:ddi:{self.agency}:{self.id}:{self.version}"
+        return ""
 
 
 @dataclass
@@ -42,7 +52,7 @@ class VariableRef:
 class CandidateFusion:
     """Candidat de fusion entre une CodeList master et plusieurs slaves."""
     fusion_id: str
-    detection_type: str  # "exact", "fuzzy", "exact_business", "labels", "semantic_list", "semantic_var", "semantic_userid", "usage"
+    detection_type: str  # "exact", "fuzzy", "exact_business", "labels", "lineage", "semantic_list", "semantic_var", "semantic_userid", "usage"
     master_cl: CodeList
     slave_cls: list[CodeList]
     confidence: float  # 0.0 – 1.0

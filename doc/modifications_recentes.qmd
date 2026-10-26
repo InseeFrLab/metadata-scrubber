@@ -3,13 +3,87 @@ title: "Changements récents"
 format: html
 ---
 
-Ce document décrit les changements récents en deux parties :
+Ce document décrit les changements récents en trois parties :
 
-1. **Suite des observations** : traitement des remarques de
+1. **API Métadonnées, niveaux et pré-contrôle** : lecture des opérations dans
+   l'API de l'Insee, lignée `BasedOnObject`, trois niveaux de CodeLists, service
+   de contrôle `scrubber-check`, ergonomie de l'onglet Validation (plan :
+   `PLAN_API.md`).
+2. **Suite des observations** : traitement des remarques de
    `observations.md` sur les doublons BTS, BPE et EAR (branche
    `fix/rattachement-variables`).
-2. **Version précédente** : onglet Validation en deux colonnes, correctifs de
+3. **Version précédente** : onglet Validation en deux colonnes, correctifs de
    détection et sorties datées (commits du 22 octobre, depuis `4be5503`).
+
+# API Métadonnées, niveaux et pré-contrôle
+
+## Vue d'ensemble
+
+| Thème | Effet principal |
+|---|---|
+| Source API | `--serie`, `--operation`, `--all-operations` (et onglet Pipeline) : plus d'export XML manuel ; provenance (opérations, séries) de chaque CodeList |
+| Lignée | Nouvelle détection `lineage` (`BasedOnObject`) : copies modifiées d'un millésime à l'autre |
+| Niveaux | Registre nettoyé v3 : niveau officielle / commune / spécifique, source, URN, provenance |
+| Nomenclatures officielles | `scrubber seed-officielles` : listes du COG au niveau officielle ; renvois « Voir dictionnaire » rattachés à la nomenclature |
+| Liste maître | Choisie par registre, niveau validé, choix de l'expert, niveau suggéré, réutilisation |
+| Pré-contrôle | Service `scrubber-check` (CLI + API HTTP, image à part) et onglet **🔎 Pré-contrôle** |
+| Validation | Décisions enregistrées à chaque clic, liste des runs, raccourcis clavier, actions de masse limitées au filtre et annulables |
+
+## Mesures sur la série BTS (`s1998`)
+
+- BTS 2023 et BTS 2024 n'ont **aucune** CodeList commune par identifiant :
+  chaque millésime recrée ses listes. 40 des 47 listes 2024 sont « basées sur »
+  une liste 2023, dont 27 identiques.
+- Le run API de la série trouve 47 candidats (27 exacts, 6 en lignée seule —
+  copies modifiées que rien d'autre ne trouvait). 116 appels à l'API au premier
+  run (28 s), 10 au suivant grâce au cache (7 s).
+- 7 opérations BTS sur 9 n'ont pas de fichiers DDI dans l'API ; certains
+  fichiers d'autres opérations ne sont pas diffusés (HTTP 401) : ils sont ignorés
+  et signalés.
+- Avec les nomenclatures du COG amorcées, `N-region`, `N_Départements` et
+  `N-pays_naissance` (« Voir dictionnaire ») sont rattachées aux régions,
+  départements et pays officiels.
+- `scrubber-check` sur BTS 2024 contre la série (listes propres à BTS 2024
+  ignorées) : 35 doublons, 2 inclusions, 8 proches, 2 nouvelles ; même résultat
+  contre la base complète, en 8 s.
+- Base complète : 617 opérations, dont **33 seulement** ont des fichiers DDI dans
+  l'API ; 7 083 CodeLists publiées, dont 11 utilisées par au moins deux séries
+  (candidates « commune »). Index de 3,3 Mo, construit en 27 min la première fois.
+
+## Onglet Validation
+
+- **Décisions enregistrées à chaque clic** dans `decisions.json` (indicateur
+  « ✓ Enregistré à … », bouton *Réessayer* en cas d'échec) et réappliquées à
+  l'ouverture d'un registre. Le serveur garde un registre par chemin : deux
+  personnes sur deux runs ne s'écrasent plus.
+- **Runs** choisis dans une liste (dossier de sortie commun aux onglets) ;
+  historique des runs dans l'onglet Pipeline ; « Valider ce run » en fin de
+  pipeline.
+- **Décider** : trois boutons, résumé des différences de codes sur chaque carte,
+  comparaison ouverte d'office pour le premier doublon en attente, raccourcis
+  `j`/`k`/`n`/`a`/`r`/`p`/`c`/`?`, enchaînement optionnel des listes.
+- **Actions de masse** limitées aux doublons affichés par le filtre, avec le
+  nombre concerné, confirmation et **Annuler**. Les approbations de masse ne
+  touchent pas aux doublons rejetés.
+- Filtre par défaut **À traiter**, tri, filtre par niveau, une seule pastille par
+  liste, état (run, filtres, liste) conservé dans l'adresse.
+- Noms et libellés échappés partout (un nom contenant `<` ou `&` s'affiche tel
+  quel) ; confirmations dans des fenêtres de l'application.
+
+## Sécurité
+
+Le XML (fichiers déposés, réponses de l'API) est lu sans résolution d'entités ni
+accès réseau.
+
+## Ce qui n'est pas fait
+
+- La détection d'inclusion n'existe que dans `scrubber-check`, pas dans
+  l'entonnoir du pipeline.
+- La reconnaissance d'une nomenclature non géographique (NAF, PCS, CJ) par
+  sondage de `/codes/{nomenclature}/{niveau}/{code}` n'est pas faite.
+- Les CodeLists jamais référencées ne sont exportées que pour une source XML
+  (`unreferenced_codelists.json`) : l'API ne donne accès qu'aux listes
+  référencées par des variables.
 
 # Suite des observations
 

@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scrubber-check
+  namespace: projet-metadonnees-rmes
+  labels:
+    app: scrubber-check
+    app.kubernetes.io/managed-by: argocd
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: scrubber-check }
+  template:
+    metadata:
+      labels: { app: scrubber-check }
+    spec:
+      containers:
+        - name: scrubber-check
+          image: ghcr.io/inseefrlab/scrubber-check:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          # Identifiants S3 (lecture de l'index) depuis le Secret partagé avec l'appli
+          envFrom:
+            - secretRef: { name: scrubber-config }
+          env:
+            - name: SCRUBBER_CHECK_INDEX
+              value: s3://projet-metadonnees-rmes/scrubber_check/reference_index.json.gz
+            - name: SCRUBBER_CHECK_MAX_MB
+              value: "50"
+            # Même mot de passe partagé que l'appli ; retirer pour une API ouverte
+            - name: SCRUBBER_CHECK_AUTH_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: scrubber-config, key: SCRUBBER_AUTH_PASSWORD, optional: true }
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits:   { cpu: 1000m, memory: 2Gi }

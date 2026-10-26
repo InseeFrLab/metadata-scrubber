@@ -1,0 +1,40 @@
+# Reconstruction quotidienne de l'index de référence depuis l'API Métadonnées.
+# Le cache des objets DDI versionnés (S3) évite de tout retélécharger :
+# seules les nouvelles versions sont récupérées.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scrubber-check-index
+  namespace: projet-metadonnees-rmes
+  labels:
+    app: scrubber-check
+spec:
+  schedule: "30 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          labels: { app: scrubber-check-index }
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: index-build
+              image: ghcr.io/inseefrlab/scrubber-check:latest
+              imagePullPolicy: Always
+              command:
+                - scrubber-check
+                - index
+                - build
+                - --output
+                - s3://projet-metadonnees-rmes/scrubber_check/reference_index.json.gz
+                - --cache-dir
+                - s3://projet-metadonnees-rmes/scrubber_check/api_cache
+              envFrom:
+                - secretRef: { name: scrubber-config }
+              resources:
+                requests: { cpu: 100m, memory: 512Mi }
+                limits:   { cpu: 1000m, memory: 2Gi }

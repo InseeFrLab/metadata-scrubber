@@ -1,14 +1,14 @@
 """cleaned_registry.py — Cycle de vie du registre des CodeLists nettoyées.
 
-Le registre nettoyé (cleaned_codelists.json, schéma v2) est un magasin
+Le registre nettoyé (cleaned_codelists.json, schéma v3) est un magasin
 persistant et ÉDITABLE : la validation des doublons l'alimente (sync
 incrémental), l'utilisateur peut modifier noms/libellés/codes, et le
 pipeline le réinjecte dans la détection (les entrées du registre sont
 prioritaires, les listes déjà remplacées sont exclues).
 
-Schéma v2 :
+Schéma v3 :
 {
-  "version": 2,
+  "version": 3,
   "generated_at": "<iso utc>",
   "source_registry": "<chemin du registre des doublons>",
   "codelists": {
@@ -17,6 +17,11 @@ Schéma v2 :
       "codes": [["valeur", "libellé"], ...],
       "codes_count", "vars",
       "replaces": [{"id", "name", "detection_types", "confidence"}, ...],
+      "level": "officielle" | "commune" | "specifique" | "",   (validé par l'expert)
+      "level_suggested",           (d'après la provenance, à la création)
+      "source": "validation" | "manuel" | "api-geo" | "api-structures",
+      "agency", "version", "urn",  (référence de l'objet DDI d'origine)
+      "operations", "series",      (provenance, source API)
       "first_added_at", "updated_at"
     }
   }
@@ -28,9 +33,24 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
+from .levels import COMMUNE, LEVELS, OFFICIELLE, SPECIFIQUE
 from .registry_io import read_json_registry, write_json_registry
 from .run_output import RUN_DIR_PATTERN
 from .types import CodeList
+
+SCHEMA_VERSION = 3
+
+# Champs ajoutés par le schéma v3 (valeurs par défaut des entrées plus anciennes)
+_V3_DEFAULTS: dict[str, Any] = {
+    "level": "",
+    "level_suggested": "",
+    "source": "",
+    "agency": "",
+    "version": "",
+    "urn": "",
+    "operations": [],
+    "series": [],
+}
 
 
 def _now() -> str:
@@ -61,9 +81,9 @@ def cleaned_registry_path(registry_path: str) -> str:
 
 
 def empty_cleaned_doc() -> dict[str, Any]:
-    """Document registre nettoyé vide (schéma v2)."""
+    """Document registre nettoyé vide (schéma courant)."""
     return {
-        "version": 2,
+        "version": SCHEMA_VERSION,
         "generated_at": _now(),
         "source_registry": "",
         "codelists": {},
@@ -71,18 +91,24 @@ def empty_cleaned_doc() -> dict[str, Any]:
 
 
 def migrate_cleaned_doc(doc: dict[str, Any]) -> dict[str, Any]:
-    """Migre un document v1 vers le schéma v2 (merged_duplicates → replaces)."""
+    """Migre un document ancien vers le schéma courant.
+
+    v1 → v2 : merged_duplicates → replaces ; v2 → v3 : niveau, source, référence
+    DDI et provenance (vides : à compléter).
+    """
     for entry in (doc.get("codelists") or {}).values():
         if "merged_duplicates" in entry and "replaces" not in entry:
             entry["replaces"] = entry.pop("merged_duplicates")
         entry.setdefault("replaces", [])
-    doc["version"] = 2
+        for key, default in _V3_DEFAULTS.items():
+            entry.setdefault(key, list(default) if isinstance(default, list) else default)
+    doc["version"] = SCHEMA_VERSION
     doc.setdefault("codelists", {})
     return doc
 
 
 def read_cleaned_registry(path: str) -> dict[str, Any]:
-    """Lit le registre nettoyé (local ou S3) et le migre au schéma v2."""
+    """Lit le registre nettoyé (local ou S3) et le migre au schéma courant."""
     return migrate_cleaned_doc(read_json_registry(path))
 
 
@@ -153,14 +179,10 @@ def sync_cleaned_registry(
         if entry is None:
             if not approuves:
                 continue
-            entries[cl_id] = {
-                "id": cl_data.get("id", cl_id),
-                "name": cl_data.get("name", ""),
-                "label": cl_data.get("label", ""),
-                "codes": cl_data.get("codes", []),
-                "codes_count": cl_data.get("codes_count", len(cl_data.get("codes", []))),
-                "vars": cl_data.get("vars", []),
-                "replaces": [
+            entries[cl_id] = new_entry(
+                cl_data,
+                source="validation",
+                replaces=[
                     {
                         "id": d.get("id", ""),
                         "name": d.get("name", ""),
@@ -169,9 +191,8 @@ def sync_cleaned_registry(
                     }
                     for d in approuves.values()
                 ],
-                "first_added_at": now,
-                "updated_at": now,
-            }
+                now=now,
+            )
             stats["entries_created"] += 1
             stats["replaces_added"] += len(approuves)
             continue
@@ -214,7 +235,7 @@ def sync_cleaned_registry(
 
     cleaned["generated_at"] = now
     cleaned["source_registry"] = source_path
-    cleaned["version"] = 2
+    cleaned["version"] = SCHEMA_VERSION
     return cleaned, stats
 
 
@@ -249,19 +270,80 @@ def add_entry_from_parent(cleaned: dict[str, Any], cl_data: dict[str, Any]) -> b
     if not cl_id or cl_id in entries:
         return False
     now = _now()
-    entries[cl_id] = {
-        "id": cl_id,
+    entries[cl_id] = new_entry(cl_data, source="manuel", replaces=[], now=now)
+    cleaned["generated_at"] = now
+    return True
+
+
+def suggested_level(series: list[str] | set[str]) -> str:
+    """Niveau suggéré d'après les séries utilisatrices (source API) ; "" sans information."""
+    if len(series) >= 2:
+        return COMMUNE
+    return SPECIFIQUE if series else ""
+
+
+def new_entry(
+    cl_data: dict[str, Any],
+    *,
+    source: str,
+    replaces: list[dict[str, Any]],
+    now: str,
+    level: str = "",
+) -> dict[str, Any]:
+    """Entrée du registre nettoyé créée depuis une CodeList du registre des doublons."""
+    codes = cl_data.get("codes", [])
+    series = list(cl_data.get("series", []))
+    return {
+        "id": cl_data.get("id", ""),
         "name": cl_data.get("name", ""),
         "label": cl_data.get("label", ""),
-        "codes": cl_data.get("codes", []),
-        "codes_count": cl_data.get("codes_count", len(cl_data.get("codes", []))),
+        "codes": codes,
+        "codes_count": cl_data.get("codes_count", len(codes)),
         "vars": cl_data.get("vars", []),
-        "replaces": [],
+        "replaces": replaces,
+        "level": level,
+        "level_suggested": level or suggested_level(series),
+        "source": source,
+        "agency": cl_data.get("agency", ""),
+        "version": cl_data.get("version", ""),
+        "urn": cl_data.get("urn", ""),
+        "operations": list(cl_data.get("operations", [])),
+        "series": series,
         "first_added_at": now,
         "updated_at": now,
     }
-    cleaned["generated_at"] = now
-    return True
+
+
+def add_official_entries(
+    cleaned: dict[str, Any], codelists: list[CodeList], source: str
+) -> dict[str, list[str]]:
+    """Ajoute des nomenclatures officielles (niveau « officielle ») au registre nettoyé.
+
+    Une entrée déjà présente voit ses codes mis à jour (nouveau millésime du
+    COG…) ; ses éventuelles éditions de nom et libellé sont conservées.
+
+    Returns:
+        Ids classés en added / updated.
+    """
+    entries = cleaned.setdefault("codelists", {})
+    now = _now()
+    result: dict[str, list[str]] = {"added": [], "updated": []}
+    for cl in codelists:
+        codes = [[v, lab] for v, lab in cl.codes]
+        entry = entries.get(cl.id)
+        if entry is None:
+            entries[cl.id] = new_entry(
+                {"id": cl.id, "name": cl.name, "label": cl.label, "codes": codes,
+                 "agency": cl.agency, "version": cl.version, "urn": cl.urn},
+                source=source, replaces=[], now=now, level=OFFICIELLE,
+            )
+            result["added"].append(cl.id)
+        elif entry.get("codes") != codes:
+            entry.update(codes=codes, codes_count=len(codes), level=OFFICIELLE, updated_at=now)
+            result["updated"].append(cl.id)
+    if result["added"] or result["updated"]:
+        cleaned["generated_at"] = now
+    return result
 
 
 def add_entries_from_parents(
@@ -359,6 +441,8 @@ def validate_cleaned_doc(doc: Any) -> list[str]:
         for field in ("name", "label"):
             if not isinstance(entry.get(field, ""), str):
                 errors.append(f"{prefix}.{field} : chaîne attendue")
+        if entry.get("level", "") not in ("", *LEVELS):
+            errors.append(f"{prefix}.level : {', '.join(LEVELS)} ou vide attendu")
         codes = entry.get("codes", [])
         if not isinstance(codes, list):
             errors.append(f"{prefix}.codes : liste attendue")
@@ -418,6 +502,11 @@ def load_cleaned_codelists(path: str) -> tuple[list[CodeList], set[str]]:
                 codes=codes,
                 vars=list(entry.get("vars", [])),
                 origin="registry",
+                agency=entry.get("agency", ""),
+                version=entry.get("version", ""),
+                operations=set(entry.get("operations", [])),
+                series=set(entry.get("series", [])),
+                level=entry.get("level", ""),
             )
         )
         for r in entry.get("replaces") or entry.get("merged_duplicates") or []:

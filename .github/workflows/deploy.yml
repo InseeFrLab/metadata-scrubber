@@ -34,3 +34,12 @@ jobs:
           tags: |
             ghcr.io/inseefrlab/metadata-scrubber:${{ github.sha }}
             ghcr.io/inseefrlab/metadata-scrubber:latest
+      - name: Build & push scrubber-check
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.check
+          push: true
+          tags: |
+            ghcr.io/inseefrlab/scrubber-check:${{ github.sha }}
+            ghcr.io/inseefrlab/scrubber-check:latest

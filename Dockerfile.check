@@ -1,0 +1,30 @@
+# syntax=docker/dockerfile:1
+# ============================================================
+# Build scrubber-check — service de contrôle des doublons (API + CLI)
+# ============================================================
+#
+# Image légère : dépendances de base seulement (pas de groupe `web` :
+# ni openai, ni numpy, ni pandas). Même code source que l'appli.
+# Entrée : scrubber-check-api → FastAPI sur le port 8000
+# La CronJob de construction de l'index utilise la même image
+# (commande `scrubber-check index build`).
+# ============================================================
+
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
+
+WORKDIR /app
+COPY pyproject.toml uv.lock ./
+COPY . .
+RUN uv sync --frozen --no-default-groups
+
+FROM python:3.13-slim
+
+WORKDIR /app
+COPY --from=builder /app/.venv  /app/.venv
+COPY --from=builder /app/src    /app/src
+COPY --from=builder /app/pyproject.toml  /app/.
+
+ENV PATH="/app/.venv/bin:$PATH" \
+    SCRUBBER_CHECK_INDEX="s3://projet-metadonnees-rmes/scrubber_check/reference_index.json.gz"
+
+CMD ["scrubber-check-api"]

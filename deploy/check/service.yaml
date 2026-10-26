@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: scrubber-check
+  namespace: projet-metadonnees-rmes
+  labels:
+    app: scrubber-check
+spec:
+  selector: { app: scrubber-check }
+  ports:
+    - port: 80
+      targetPort: 8000

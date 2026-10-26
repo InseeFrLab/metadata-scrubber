@@ -171,18 +171,26 @@ Sur BTS.xml : **29 groupes** détectés, **54** CodeLists redondantes.
 ### Choix de la CodeList maître
 
 Aucune distance ni aucun score n'intervient dans le choix de la maître. Toutes les
-paires détectées (exactes, floues, usage, sémantiques) sont réunies en
+paires détectées (exactes, floues, usage, sémantiques, lignée) sont réunies en
 **composantes connexes** (`build_duplicates_registry`). Dans chaque composante, la
-maître est la **première CodeList rencontrée dans l'ordre du fichier XML** ; les
-autres membres sont ses doublons. Les entrées du registre nettoyé
-(`--registry`) sont placées en tête de cet ordre et restent donc toujours maîtres.
+maître est la **première CodeList** dans l'ordre établi avant la détection par
+`levels.master_rank` :
+
+1. entrées du registre nettoyé (`--registry`), qui restent donc toujours maîtres ;
+2. niveau **validé** : officielle, puis commune, puis spécifique ;
+3. maître choisie par l'expert lors d'un run précédent (`decisions.json`) ;
+4. niveau **suggéré** (au moins deux séries utilisatrices → commune) ;
+5. nombre de séries, puis de variables qui utilisent la liste ;
+6. à égalité, l'ordre du fichier.
+
+Un choix de l'expert l'emporte ainsi sur une simple suggestion, mais pas sur une
+nomenclature officielle validée.
 
 L'utilisateur peut changer la maître d'un groupe depuis l'interface
 (`swap_parent`). Chaque membre porte ses `links` (toutes ses paires avec les
 autres membres), ce qui permet de recalculer badges, confiance et `via` sans
-relancer le pipeline. Le choix est conservé dans `decisions.json` (`masters`) :
-au run suivant, la priorité devient registre nettoyé, puis maître choisie, puis
-ordre du XML.
+relancer le pipeline. Le choix est conservé dans `decisions.json` (`masters`) et
+pris en compte au run suivant (rang 3 ci-dessus).
 
 Un doublon relié à la maître seulement via un autre doublon affiche « lien
 indirect, via … ».
@@ -463,11 +471,11 @@ codelists = registry_cls + codelists  # masters d'abord
 > `replaces[]` que si le modèle DDI expose une version exploitable sur le
 > Fragment source.
 
-## Schéma du registre nettoyé (v2)
+## Schéma du registre nettoyé (v3)
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "generated_at": "2025-xx-xxTxx:xx:xx+00:00",
   "source_registry": "s3://…/codelist_duplicates.json",
   "codelists": {
@@ -486,12 +494,26 @@ codelists = registry_cls + codelists  # masters d'abord
           "confidence": 1.0
         }
       ],
+      "level": "commune",
+      "level_suggested": "commune",
+      "source": "validation",
+      "agency": "fr.insee",
+      "version": "2",
+      "urn": "urn:ddi:fr.insee:uuid-master:2",
+      "operations": ["s2219", "s2297"],
+      "series": ["s1998", "s1223"],
       "first_added_at": "2025-xx-xx...",
       "updated_at": "2025-xx-xx..."
     }
   }
 }
 ```
+
+Le schéma v3 ajoute le **niveau** (validé par l'expert : `officielle`,
+`commune`, `specifique`, ou vide ; `level_suggested` rappelle la suggestion faite
+à la création), la **source** de l'entrée (`validation`, `manuel`, `api-geo`,
+`api-structures`), la **référence DDI** de l'objet d'origine et sa
+**provenance**. Un registre v1 ou v2 est migré à la lecture (champs vides).
 
 ## Sync incrémental (`sync_cleaned_registry`)
 
@@ -506,8 +528,9 @@ Lors de `/api/registry/save` :
 
 ## Décisions conservées entre les runs (`decisions.json`)
 
-La sauvegarde écrit aussi `decisions.json` à la racine des sorties, à côté de
-`cleaned_codelists.json` :
+L'interface écrit `decisions.json` à **chaque décision** (sauvegarde automatique),
+à la racine des sorties, à côté de `cleaned_codelists.json` ; à l'ouverture d'un
+registre, ces décisions lui sont réappliquées (`reapply_decisions`) :
 
 ```json
 {
@@ -531,6 +554,85 @@ doublon reçoit `decision_carried: true`, la liste écartée `dismissed: true`, 
 doublon figure déjà dans les `replaces` du registre nettoyé n'apparaissent pas,
 puisque `--registry` exclut ces listes de la détection : la reprise sert donc
 surtout aux rejets.
+
+# Source API Métadonnées, lignée et niveaux
+
+## Lire les opérations depuis l'API
+
+Le pipeline peut lire ses CodeLists dans l'API Métadonnées de l'Insee
+(`https://api.insee.fr/metadonnees/V2`, publique) au lieu d'un fichier exporté
+(`--operation`, `--serie`, `--all-operations`). Le module `insee_api` suit la
+chaîne :
+
+```
+/operations/serie/{s}                   → opérations de la série
+/structures/operation/{op}/fichiers     → StudyUnit : PhysicalInstanceReference
+/structures/fichier/{agency}/{id}/{v}   → Variables : CodeListReference (agence, id, version)
+/structures/codelist/{agency}/{id}/{v}  → CodeList + Codes + Catégories
+```
+
+Les fragments renvoyés sont lus par `extractor`, sans adaptation. `corpus`
+garde la **provenance** de chaque CodeList (opérations et séries qui
+l'utilisent). Les objets DDI versionnés sont immuables : ils sont mis en cache
+(`api_cache/<type>/<agence>/<id>/<version>.xml`), si bien qu'un nouveau run ne
+retélécharge que les nouvelles versions (série BTS : 116 appels au premier run,
+10 ensuite).
+
+Limites : l'API ne décrit que les opérations publiées (BTS : 2 opérations sur
+9 ont des fichiers DDI) ; certains fichiers d'une opération publiée ne sont pas
+diffusés (HTTP 401) : ils sont ignorés et signalés dans `run_summary.json`.
+
+## Lignée (`BasedOnObject`)
+
+Chaque millésime d'une enquête recrée ses listes à partir de celles du
+millésime précédent, en gardant le lien `BasedOnReference`. Sur la série BTS,
+BTS 2023 et BTS 2024 n'ont **aucune** CodeList en commun par identifiant, mais
+40 des 47 listes 2024 sont « basées sur » une liste 2023, dont 27 au contenu
+strictement identique.
+
+`funnel.detect_lineage` produit une paire `lineage` pour chaque liste dérivée
+d'une liste présente, avec la similarité des codes comme confiance. Les paires
+déjà trouvées par une autre détection gardent leur type ; sur BTS, la lignée
+ajoute 6 paires que rien d'autre ne trouvait (copies modifiées, par exemple
+`N_origine_23` → `N_origine_24`, un code retiré).
+
+## Niveaux
+
+| Niveau | Contenu | Origine |
+|---|---|---|
+| `officielle` | Nomenclatures officielles | `scrubber seed-officielles` : listes du COG (`/geo/*`) et CodeLists Colectica désignées |
+| `commune` | Listes standard gérées par la division métadonnées | validées par l'expert ; **suggérées** pour une liste utilisée par au moins deux séries |
+| `specifique` | Listes propres à une enquête | suggérées pour une liste d'une seule série |
+
+Le niveau validé vit dans le registre nettoyé ; il pèse dans le choix de la
+maître (voir *Choix de la CodeList maître*). Une liste « Voir dictionnaire des
+nomenclatures » (indicateur `placeholder`) est rapprochée, par les mots de son
+nom, de la nomenclature officielle qu'elle désigne (`levels.suggest_official`) :
+sur BTS, `N-region`, `N_Départements` et `N-pays_naissance` sont rattachées aux
+régions, départements et pays du COG.
+
+## Contrôle d'un fichier contre les listes publiées (`scrubber-check`)
+
+Le service de contrôle compare les CodeLists d'un fichier aux CodeLists publiées,
+réunies dans un **index de référence** construit depuis l'API (toute la base,
+plus les listes du COG). Pour chaque liste fournie, dans l'ordre :
+
+1. **réutilisée** : même identifiant dans l'index ;
+2. **doublon** : signature exacte, hors codes d'échappement, ou mêmes libellés
+   métier, par recherche directe dans des index inversés ;
+3. **inclusion** : au moins 95 % de ses codes métier sont dans une liste plus
+   grande (sous-ensemble), ou elle contient une liste plus petite (extension,
+   « codes en plus ») ;
+4. **lignée** : `BasedOnObject` vers une liste de l'index ;
+5. **proche** : score flou du pipeline (`funnel.fuzzy_score`), calculé seulement
+   avec les listes de l'index qui partagent au moins une valeur ou un libellé de
+   code — quelques dizaines de comparaisons au lieu de toute la base.
+
+Les correspondances sont triées par force (doublon, inclusion, proche), puis par
+niveau (officielle d'abord), puis par confiance. Pas de LLM : le contrôle est
+déterministe et rapide. Contrôler BTS 2024 contre la série BTS (en ignorant les
+listes propres à BTS 2024) donne 35 doublons, 2 inclusions, 8 listes proches et
+2 nouvelles.
 
 # Walkthrough : Exemples avec les Datasets Demo
 
@@ -682,7 +784,7 @@ d'amorçage (export + import initial) reste à mettre en place.
 
 ## Robustesse
 
-- Détection de **sous-ensembles** : une CodeList peut être incluse dans une autre
+- Détection de **sous-ensembles** dans le pipeline : elle existe dans `scrubber-check` (inclusion, extension) mais pas encore dans l'entonnoir de validation
 - Embeddings spécialisés sur le vocabulaire statistique Insee
 - **Inclusion par référence** : le modèle DDI la permet, mais ni l'outil ni
   Colectica ne l'implémentent (crainte de références circulaires côté

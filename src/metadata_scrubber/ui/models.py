@@ -13,7 +13,9 @@ from pydantic import BaseModel, Field
 
 class PipelineRequest(BaseModel):
     """Requête pour lancer un pipeline."""
-    xml_source: str = Field(..., description="Chemin ou URL S3 du fichier DDI.")
+    xml_source: Optional[str] = Field(
+        None, description="Chemin ou URL S3 du fichier DDI (absent pour une source API)."
+    )
     output_base: str = Field(
         "s3://projet-metadonnees-rmes/scrubber_output",
         description="Répertoire de sortie (S3 ou local).",
@@ -23,6 +25,25 @@ class PipelineRequest(BaseModel):
     registry_path: Optional[str] = Field(
         None, description="Registre nettoyé (cleaned_codelists.json) à injecter dans la détection."
     )
+    api_operations: list[str] = Field(
+        default_factory=list, description="Source API Insee : opérations (ex. s2219)."
+    )
+    api_series: list[str] = Field(
+        default_factory=list, description="Source API Insee : séries (ex. s1998)."
+    )
+    api_all_operations: bool = Field(
+        False, description="Source API Insee : toutes les opérations de toutes les séries."
+    )
+
+    def api_scope(self) -> Optional[dict[str, Any]]:
+        """Source API demandée, ou None pour un fichier XML."""
+        if not (self.api_operations or self.api_series or self.api_all_operations):
+            return None
+        return {
+            "operations": self.api_operations,
+            "series": self.api_series,
+            "all_operations": self.api_all_operations,
+        }
 
 
 class AddToCleanedRequest(BaseModel):
@@ -86,6 +107,11 @@ class DecisionUpdate(BaseModel):
     cl_id: str
     dup_id: str
     decision: str = Field(..., pattern="^(approve|reject|pending)$")
+
+
+class DecisionBatch(BaseModel):
+    """Décisions à appliquer en une fois (action de masse sur la sélection affichée, annulation)."""
+    items: list[DecisionUpdate] = Field(..., min_length=1)
 
 
 class BulkDecision(BaseModel):

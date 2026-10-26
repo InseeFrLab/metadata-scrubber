@@ -77,19 +77,25 @@
     word-break: break-all;
 }
 
-/* Toasts */
+/* Toasts : en bas à droite, hors de la barre de navigation */
 .toast-container {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 1090;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    width: 100% !important;
+    align-items: flex-end;
+    gap: 8px;
+    max-width: calc(100vw - 32px);
 }
 
-.toast {
-    min-width: 400px !important;
-    width: 100% !important;
-    max-width: 600px !important;
-    margin-bottom: 8px;
+.app-toast {
+    display: flex;
+    align-items: center;
+    width: 480px;
+    max-width: 100%;
+    border-radius: 0.375rem;
 }
 
 /* Pagination */
@@ -226,6 +232,9 @@ pre {
 .split-nav .list-group-item.active small {
     color: inherit;
 }
+.split-nav .list-group-item.active .dup-id {
+    background: rgba(255, 255, 255, 0.2);
+}
 @media (max-width: 768px) {
     .split-nav {
         max-height: 30vh;
@@ -339,4 +348,100 @@ pre {
     padding: 0.15em 0.45em;
     margin-left: 0.25rem;
     border-radius: 0.25rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* Validation : décisions, doublon actif, diff, enregistrement
+/* ------------------------------------------------------------------ */
+
+.dup-card {
+    border-radius: 0.375rem;
+    scroll-margin: 8px;
+}
+
+.dup-card.dup-active {
+    outline: 2px solid #0d6efd;
+    outline-offset: 1px;
+}
+
+.decision-group .btn {
+    white-space: nowrap;
+}
+
+.confidence-pill {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.1em 0.5em;
+    border-radius: 1em;
+    color: #fff;
+    vertical-align: middle;
+}
+
+.confidence-pill.confidence-medium {
+    color: #212529;
+}
+
+.diff-summary .diff-changed { color: #997404; }
+.diff-summary .diff-only-src { color: #087990; }
+.diff-summary .diff-only-dst { color: #b02a37; }
+
+.legend-swatch {
+    display: inline-block;
+    width: 0.8em;
+    height: 0.8em;
+    margin: 0 0.2em 0 0.6em;
+    border: 1px solid #ced4da;
+    vertical-align: middle;
+}
+
+.legend-swatch.table-warning { background: #fff3cd; }
+.legend-swatch.table-info { background: #cff4fc; }
+.legend-swatch.table-danger { background: #f8d7da; }
+
+#saveStatus .save-error {
+    color: #ffda6a;
+    font-weight: 600;
+}
+
+.decision-progress {
+    height: 8px;
+}
+
+#legendHelp {
+    cursor: help;
+    text-decoration: underline dotted;
+}
+
+.shortcuts-table td:first-child {
+    white-space: nowrap;
+    width: 30%;
+}
+
+.runs-table td,
+.runs-table th {
+    font-size: 0.85rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+
+/* Focus visible au clavier sur les éléments interactifs ajoutés par JS */
+.copy-id-btn:focus-visible,
+.split-nav .list-group-item:focus-visible,
+.replace-badge:focus-visible {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+/* Pré-contrôle */
+.precheck-row {
+    cursor: pointer;
+}
+.precheck-action td {
+    border-top: none;
+    padding-top: 0;
+    color: #495057;
+}
+.precheck-detail td {
+    background: #f8f9fa;
 }
