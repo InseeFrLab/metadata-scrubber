@@ -3,13 +3,184 @@ title: "Changements récents"
 format: html
 ---
 
-Ce document décrit ce qui a changé depuis le dernier push (`4be5503`,
-« Truncate codelist for embedding »). Il regroupe l'évolution de l'onglet
-**Validation des doublons**, les correctifs de détection issus des remarques de
-Guillaume sur l'ancienne version, et la nouvelle organisation des fichiers de
-sortie.
+Ce document décrit les changements récents en deux parties :
 
-# Vue d'ensemble
+1. **Suite des observations** : traitement des remarques de
+   `observations.md` sur les doublons BTS, BPE et EAR (branche
+   `fix/rattachement-variables`).
+2. **Version précédente** : onglet Validation en deux colonnes, correctifs de
+   détection et sorties datées (commits du 22 octobre, depuis `4be5503`).
+
+# Suite des observations
+
+## Vue d'ensemble
+
+| Thème | Effet principal |
+|---|---|
+| Variables | Les variables DDI 3.3 (`VariableRepresentation`) sont rattachées : EAR passe de 0 à 656/656 CodeLists liées |
+| Phase floue | Appariement par valeur : limite portée de 100 à 5 000 codes, EAR 515 s → 83 s |
+| Décisions | Conservées d'un run à l'autre (`decisions.json`) ; listes sans doublon « écartées » |
+| Liste maître | Un doublon peut devenir maître ; liens entre doublons affichés |
+| Codes d'échappement | Détections « exact hors échappement » et « libellés » |
+| Listes suspectes | Renvoi vers une nomenclature, représentation numérique, code unique (⚠) |
+| Versions DDI | Agence, version, `BasedOnObject` lus ; dernière version gardée |
+
+::: {.callout-warning}
+## Impact sur les résultats
+
+Le nombre et la composition des groupes changent : les listes de 101 à 5 000
+codes sont de nouveau comparées, de nouvelles paires apparaissent (hors
+échappement, libellés) et les listes « placeholder » ne sont plus regroupées sur
+leurs codes. Sur BTS, le groupe « Voir dictionnaire des nomenclatures »
+(catégorie juridique + 16 listes) se réduit aux vrais doublons de nom. Les
+registres produits avant ces changements se chargent toujours, mais ne
+permettent pas de changer de maître (pas de liens) : relancer le pipeline.
+:::
+
+## Rattachement des variables
+
+L'étape 3 de `main.py` ne lisait que les références posées directement sous la
+variable. En DDI 3.3, elles sont sous `VariableRepresentation` : sur EAR, aucune
+CodeList n'avait de variable. `_link_variables` s'appuie maintenant sur
+`extract_variables`.
+
+| Fichier | Avant | Après |
+|---|---|---|
+| EAR.xml | 0 / 656 | 656 / 656 |
+| BPE.xml | 120 / 126 | 126 / 126 |
+
+Cela répare le signal d'usage, la phase sémantique « via variables » et le
+compteur de variables, désormais affiché aussi dans la colonne de gauche.
+
+La règle de choix de la liste maître est documentée (note méthodologique) :
+première liste du groupe dans l'ordre du XML, registre nettoyé en tête.
+
+## Phase floue : appariement par valeur
+
+`_code_similarity` apparie d'abord les codes de même valeur (index, coût
+linéaire), puis cherche le meilleur appariement des codes restants seulement
+si chaque reste compte au plus 100 codes. Une paire dont le rapport des tailles
+est sous 0,75 est écartée sans calcul.
+
+| | Avant | Après |
+|---|---|---|
+| Limite de taille | 100 codes | 5 000 codes (communes et IRIS restent exclus) |
+| Phase floue sur EAR | 515 s | 83 s, mêmes 205 paires |
+| Types d'équipements BPE (150 à 232 codes) | exclus | comparés : `L_TYPEQU_2024_DIFF` ~ `L_TYPEQU_2024` (0,93) |
+
+## Décisions conservées et listes écartées
+
+La sauvegarde écrit `decisions.json` à la racine des sorties, à côté de
+`cleaned_codelists.json` : décisions *approuvé* / *rejeté* par paire (valables
+dans les deux sens), listes écartées et maîtres choisies. Au run suivant, le
+pipeline les réapplique.
+
+- Une décision reprise est marquée **↻ reprise** sur la carte ; la changer
+  efface la marque.
+- Une paire remise en attente est retirée du fichier ; les décisions des autres
+  fichiers sources sont conservées.
+- **🚫 Écarter** / **↩ Annuler l'écart** sur une CodeList sans doublon : elle n'a
+  plus de case à cocher et n'est pas prise par « Ajouter toutes les CodeLists
+  sans doublon ». Filtre décision *Écartées*.
+- `run_summary.json` compte `decisions_carried`.
+
+## Changer la liste maître
+
+- Chaque membre d'un groupe porte ses `links` : toutes ses paires avec les
+  autres membres.
+- **⇅ Définir comme maître** sur une carte : le doublon devient maître, l'ancienne
+  maître devient doublon en attente ; badges, confiance et « via » sont
+  recalculés depuis les liens ; les autres décisions sont conservées.
+- Le choix est conservé (`decisions.json`, `masters`). Priorité au run suivant :
+  registre nettoyé, maître choisie, ordre du XML.
+- Registre nettoyé : l'entrée de l'ancienne maître perd les listes du groupe
+  (supprimée si elle devient vide).
+- Une maître issue du registre nettoyé ne peut pas être remplacée ici (409).
+- Les cartes indiquent **🔗 lié aussi à …** (paires avec d'autres doublons) et,
+  pour un doublon rejeté encore lié, suggèrent de le définir comme maître.
+
+## Codes d'échappement
+
+`quality.split_codes` sépare codes métier et codes d'échappement : libellé
+commençant par « sans objet », « non concerné », « non renseigné », « non
+réponse », « indéterminé », « hors champ »…, ou valeur `_Z`, `_U`, `/`. Deux
+détections s'ajoutent après la phase floue :
+
+| Type (badge) | Règle | Confiance |
+|---|---|---|
+| `exact_business` (« exact hors échappement ») | Mêmes codes métier, codes d'échappement différents | 0,98 |
+| `labels` (« libellés ») | Mêmes libellés métier, valeurs différentes | 0,95 |
+
+Au moins 2 codes métier sont exigés. Sur BPE : `L_QUALITE_ZONAGE` /
+`_2023`, `L_VAR_SPECIF_2023` / `L_PRESENCE_ABSENCE`, `L_VAR_SPECIF_2023` /
+`_2021` (`1`/`0` contre `oui`/`non`), `L_QUALITE_XY` (`A` contre
+`Acceptable`). La carte rappelle les codes d'échappement de la maître et du
+doublon.
+
+## Listes suspectes
+
+| Indicateur (badge ⚠) | Exemples |
+|---|---|
+| `placeholder` (« renvoi ») | « Voir dictionnaire des nomenclatures », « Code quartier du QVA », « Code sur 6 positions » |
+| `numeric_range` (« numérique ») | « 0 à 7 », « 00 à 23 », « de 0 à N » (au plus 2 codes métier) |
+| `single_code` (« code unique ») | Un seul code métier |
+
+Une liste `placeholder` est comparée sur son **nom** normalisé, plus sur ses
+codes. Filtre origine *Listes suspectes ⚠* ; confirmation avant d'ajouter une
+liste suspecte au registre nettoyé. `run_summary.json` compte `placeholder`.
+
+## Versions DDI et filiation
+
+- L'extraction lit `r:Agency`, `r:Version` et `BasedOnObject`.
+- Une seule version par identifiant, la plus récente (BPE : version 6 de
+  `3ca0b23e` gardée, version 5 ignorée) ; compteur `older_versions_ignored`.
+- L'en-tête affiche `agence:id:version` ; une carte indique « basé sur … »
+  entre listes d'un même groupe (43 cas sur BPE). Indicateur seulement : pas de
+  rejet automatique.
+
+## API
+
+| Méthode | Route | Rôle |
+|---|---|---|
+| `POST` | `/api/registry/dismiss` | Écarte ou réintègre des CodeLists sans doublon. Corps : `{"cl_ids": [...], "dismissed": true}`. Réponse : `updated`, `not_found`, `skipped_with_duplicates`. |
+| `POST` | `/api/registry/swap-parent` | Fait d'un doublon la maître. Corps : `{"parent_id", "new_parent_id"}`. Réponse : `old_parent_id`, `entry`. 404 si introuvable, 409 si maître du registre nettoyé ou registre sans liens. |
+| `POST` | `/api/registry/save` | Écrit aussi `decisions.json` ; réponse enrichie de `decisions_path` et `decisions_count`. |
+
+Nouveaux champs du registre des doublons : `links`, `escape_codes`,
+`quality_flags`, `agency`, `version`, `based_on` (toutes les listes),
+`decision_carried` (doublon), `dismissed`, `master_chosen`, `previous_parent`
+(entrée).
+
+## Tests ajoutés
+
+| Fichier | Couvre |
+|---|---|
+| `tests/test_scrubber.py` | Rattachement des variables sous `VariableRepresentation` |
+| `tests/test_detection_fixes.py` | Grandes listes, appariement par valeur, pré-filtre de taille |
+| `tests/test_decisions.py` | `decisions.json`, reprise au run suivant, route d'écart |
+| `tests/test_swap_parent.py` | Liens, changement de maître, persistance, sync du registre nettoyé |
+| `tests/test_escape_codes.py` | Codes d'échappement, détections hors échappement et libellés |
+| `tests/test_quality_flags.py` | Listes suspectes, groupement des placeholders par nom |
+| `tests/test_versions.py` | Agence, version, `BasedOnObject`, dernière version |
+
+## Reste à traiter
+
+- CodeLists non référencées : export des listes sans variable référente
+  (nécessite le XML complet du repository).
+- Mise à jour des objets via l'API Colectica (`RegisterOrReplace`, `DELETE`).
+- Variables `OPENAI_BASE_URL` / `OPENAI_API_KEY` à fournir au déploiement pour
+  l'étape sémantique.
+- Règle métier à décider pour `BasedOnObject` (rejet d'une liste dérivée d'une
+  liste rejetée).
+
+---
+
+# Version précédente (22 octobre 2026)
+
+Cette partie décrit ce qui avait changé depuis le push `4be5503`
+(« Truncate codelist for embedding ») : évolution de l'onglet **Validation des
+doublons**, correctifs de détection issus des remarques de Guillaume sur
+l'ancienne version, et nouvelle organisation des fichiers de sortie.
 
 | Thème | Effet principal |
 |---|---|
@@ -152,8 +323,8 @@ sémantique est sautée. Cela n'était visible que dans la console.
 
 - Le run enregistre un avertissement `{phase, status, reason}` dans
   `run_summary.json`. `status` vaut `skipped` (variables absentes), `disabled`
-  (`--no-llm`) ou `partial` (listes de plus de 100 codes exclues de la détection
-  floue).
+  (`--no-llm`) ou `partial` (listes trop longues exclues de la détection
+  floue ; la limite, alors de 100 codes, est passée à 5 000 depuis).
 - Un **bandeau jaune** l'affiche dans l'onglet Pipeline, à la fin du run, et en haut
   de l'onglet Validation quand le registre chargé a un `run_summary.json`.
 
@@ -216,16 +387,12 @@ Les CodeLists qui ont des doublons sont refusées côté serveur par l'ajout en 
 
 ---
 
-# Hors périmètre et suites possibles
+# Hors périmètre à l'époque
 
-Points soulevés dans les observations sur l'ancienne version, **non traités** :
-
-- changer la liste maître d'un groupe depuis l'interface ;
-- écarter une CodeList du registre sans l'ajouter ;
-- valeurs d'échappement (`MissingCodeRepresentation`) : les comparer à part ;
-- versions des objets DDI et `BasedOnObject` : ils ne sont pas lus aujourd'hui ;
-- CodeLists non référencées, et mise à jour des objets via l'API Colectica ;
-- indicateur du nombre de variables qui utilisent une CodeList.
+Points alors non traités, repris depuis dans la partie *Suite des
+observations* : changer la liste maître, écarter une CodeList, valeurs
+d'échappement, versions et `BasedOnObject`, nombre de variables. Restent
+ouverts : CodeLists non référencées et mise à jour via l'API Colectica.
 
 ---
 
