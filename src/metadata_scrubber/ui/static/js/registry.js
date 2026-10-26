@@ -241,8 +241,9 @@ async function renderCodelistsFiltered() {
             if (!decisions.some(d => decisionFilter.includes(d))) continue;
         }
 
-        // Origin filter (listes issues du registre nettoyé)
+        // Origin filter (listes issues du registre nettoyé, ou listes suspectes)
         if (originFilter === 'registry' && cl.origin !== 'registry') continue;
+        if (originFilter === 'suspect' && !(clData.quality_flags || []).length) continue;
 
         // Search filter (nom ou ID de la liste, ou d'un de ses doublons)
         if (search) {
@@ -301,6 +302,7 @@ function renderCodelistNav(items) {
         if (cl.origin === 'registry') html += ` <span class="badge bg-primary">📘</span>`;
         if (added) html += ` <span class="badge bg-success" title="Dans le registre nettoyé">✅</span>`;
         if (dismissed) html += ` <span class="badge bg-secondary" title="Écartée : ne pas ajouter au registre nettoyé">🚫</span>`;
+        html += qualityBadgeHtml(registryData[cl.id]?.quality_flags);
         const nVars = (registryData[cl.id]?.vars || []).length;
         html += `<br><code class="dup-id">${escapeHtml(cl.id)}</code>`;
         html += ` <small class="text-muted" title="Variables qui référencent cette CodeList">· ${nVars} var.</small></div></div>`;
@@ -356,6 +358,10 @@ function renderDetailHeader(id) {
     html += `</div><div class="d-flex gap-1">`;
     if (cl.origin === 'registry') html += `<span class="badge bg-primary">📘 registre</span>`;
     if (cl.master_chosen) html += `<span class="badge bg-info text-dark" title="Maître choisie par l'utilisateur, conservée aux runs suivants">⇅ maître choisie</span>`;
+    for (const flag of cl.quality_flags || []) {
+        const [label, help] = QUALITY_FLAGS[flag] || [flag, flag];
+        html += `<span class="badge bg-warning text-dark" title="${escapeHtml(help)}">⚠ ${escapeHtml(label)}</span>`;
+    }
     html += decisionBadgesHtml(cl.duplicates || []);
     html += `</div></div>`;
     html += `<div class="card-body py-1 small">`;
@@ -465,6 +471,10 @@ function renderCodelistDetail(id) {
 
 async function addToCleaned(clId) {
     const btn = document.getElementById(`addclean_${clId}`);
+    const flags = registryData[clId]?.quality_flags || [];
+    if (flags.length && !confirm(
+        `Liste suspecte (${flags.map(f => (QUALITY_FLAGS[f] || [f])[0]).join(', ')}). L'ajouter quand même au registre nettoyé ?`
+    )) return;
     try {
         const resp = await fetch(`${API_BASE}api/registry/add-to-cleaned`, {
             method: 'POST',
@@ -668,14 +678,15 @@ async function postBatchToCleaned(body, btn) {
 function addBatchToCleaned(btn) {
     const ids = [...batchSelected];
     if (!ids.length) return;
-    if (!confirm(`Ajouter ${ids.length} CodeList(s) au registre nettoyé ?`)) return;
+    if (!confirm(`Ajouter ${ids.length} CodeList(s) au registre nettoyé ?${suspectWarning(ids)}`)) return;
     return postBatchToCleaned({ cl_ids: ids }, btn);
 }
 
 function addAllWithoutDuplicates(btn) {
     const count = listsWithoutDuplicates().filter(id => !inCleaned.has(id)).length;
     if (!count) return;
-    if (!confirm(`Ajouter les ${count} CodeList(s) sans doublon au registre nettoyé ?`)) return;
+    const ids = listsWithoutDuplicates().filter(id => !inCleaned.has(id));
+    if (!confirm(`Ajouter les ${count} CodeList(s) sans doublon au registre nettoyé ?${suspectWarning(ids)}`)) return;
     return postBatchToCleaned({ all_without_duplicates: true }, btn);
 }
 
@@ -762,6 +773,25 @@ function buildCodeComparisonHtml(srcCodes, dstCodes, srcName, dupName) {
     return html;
 }
 
+/* Indicateurs de liste suspecte (quality.py) : libellé court et infobulle */
+const QUALITY_FLAGS = {
+    placeholder: ['renvoi', 'Les codes renvoient ailleurs (« Voir dictionnaire des nomenclatures », « Code quartier… ») : la liste est comparée sur son nom'],
+    numeric_range: ['numérique', 'Représentation numérique mise en liste (« 0 à 7 », « de 0 à N ») : un type numérique avec bornes conviendrait mieux'],
+    single_code: ['code unique', 'Un seul code métier'],
+};
+
+function qualityBadgeHtml(flags) {
+    if (!flags?.length) return '';
+    const help = flags.map(f => (QUALITY_FLAGS[f] || [f, f])[1]).join(' · ');
+    return ` <span class="badge bg-warning text-dark" title="${escapeHtml(help)}">⚠</span>`;
+}
+
+/* Mention ajoutée aux confirmations d'ajout en lot quand des listes suspectes en font partie */
+function suspectWarning(ids) {
+    const n = ids.filter(id => (registryData[id]?.quality_flags || []).length).length;
+    return n ? `\n\n⚠ ${n} liste(s) suspecte(s) en font partie (filtre « Listes suspectes »).` : '';
+}
+
 /* Libellé affiché et infobulle de chaque type de détection */
 const DETECTION_LABELS = {
     exact: ['exact', 'mêmes codes (valeurs et libellés)'],
@@ -782,6 +812,7 @@ function renderDuplicateCard(cl, dup) {
     html += `<div style="flex: 1;"><strong>${dup.name || 'Inconnu'}</strong>`;
     html += ` <code class="dup-id">${escapeHtml(dup.id)}</code> <button class="btn btn-link p-0 copy-id-btn" onclick="copyId('${escapeHtml(dup.id)}')" title="Copier l'ID">📋</button>`;
     if (dup.origin === 'registry') html += ` <span class="badge bg-primary">📘 registre</span>`;
+    html += qualityBadgeHtml(dup.quality_flags);
     if (dup.label) html += `<br><small class="text-muted">${dup.label}</small>`;
 
     // Detection types

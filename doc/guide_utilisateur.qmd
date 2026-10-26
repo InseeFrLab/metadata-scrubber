@@ -151,6 +151,20 @@ cocher dans la colonne de gauche (les CodeLists avec doublons n'en ont pas) :
 Les CodeLists déjà présentes dans le registre nettoyé sont ignorées. Une fois
 ajoutée, une CodeList est marquée ✅ dans la liste.
 
+### Listes suspectes ⚠
+
+Certaines listes ne devraient probablement pas être des listes de codes. Elles
+portent un badge ⚠, détaillé dans l'en-tête :
+
+- **renvoi** : les codes renvoient ailleurs (« Voir dictionnaire des
+  nomenclatures », « Code quartier du QVA ») ; la liste est alors comparée aux
+  autres sur son **nom**, pas sur ses codes ;
+- **numérique** : représentation numérique mise en liste (« 0 à 7 », « de 0 à N ») ;
+- **code unique** : un seul code métier.
+
+Le filtre origine *Listes suspectes ⚠* les regroupe. Ajouter une liste suspecte
+au registre nettoyé demande une confirmation.
+
 ### Écarter une CodeList sans doublon
 
 Une CodeList sans doublon qu'on ne veut pas ajouter au registre nettoyé (par
@@ -253,7 +267,7 @@ Pour se concentrer sur un sous-ensemble de CodeLists :
 
 - **Filtre décision** : *Toutes* / *En attente* / *Approuvés* / *Rejetés* /
   *Sans doublon* (hors listes écartées) / *Écartées*
-- **Filtre origine** : *Toutes* / *Registre uniquement* (uniquement les CodeLists qui sont des maîtres d'un registre existant)
+- **Filtre origine** : *Toutes* / *Registre uniquement* (uniquement les CodeLists qui sont des maîtres d'un registre existant) / *Listes suspectes ⚠*
 - **Recherche** : champ texte — recherche par nom de la CodeList
 - **Afficher** : 20 / 50 / 100 éléments par page
 

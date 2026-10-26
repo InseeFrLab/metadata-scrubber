@@ -21,6 +21,7 @@ class CodeList:
     cat_ids: set[str] = field(default_factory=set)              # IDs des catégories présentes
     var_sig: tuple[str, ...] = field(default_factory=tuple)     # signature d'usage (trié)
     origin: str = "xml"                                         # "xml" ou "registry"
+    quality_flags: list[str] = field(default_factory=list)      # listes suspectes (quality.py)
     description: str = ""                                       # texte depuis r:Description
     user_id: str = ""                                           # texte brut depuis r:UserID
 

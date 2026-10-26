@@ -251,6 +251,7 @@
                                     <select class="form-select form-select-sm" id="originFilter">
                                         <option value="all" selected>Toutes</option>
                                         <option value="registry">Registre uniquement</option>
+                                        <option value="suspect">Listes suspectes ⚠</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
@@ -280,7 +281,8 @@
                                 <span class="badge bg-secondary">total des doublons</span>
                                 — les badges d'un doublon (exact, fuzzy…) décrivent sa détection
                                 par rapport à la CodeList principale ; ↻ = décision reprise d'un run
-                                précédent, 🚫 = liste écartée.
+                                précédent, 🚫 = liste écartée, ⚠ = liste suspecte (renvoi vers une
+                                nomenclature, représentation numérique, code unique).
                             </p>
 
                             <!-- Pagination -->
