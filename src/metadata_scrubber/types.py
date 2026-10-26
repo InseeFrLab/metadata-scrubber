@@ -22,6 +22,9 @@ class CodeList:
     var_sig: tuple[str, ...] = field(default_factory=tuple)     # signature d'usage (trié)
     origin: str = "xml"                                         # "xml" ou "registry"
     quality_flags: list[str] = field(default_factory=list)      # listes suspectes (quality.py)
+    agency: str = ""                                            # r:Agency
+    version: str = ""                                           # r:Version
+    based_on: list[str] = field(default_factory=list)           # ids des BasedOnReference
     description: str = ""                                       # texte depuis r:Description
     user_id: str = ""                                           # texte brut depuis r:UserID
 

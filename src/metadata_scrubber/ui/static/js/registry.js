@@ -365,6 +365,9 @@ function renderDetailHeader(id) {
     html += decisionBadgesHtml(cl.duplicates || []);
     html += `</div></div>`;
     html += `<div class="card-body py-1 small">`;
+    if (cl.version) {
+        html += `<code title="Référence DDI agence:id:version">${escapeHtml(`${cl.agency || '?'}:${id}:${cl.version}`)}</code> · `;
+    }
     html += `${cl.codes_count || 0} codes · ${(cl.vars || []).length} variables`;
     html += ` · ${(cl.cat_ids || []).length} catégories</div>`;
     return html;
@@ -854,6 +857,22 @@ function renderDuplicateCard(cl, dup) {
         html += `<div class="small text-muted mt-1">↪ lien indirect, via ${names.join(', ')}</div>`;
     }
 
+    // Filiation DDI (BasedOnObject) entre le doublon et les listes du groupe
+    const nameOf = id => id === cl.id ? 'la maître'
+        : escapeHtml((cl.duplicates || []).find(d => d.id === id)?.name || id);
+    const groupIds = new Set([cl.id, ...(cl.duplicates || []).map(d => d.id)]);
+    const basedOn = (dup.based_on || []).filter(id => groupIds.has(id));
+    if (basedOn.length) {
+        html += `<div class="small text-muted mt-1" title="BasedOnObject DDI">↳ basé sur ${basedOn.map(nameOf).join(', ')}</div>`;
+    }
+    if ((cl.based_on || []).includes(dup.id)) {
+        html += `<div class="small text-muted mt-1" title="BasedOnObject DDI">↰ la maître est basée sur ce doublon</div>`;
+    }
+    const outside = (dup.based_on || []).filter(id => !groupIds.has(id));
+    if (outside.length) {
+        html += `<div class="small text-muted mt-1" title="BasedOnObject DDI vers une liste hors du groupe">↳ basé sur ${outside.map(id => `<code>${escapeHtml(id)}</code>`).join(', ')} (hors groupe)</div>`;
+    }
+
     // Autres liens du doublon dans le groupe (paires avec d'autres doublons)
     const otherLinks = (dup.links || []).filter(lk => lk.id !== cl.id && !(dup.via || []).includes(lk.id));
     if (otherLinks.length) {
@@ -909,6 +928,9 @@ function renderDuplicateCard(cl, dup) {
     html += `<div class="small text-muted">`;
     html += `<p class="mb-1"><strong>ID:</strong> ${dup.id}</p>`;
     html += `<p class="mb-1"><strong>Codes:</strong> ${dup.codes_count || 0}</p>`;
+    if (dup.version) {
+        html += `<p class="mb-1"><strong>Référence DDI:</strong> ${escapeHtml(`${dup.agency || '?'}:${dup.id}:${dup.version}`)}</p>`;
+    }
     if (dup.vars?.length) {
         html += `<p class="mb-1"><strong>VARIABLES:</strong> ${dup.vars.join(', ')}</p>`;
     }
