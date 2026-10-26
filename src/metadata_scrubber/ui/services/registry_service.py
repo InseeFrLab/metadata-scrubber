@@ -70,6 +70,7 @@ def set_decision(registry: dict[str, Any], cl_id: str, dup_id: str, decision: st
             for dup in cl_data.get("duplicates", []):
                 if dup.get("id") == dup_id:
                     dup["decision"] = decision
+                    dup.pop("decision_carried", None)
                     return True
     return False
 
@@ -107,6 +108,7 @@ def bulk_set_decisions(registry: dict[str, Any], criteria: str, action: str) -> 
 
             if should:
                 dup["decision"] = action
+                dup.pop("decision_carried", None)
                 count += 1
     return count
 

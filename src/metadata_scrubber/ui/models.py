@@ -44,6 +44,12 @@ class RemoveFromCleanedRequest(BaseModel):
     cl_ids: list[str] = Field(..., min_length=1, description="Ids des CodeLists à retirer.")
 
 
+class DismissRequest(BaseModel):
+    """Écarter (ou réintégrer) des CodeLists sans doublon."""
+    cl_ids: list[str] = Field(..., min_length=1, description="Ids des CodeLists concernées.")
+    dismissed: bool = Field(True, description="True pour écarter, False pour annuler l'écart.")
+
+
 class PipelineResponse(BaseModel):
     """Réponse lors du lancement d'un pipeline."""
     job_id: str

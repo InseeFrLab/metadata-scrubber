@@ -44,7 +44,7 @@ from .funnel import (  # noqa: E402
 )
 from .normalize import normalize, signature_from_codes  # noqa: E402
 from .reporting.duplicates_registry import (  # noqa: E402
-    write_duplicates_registry,
+    build_duplicates_registry,
 )
 from .signals import (  # noqa: E402
     cross_check as compute_cross,
@@ -56,6 +56,7 @@ from .semantic import (  # noqa: E402
     detect_semantic_via_variables,
     llm_judge,
 )
+from .decisions import apply_decisions, decisions_path, load_decisions  # noqa: E402
 from .registry_io import write_json_registry  # noqa: E402
 from .run_output import RunLogCapture, make_run_dir  # noqa: E402
 from .types import CandidateFusion, CodeList  # noqa: E402
@@ -330,7 +331,15 @@ def _run_pipeline_body(
     summary["counts"]["candidates"] = len(candidates)
 
     out_path = f"{run_dir}/codelist_duplicates.json"
-    write_duplicates_registry(candidates, codelists, out_path)
+    registry = build_duplicates_registry(candidates, codelists)
+
+    # Décisions et écarts des runs précédents (decisions.json, racine des sorties)
+    carried = apply_decisions(registry, load_decisions(decisions_path(out_path)))
+    summary["counts"]["decisions_carried"] = carried
+    if carried:
+        print(f"  {carried} décision(s) reprise(s) des runs précédents.")
+
+    write_json_registry(registry, out_path)
     print(f"  → {out_path}")
 
     print("\n" + "=" * 60)

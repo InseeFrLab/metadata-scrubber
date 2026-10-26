@@ -37,12 +37,12 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def cleaned_registry_path(registry_path: str) -> str:
-    """Dérive le chemin du registre nettoyé (cleaned_codelists.json).
+def output_root_path(registry_path: str, filename: str) -> str:
+    """Chemin d'un fichier partagé entre les runs, à la racine des sorties.
 
-    Il se trouve dans le dossier du fichier des doublons ; si ce dossier est un
-    dossier de run daté (AAAAMMJJ-HHMMSS), le registre nettoyé reste à la racine
-    de sortie, au niveau supérieur, pour être partagé (et accumulé) entre les runs.
+    Le fichier est placé dans le dossier du registre des doublons ; si ce
+    dossier est un dossier de run daté (AAAAMMJJ-HHMMSS), il remonte à la
+    racine de sortie, au niveau supérieur, pour être partagé entre les runs.
 
     Manipulation de chaîne (pas de pathlib) pour rester compatible S3.
     """
@@ -51,8 +51,13 @@ def cleaned_registry_path(registry_path: str) -> str:
         parent, _, last = base.rpartition("/")
         if parent and RUN_DIR_PATTERN.match(last):
             base = parent
-        return f"{base}/cleaned_codelists.json"
-    return "cleaned_codelists.json"
+        return f"{base}/{filename}"
+    return filename
+
+
+def cleaned_registry_path(registry_path: str) -> str:
+    """Dérive le chemin du registre nettoyé (cleaned_codelists.json, racine des sorties)."""
+    return output_root_path(registry_path, "cleaned_codelists.json")
 
 
 def empty_cleaned_doc() -> dict[str, Any]:
@@ -250,7 +255,8 @@ def add_entries_from_parents(
     Args:
         cleaned: registre nettoyé, modifié en place.
         registry: registre des doublons ({cl_id: entrée parent}).
-        cl_ids: ids à ajouter ; None = toutes les listes sans doublon du registre.
+        cl_ids: ids à ajouter ; None = toutes les listes sans doublon du registre,
+            hors listes écartées.
 
     Returns:
         Ids classés en added / already_present / not_found / skipped_with_duplicates.
@@ -262,7 +268,10 @@ def add_entries_from_parents(
         "skipped_with_duplicates": [],
     }
     if cl_ids is None:
-        cl_ids = [cl_id for cl_id, cl in registry.items() if not cl.get("duplicates")]
+        cl_ids = [
+            cl_id for cl_id, cl in registry.items()
+            if not cl.get("duplicates") and not cl.get("dismissed")
+        ]
 
     for cl_id in dict.fromkeys(cl_ids):
         cl_data = registry.get(cl_id)
