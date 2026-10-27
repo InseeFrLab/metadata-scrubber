@@ -22,6 +22,14 @@ def test_resolve_operations_from_serie_and_operation():
         resolve_operations(client, operations=["s9999"])
 
 
+def test_operations_restrict_their_serie():
+    client, _ = make_client()
+    # Une opération de la série demandée la restreint…
+    assert resolve_operations(client, series=["s1998"], operations=["s2024"]) == {"s2024": "s1998"}
+    # …mais pas « toute la base »
+    assert len(resolve_operations(client, operations=["s2024"], all_operations=True)) == 3
+
+
 def test_build_corpus_provenance_and_skipped_operations():
     client, _ = make_client()
     corpus = build_corpus(client, resolve_operations(client, series=["s1998"]), log=lambda _: None)

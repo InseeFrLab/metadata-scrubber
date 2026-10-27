@@ -48,10 +48,13 @@ def resolve_operations(
 ) -> dict[str, str]:
     """Opérations à charger, avec leur série : {op_id: serie_id}.
 
-    `all_operations` parcourt toutes les séries de l'API. Une opération donnée
-    seule voit sa série demandée à l'API.
+    Une série demandée apporte toutes ses opérations, sauf si des opérations de
+    cette série sont aussi demandées : seules celles-ci sont gardées. Une
+    opération d'une autre série s'ajoute (sa série est demandée à l'API).
+    `all_operations` parcourt toutes les séries de l'API, sans restriction.
     """
     result: dict[str, str] = {}
+    wanted, restricted = set(operations or []), set(series or [])
     serie_ids = list(series or [])
     if all_operations:
         serie_ids += [s["id"] for s in client.list_series()]
@@ -59,8 +62,11 @@ def resolve_operations(
         info = client.serie(serie_id)
         if info is None:
             raise ValueError(f"Série inconnue de l'API : {serie_id}")
-        for op in info["operations"]:
-            result.setdefault(op["id"], serie_id)
+        ops = [op["id"] for op in info["operations"]]
+        if serie_id in restricted:
+            ops = [op for op in ops if op in wanted] or ops
+        for op_id in ops:
+            result.setdefault(op_id, serie_id)
     for op_id in operations or []:
         if op_id in result:
             continue

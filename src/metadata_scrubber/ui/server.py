@@ -584,6 +584,27 @@ def insee_series():
     return series
 
 
+_operations_cache: dict[str, tuple[float, list[dict[str, str]]]] = {}
+
+
+@app.get("/api/insee/series/{serie_id}/operations")
+def insee_serie_operations(serie_id: str):
+    """Opérations d'une série (id, libellé), gardées en mémoire une heure."""
+    from metadata_scrubber.insee_api import InseeMetadataClient
+
+    cached = _operations_cache.get(serie_id)
+    if cached and cached[0] > time.time() - 3600:
+        return cached[1]
+    try:
+        info = InseeMetadataClient().serie(serie_id)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"API Insee indisponible : {e}")
+    if info is None:
+        raise HTTPException(status_code=404, detail=f"Série inconnue de l'API : {serie_id}")
+    _operations_cache[serie_id] = (time.time(), info["operations"])
+    return info["operations"]
+
+
 # ============================================================================
 # Runs (dossiers datés d'une racine de sortie)
 # ============================================================================

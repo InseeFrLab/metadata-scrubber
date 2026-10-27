@@ -65,7 +65,7 @@ nomenclature, représentation numérique, code unique) sont signalées.
 # En ligne de commande
 
 ```bash
-# Construire l'index (toute la base ; --serie / --operation pour restreindre)
+# Construire l'index (toute la base ; --serie pour restreindre, --operation pour ne garder que certaines opérations de ces séries)
 uv run scrubber-check index build --output s3://projet-metadonnees-rmes/scrubber_check/reference_index.json.gz
 
 # Décrire un index
@@ -115,7 +115,7 @@ curl -u équipe:$MOT_DE_PASSE -F file=@nouvelle_operation.xml \
 Le XML reçu est lu sans résolution d'entités ni accès réseau. Le service ne fait
 que **lire** l'API Insee : il n'écrit rien dans Colectica.
 
-L'onglet **🔎 Pré-contrôle** de l'appli de validation utilise le même moteur
+L'écran **Pré-contrôle** de l'appli de validation utilise le même moteur
 (voir le [guide](guide_utilisateur.qmd#precontrole)).
 
 # Déploiement
