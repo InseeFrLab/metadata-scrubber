@@ -69,7 +69,9 @@ function savePref(key, value) {
     }
 }
 
-const DEFAULT_OUTPUT_ROOT = 's3://projet-metadonnees-rmes/scrubber_output';
+// Fournie par le serveur (SCRUBBER_OUTPUT_ROOT), pour qu'une instance V2 écrive à part
+const DEFAULT_OUTPUT_ROOT = document.querySelector('meta[name="scrubber-output-root"]')?.content
+    || 's3://projet-metadonnees-rmes/scrubber_output';
 
 /* Racine des sorties : un seul réglage, partagé par les onglets
    (barre du haut). Les écrans qui en dépendent écoutent « outputrootchange ». */

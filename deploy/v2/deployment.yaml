@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metadata-scrubber-v2
+  namespace: projet-metadonnees-rmes
+  labels:
+    app: metadata-scrubber-v2
+    app.kubernetes.io/managed-by: argocd
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: metadata-scrubber-v2 }
+  template:
+    metadata:
+      labels: { app: metadata-scrubber-v2 }
+    spec:
+      containers:
+        - name: scrubber
+          image: ghcr.io/inseefrlab/metadata-scrubber:v2
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          # Même Secret que la V1 (S3 + auth)…
+          envFrom:
+            - secretRef: { name: scrubber-config }
+          # …mais des sorties à part : la V1 ne lit pas les registres V2
+          env:
+            - name: SCRUBBER_OUTPUT_ROOT
+              value: s3://projet-metadonnees-rmes/scrubber_output_v2
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits:   { cpu: 1500m, memory: 2Gi }

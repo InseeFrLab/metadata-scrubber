@@ -569,3 +569,35 @@ reconstruit chaque nuit l'index de référence vers
 `s3://projet-metadonnees-rmes/scrubber_check/reference_index.json.gz`. Il lit le
 Secret `scrubber-config` (S3) et reprend le mot de passe partagé
 (`SCRUBBER_CHECK_AUTH_PASSWORD` ← `SCRUBBER_AUTH_PASSWORD`).
+
+### Instance V2 (à côté de l'appli en production)
+
+Pour essayer une branche sans toucher l'appli déployée depuis `main`,
+`deploy/v2/` décrit une seconde instance, avec ses propres ressources.
+
+| | V1 (`deploy/`) | V2 (`deploy/v2/`) |
+|---|---|---|
+| Application Argo CD | `metadata-scrubber` (suit `main`) | `metadata-scrubber-v2` (suit `refactor/use-api`) |
+| Image | `metadata-scrubber:latest` | `metadata-scrubber:v2` |
+| Adresse | `metadata-scrubber.lab.sspcloud.fr` | `metadata-scrubber-v2.lab.sspcloud.fr` |
+| Sorties par défaut (`SCRUBBER_OUTPUT_ROOT`) | `s3://projet-metadonnees-rmes/scrubber_output` | `s3://projet-metadonnees-rmes/scrubber_output_v2` |
+
+Le Secret `scrubber-config` (S3 et mot de passe) est partagé. Comme les
+dossiers de sortie sont distincts, les décisions et le référentiel de la V2 ne
+modifient pas ceux de la V1. Mise en place :
+
+```bash
+# 1. Image :v2 : construite à chaque push sur refactor/use-api (deploy.yml),
+#    ou via « Run workflow » sur une autre branche
+# 2. Déclarer l'application Argo CD (une fois)
+kubectl apply -f deploy/v2/application.yaml -n projet-metadonnees-rmes
+# 3. (Facultatif) partir du référentiel de la V1
+mc cp s3/projet-metadonnees-rmes/scrubber_output/cleaned_codelists.json \
+      s3/projet-metadonnees-rmes/scrubber_output_v2/
+# 4. Prendre une nouvelle image :v2 (le tag ne change pas)
+kubectl rollout restart deployment/metadata-scrubber-v2 -n projet-metadonnees-rmes
+```
+
+Pour suivre une autre branche, changer `targetRevision` dans
+`deploy/v2/application.yaml` et la branche dans `deploy.yml`. Pour supprimer la
+V2 : `kubectl delete application metadata-scrubber-v2 -n projet-metadonnees-rmes`.

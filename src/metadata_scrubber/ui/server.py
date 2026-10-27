@@ -19,6 +19,7 @@ import tempfile
 import threading
 import time
 from contextlib import asynccontextmanager
+from html import escape
 from importlib import resources as importlib_resources
 from typing import Any, AsyncGenerator
 
@@ -26,6 +27,7 @@ from fastapi import FastAPI, HTTPException, Query, Request, UploadFile, File
 from fastapi.responses import HTMLResponse, StreamingResponse
 
 from metadata_scrubber.ui.models import (
+    DEFAULT_OUTPUT_ROOT,
     AddToCleanedBatchRequest,
     AddToCleanedRequest,
     RemoveFromCleanedRequest,
@@ -219,6 +221,7 @@ def _inline_assets(html: str) -> str:
 async def index():
     """Serve the main page with CSS/JS inlined from package resources."""
     html = _read_template()
+    html = html.replace("{{OUTPUT_ROOT}}", escape(DEFAULT_OUTPUT_ROOT, quote=True))
     html = _inline_assets(html)
     return HTMLResponse(html)
 

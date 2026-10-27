@@ -1,0 +1,25 @@
+# Application Argo CD de la V2 (deploy/v2), à appliquer une fois :
+#   kubectl apply -f deploy/v2/application.yaml -n projet-metadonnees-rmes
+# Ressources, hostname, image (:v2) et dossier de sortie S3 propres : l'appli
+# déployée depuis main (deploy/, non récursif) n'est pas touchée.
+# Suivre une autre branche : changer targetRevision (et la branche dans deploy.yml).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metadata-scrubber-v2
+  namespace: projet-metadonnees-rmes
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/inseefrlab/metadata-scrubber.git
+    targetRevision: refactor/use-api
+    path: deploy/v2
+    directory:
+      exclude: application.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: projet-metadonnees-rmes
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

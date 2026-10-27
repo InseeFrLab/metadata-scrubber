@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field
+
+# Racine des sorties par défaut ; une autre instance (V2) en prend une à part.
+DEFAULT_OUTPUT_ROOT = os.environ.get(
+    "SCRUBBER_OUTPUT_ROOT", "s3://projet-metadonnees-rmes/scrubber_output"
+)
 
 
 # ============================================================================
@@ -17,7 +23,7 @@ class PipelineRequest(BaseModel):
         None, description="Chemin ou URL S3 du fichier DDI (absent pour une source API)."
     )
     output_base: str = Field(
-        "s3://projet-metadonnees-rmes/scrubber_output",
+        DEFAULT_OUTPUT_ROOT,
         description="Répertoire de sortie (S3 ou local).",
     )
     run_llm: bool = Field(True, description="Inclure les phases sémantiques (LLM).")
