@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-10-22">
+<meta name="dcterms.date" content="2026-10-27">
 
 <title>Guide d’Utilisation — Metadata Scrubber – Metadata Scrubber</title>
 <style>
@@ -46,7 +46,7 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-d3c09cf01b9717715406c5b992d80823.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-55617497126496852ff9f5a59253c640.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -141,13 +141,20 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#vue-densemble" id="toc-vue-densemble" class="nav-link" data-scroll-target="#vue-densemble"><span class="header-section-number">4.2</span> Vue d’ensemble</a>
   <ul class="collapse">
   <li><a href="#ajouter-des-codelists-sans-doublon-au-registre-nettoyé" id="toc-ajouter-des-codelists-sans-doublon-au-registre-nettoyé" class="nav-link" data-scroll-target="#ajouter-des-codelists-sans-doublon-au-registre-nettoyé"><span class="header-section-number">4.2.1</span> Ajouter des CodeLists sans doublon au registre nettoyé</a></li>
+  <li><a href="#listes-suspectes" id="toc-listes-suspectes" class="nav-link" data-scroll-target="#listes-suspectes"><span class="header-section-number">4.2.2</span> Listes suspectes ⚠</a></li>
+  <li><a href="#écarter-une-codelist-sans-doublon" id="toc-écarter-une-codelist-sans-doublon" class="nav-link" data-scroll-target="#écarter-une-codelist-sans-doublon"><span class="header-section-number">4.2.3</span> Écarter une CodeList sans doublon</a></li>
   </ul></li>
   <li><a href="#comparer-côte-à-côte" id="toc-comparer-côte-à-côte" class="nav-link" data-scroll-target="#comparer-côte-à-côte"><span class="header-section-number">4.3</span> Comparer côte à côte</a></li>
   <li><a href="#décisions-par-paire" id="toc-décisions-par-paire" class="nav-link" data-scroll-target="#décisions-par-paire"><span class="header-section-number">4.4</span> Décisions par paire</a></li>
-  <li><a href="#actions-de-masse" id="toc-actions-de-masse" class="nav-link" data-scroll-target="#actions-de-masse"><span class="header-section-number">4.5</span> Actions de masse</a></li>
-  <li><a href="#filtres" id="toc-filtres" class="nav-link" data-scroll-target="#filtres"><span class="header-section-number">4.6</span> Filtres</a></li>
-  <li><a href="#sauvegarder-les-décisions" id="toc-sauvegarder-les-décisions" class="nav-link" data-scroll-target="#sauvegarder-les-décisions"><span class="header-section-number">4.7</span> Sauvegarder les décisions</a></li>
-  <li><a href="#ajouter-une-codelist-au-registre" id="toc-ajouter-une-codelist-au-registre" class="nav-link" data-scroll-target="#ajouter-une-codelist-au-registre"><span class="header-section-number">4.8</span> Ajouter une CodeList au registre</a></li>
+  <li><a href="#changer-la-liste-maître" id="toc-changer-la-liste-maître" class="nav-link" data-scroll-target="#changer-la-liste-maître"><span class="header-section-number">4.5</span> Changer la liste maître</a>
+  <ul class="collapse">
+  <li><a href="#versions-et-filiation-ddi" id="toc-versions-et-filiation-ddi" class="nav-link" data-scroll-target="#versions-et-filiation-ddi"><span class="header-section-number">4.5.1</span> Versions et filiation DDI</a></li>
+  <li><a href="#liens-entre-doublons" id="toc-liens-entre-doublons" class="nav-link" data-scroll-target="#liens-entre-doublons"><span class="header-section-number">4.5.2</span> Liens entre doublons</a></li>
+  </ul></li>
+  <li><a href="#actions-de-masse" id="toc-actions-de-masse" class="nav-link" data-scroll-target="#actions-de-masse"><span class="header-section-number">4.6</span> Actions de masse</a></li>
+  <li><a href="#filtres" id="toc-filtres" class="nav-link" data-scroll-target="#filtres"><span class="header-section-number">4.7</span> Filtres</a></li>
+  <li><a href="#sauvegarder-les-décisions" id="toc-sauvegarder-les-décisions" class="nav-link" data-scroll-target="#sauvegarder-les-décisions"><span class="header-section-number">4.8</span> Sauvegarder les décisions</a></li>
+  <li><a href="#ajouter-une-codelist-au-registre" id="toc-ajouter-une-codelist-au-registre" class="nav-link" data-scroll-target="#ajouter-une-codelist-au-registre"><span class="header-section-number">4.9</span> Ajouter une CodeList au registre</a></li>
   </ul></li>
   <li><a href="#registre-nettoyé" id="toc-registre-nettoyé" class="nav-link" data-scroll-target="#registre-nettoyé"><span class="header-section-number">5</span> Registre nettoyé</a>
   <ul class="collapse">
@@ -183,7 +190,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 22, 2026</p>
+      <p class="date">October 27, 2026</p>
     </div>
   </div>
   
@@ -357,6 +364,21 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>➕ Ajouter toutes les CodeLists sans doublon</strong> ajoute d’un coup toutes celles du registre chargé, sans sélection préalable et quels que soient les filtres actifs. Le nombre de CodeLists concernées est indiqué sur le bouton.</li>
 </ul>
 <p>Les CodeLists déjà présentes dans le registre nettoyé sont ignorées. Une fois ajoutée, une CodeList est marquée ✅ dans la liste.</p>
+</section>
+<section id="listes-suspectes" class="level3" data-number="4.2.2">
+<h3 data-number="4.2.2" class="anchored" data-anchor-id="listes-suspectes"><span class="header-section-number">4.2.2</span> Listes suspectes ⚠</h3>
+<p>Certaines listes ne devraient probablement pas être des listes de codes. Elles portent un badge ⚠, détaillé dans l’en-tête :</p>
+<ul>
+<li><strong>renvoi</strong> : les codes renvoient ailleurs (« Voir dictionnaire des nomenclatures », « Code quartier du QVA ») ; la liste est alors comparée aux autres sur son <strong>nom</strong>, pas sur ses codes ;</li>
+<li><strong>numérique</strong> : représentation numérique mise en liste (« 0 à 7 », « de 0 à N ») ;</li>
+<li><strong>code unique</strong> : un seul code métier.</li>
+</ul>
+<p>Le filtre origine <em>Listes suspectes ⚠</em> les regroupe. Ajouter une liste suspecte au registre nettoyé demande une confirmation.</p>
+</section>
+<section id="écarter-une-codelist-sans-doublon" class="level3" data-number="4.2.3">
+<h3 data-number="4.2.3" class="anchored" data-anchor-id="écarter-une-codelist-sans-doublon"><span class="header-section-number">4.2.3</span> Écarter une CodeList sans doublon</h3>
+<p>Une CodeList sans doublon qu’on ne veut pas ajouter au registre nettoyé (par exemple une liste des départements qui n’est pas la liste officielle) peut être <strong>écartée</strong> avec le bouton <strong>🚫 Écarter</strong> du panneau de droite. Elle est alors marquée 🚫, n’a plus de case à cocher et n’est pas prise par <strong>Ajouter toutes les CodeLists sans doublon</strong>. <strong>↩︎ Annuler l’écart</strong> la réintègre.</p>
+<p>L’écart est conservé à la sauvegarde et repris aux runs suivants (voir <em>Sauvegarder les décisions</em>). Le filtre décision <em>Écartées</em> les affiche.</p>
 <p>Chaque doublon est présenté sous forme de <strong>carte</strong> comportant :</p>
 <ul>
 <li>Le <strong>nom</strong> de la CodeList et un bouton <strong>Voir</strong> à côté (pour la comparaison)</li>
@@ -364,6 +386,7 @@ ul.task-list li input[type="checkbox"] {
 <li>Le <strong>score de confiance</strong> (0–100 %)</li>
 <li>Le <strong>badge de décision</strong> : 🟡 en attente, 🟢 approuvé, 🔴 rejeté</li>
 <li>Les <strong>signaux de détection</strong> : <em>exact</em>, <em>flou</em>, <em>usage</em>, <em>synonyme</em>, <em>semantic</em> (ces badges reflètent la phase du pipeline qui a produit la correspondance — <em>synonyme</em> n’est pas un signal séparé mais une manifestation du signal <em>semantic</em> (juge LLM) ; le détail des définitions est dans la <a href="./note_methodologique_dedoublonnage.html">note méthodologique</a>, §2-3)</li>
+<li>Les badges <strong>exact hors échappement</strong> (mêmes codes métier, seuls les codes <em>sans objet</em>, <em>non réponse</em>… diffèrent) et <strong>libellés</strong> (mêmes libellés, valeurs différentes, par exemple <code>1</code>/<code>0</code> et <code>oui</code>/<code>non</code>). La carte rappelle alors les <strong>codes d’échappement</strong> de la maître et du doublon.</li>
 <li>Un bouton <strong>📋 Détails</strong> affichant une liste <code>(valeur → libellé)</code> pour chaque CodeList du groupe</li>
 </ul>
 <div class="quarto-figure quarto-figure-center">
@@ -378,7 +401,7 @@ ul.task-list li input[type="checkbox"] {
 <h2 data-number="4.3" class="anchored" data-anchor-id="comparer-côte-à-côte"><span class="header-section-number">4.3</span> Comparer côte à côte</h2>
 <p>Cliquez sur <strong>Voir</strong> (à côté du nom de la CodeList) pour ouvrir le panneau de comparaison en deux colonnes :</p>
 <ul>
-<li><strong>Colonne gauche</strong> : la CodeList maître (la plus récente, ou celle retenue)</li>
+<li><strong>Colonne gauche</strong> : la CodeList maître (la première du groupe dans l’ordre du fichier XML, ou l’entrée du registre nettoyé si le groupe en contient une)</li>
 <li><strong>Colonne droite</strong> : la CodeList candidate détectée comme redondante</li>
 <li><strong>Lignes colorées</strong> : les lignes où les valeurs ou libellés diffèrent entre les deux listes (mise en évidence rouge)</li>
 <li>Les <strong>codes communs</strong> (valeur + libellé identiques) ne sont pas colorés</li>
@@ -401,8 +424,26 @@ ul.task-list li input[type="checkbox"] {
 </ul>
 <p>Chaque changement de décision met à jour le badge coloré de la carte.</p>
 </section>
-<section id="actions-de-masse" class="level2" data-number="4.5">
-<h2 data-number="4.5" class="anchored" data-anchor-id="actions-de-masse"><span class="header-section-number">4.5</span> Actions de masse</h2>
+<section id="changer-la-liste-maître" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="changer-la-liste-maître"><span class="header-section-number">4.5</span> Changer la liste maître</h2>
+<p>Un doublon peut devenir la maître de son groupe, par exemple quand il corrige la forme de la maître proposée. Le bouton <strong>⇅ Définir comme maître</strong> de sa carte, après confirmation :</p>
+<ul>
+<li>en fait la maître (badge <strong>⇅ maître choisie</strong>) ; l’ancienne maître devient un doublon <strong>en attente</strong> ;</li>
+<li>recalcule les badges et le score de chaque doublon par rapport à la nouvelle maître (« lien indirect, via … » s’il n’y a pas de paire directe) ;</li>
+<li>conserve les décisions déjà prises sur les autres doublons.</li>
+</ul>
+<p>Le choix est enregistré à la sauvegarde et repris aux runs suivants (<code>decisions.json</code>). Si l’ancienne maître avait une entrée dans le registre nettoyé, elle perd les listes du groupe ; les listes approuvées sont rattachées à la nouvelle maître. Une maître issue du registre nettoyé (📘) ne peut pas être remplacée depuis cet onglet.</p>
+<section id="versions-et-filiation-ddi" class="level3" data-number="4.5.1">
+<h3 data-number="4.5.1" class="anchored" data-anchor-id="versions-et-filiation-ddi"><span class="header-section-number">4.5.1</span> Versions et filiation DDI</h3>
+<p>L’en-tête de la CodeList affiche sa référence DDI <code>agence:id:version</code>. Une carte de doublon indique <strong>↳ basé sur …</strong> quand le doublon a été créé à partir d’une autre liste (<code>BasedOnObject</code>), et <strong>↰ la maître est basée sur ce doublon</strong> dans le sens inverse. Si un fichier contient plusieurs versions d’une même CodeList, seule la plus récente est examinée.</p>
+</section>
+<section id="liens-entre-doublons" class="level3" data-number="4.5.2">
+<h3 data-number="4.5.2" class="anchored" data-anchor-id="liens-entre-doublons"><span class="header-section-number">4.5.2</span> Liens entre doublons</h3>
+<p>Une carte indique aussi <strong>🔗 lié aussi à …</strong> quand le doublon a été détecté avec d’autres doublons du groupe. Si on le rejette par rapport à la maître alors qu’il reste lié à un autre doublon, le définir comme maître permet d’examiner ces liens.</p>
+</section>
+</section>
+<section id="actions-de-masse" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="actions-de-masse"><span class="header-section-number">4.6</span> Actions de masse</h2>
 <p>Quatre boutons en haut de la page permettent d’appliquer des décisions à plusieurs paires simultanément :</p>
 <table class="caption-top table">
 <colgroup>
@@ -435,23 +476,25 @@ ul.task-list li input[type="checkbox"] {
 </tbody>
 </table>
 </section>
-<section id="filtres" class="level2" data-number="4.6">
-<h2 data-number="4.6" class="anchored" data-anchor-id="filtres"><span class="header-section-number">4.6</span> Filtres</h2>
+<section id="filtres" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="filtres"><span class="header-section-number">4.7</span> Filtres</h2>
 <p>Pour se concentrer sur un sous-ensemble de CodeLists :</p>
 <ul>
-<li><strong>Filtre décision</strong> : <em>Toutes</em> / <em>En attente</em> / <em>Approuvés</em> / <em>Rejetés</em> / <em>Sans doublon</em></li>
-<li><strong>Filtre origine</strong> : <em>Toutes</em> / <em>Registre uniquement</em> (uniquement les CodeLists qui sont des maîtres d’un registre existant)</li>
+<li><strong>Filtre décision</strong> : <em>Toutes</em> / <em>En attente</em> / <em>Approuvés</em> / <em>Rejetés</em> / <em>Sans doublon</em> (hors listes écartées) / <em>Écartées</em></li>
+<li><strong>Filtre origine</strong> : <em>Toutes</em> / <em>Registre uniquement</em> (uniquement les CodeLists qui sont des maîtres d’un registre existant) / <em>Listes suspectes ⚠</em></li>
 <li><strong>Recherche</strong> : champ texte — recherche par nom de la CodeList</li>
 <li><strong>Afficher</strong> : 20 / 50 / 100 éléments par page</li>
 </ul>
 </section>
-<section id="sauvegarder-les-décisions" class="level2" data-number="4.7">
-<h2 data-number="4.7" class="anchored" data-anchor-id="sauvegarder-les-décisions"><span class="header-section-number">4.7</span> Sauvegarder les décisions</h2>
+<section id="sauvegarder-les-décisions" class="level2" data-number="4.8">
+<h2 data-number="4.8" class="anchored" data-anchor-id="sauvegarder-les-décisions"><span class="header-section-number">4.8</span> Sauvegarder les décisions</h2>
 <p>Après examen, cliquez sur <strong>💾 sauvegarder</strong>. L’interface :</p>
 <ol type="1">
 <li>Met à jour les états <code>decision</code> dans le registre <code>codelist_duplicates.json</code></li>
 <li>Génère ou met à jour le <strong>registre nettoyé</strong> <code>cleaned_codelists.json</code></li>
+<li>Met à jour <code>decisions.json</code>, à la racine des sorties : décisions <em>approuvé</em> et <em>rejeté</em> de chaque paire, et listes écartées</li>
 </ol>
+<p>Au run suivant, le pipeline relit <code>decisions.json</code> : une paire déjà tranchée qui est de nouveau détectée reprend sa décision, marquée <strong>↻ reprise</strong> sur la carte, et une liste écartée reste écartée. Seules les paires nouvelles ou laissées en attente sont donc à examiner. Une paire est reconnue quel que soit le sens (maître / doublon). Changer une décision reprise efface la marque ↻.</p>
 <p>Une notification (toast) verte apparaît en confirmation :</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -463,8 +506,8 @@ ul.task-list li input[type="checkbox"] {
 <p><strong>Ce que la sauvegarde produit</strong> : <code>cleaned_codelists.json</code> ne contient que les CodeLists maîtres — celles qui ont été approuvées et celles marquées “sans doublon”. Chaque maître possède un champ <code>replaces[]</code> listant les CodeLists redondantes qu’il remplace. Ce fichier est un input pour les runs suivants (workflow itératif, § 6.2).</p>
 </blockquote>
 </section>
-<section id="ajouter-une-codelist-au-registre" class="level2" data-number="4.8">
-<h2 data-number="4.8" class="anchored" data-anchor-id="ajouter-une-codelist-au-registre"><span class="header-section-number">4.8</span> Ajouter une CodeList au registre</h2>
+<section id="ajouter-une-codelist-au-registre" class="level2" data-number="4.9">
+<h2 data-number="4.9" class="anchored" data-anchor-id="ajouter-une-codelist-au-registre"><span class="header-section-number">4.9</span> Ajouter une CodeList au registre</h2>
 <p>Lorsqu’une CodeList n’a aucun doublon détecté, l’expert peut décider tout de même de l’ajouter au registre épuré :</p>
 <ol type="1">
 <li>Cliquez sur le bouton <strong>➕ Ajouter au registre</strong> (en haut de la carte de la CodeList concernée, accessible via le bouton <strong>📋 Détails</strong> ou dans la vue comparée)</li>
@@ -595,7 +638,7 @@ Step 2 — Analyser BPE
 <h1 data-number="7"><span class="header-section-number">7</span> Astuces pratiques</h1>
 <p><strong>Run rapide (prototype)</strong> — décochez <strong>Exécuter les phases LLM / embeddings</strong> pour un run 5 à 10 × plus rapide. Le pipeline se contente des phases exacte et floue ; la phase sémantique (embeddings + juge LLM) est omise.</p>
 <p><strong>Sauvegarder régulièrement</strong> — les décisions ne sont pas persistées automatiquement. Un clic sur <strong>💾 sauvegarder</strong> est nécessaire après chaque session de travail pour que les décisions et le registre propre soient écrits.</p>
-<p><strong>Reprendre une session</strong> — recharger le registre avec <strong>📂 Charger</strong> (onglet Validation ou Registre nettoyé) restaure les décisions précédentes. Tout est conservé dans le fichier JSON.</p>
+<p><strong>Reprendre une session</strong> — recharger le registre avec <strong>📂 Charger</strong> (onglet Validation ou Registre nettoyé) restaure les décisions précédentes. Tout est conservé dans le fichier JSON. Un nouveau run reprend aussi les décisions sauvegardées (<code>decisions.json</code>).</p>
 <p><strong>Documentation API automatique</strong> — la documentation OpenAPI complète de l’API REST est disponible à l’URL <code>/docs</code> (Swagger UI) et <code>/redoc</code>. Elle liste tous les endpoints, leurs paramètres et leurs réponses.</p>
 <hr>
 </section>

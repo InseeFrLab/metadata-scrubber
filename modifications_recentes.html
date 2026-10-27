@@ -80,7 +80,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-d3c09cf01b9717715406c5b992d80823.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-55617497126496852ff9f5a59253c640.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -161,30 +161,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#vue-densemble" id="toc-vue-densemble" class="nav-link active" data-scroll-target="#vue-densemble"><span class="header-section-number">1</span> Vue d’ensemble</a></li>
-  <li><a href="#onglet-validation-des-doublons" id="toc-onglet-validation-des-doublons" class="nav-link" data-scroll-target="#onglet-validation-des-doublons"><span class="header-section-number">2</span> Onglet Validation des doublons</a>
+  <li><a href="#suite-des-observations" id="toc-suite-des-observations" class="nav-link active" data-scroll-target="#suite-des-observations"><span class="header-section-number">1</span> Suite des observations</a>
   <ul class="collapse">
-  <li><a href="#deux-colonnes" id="toc-deux-colonnes" class="nav-link" data-scroll-target="#deux-colonnes"><span class="header-section-number">2.1</span> Deux colonnes</a></li>
-  <li><a href="#filtres" id="toc-filtres" class="nav-link" data-scroll-target="#filtres"><span class="header-section-number">2.2</span> Filtres</a></li>
-  <li><a href="#lisibilité-des-badges" id="toc-lisibilité-des-badges" class="nav-link" data-scroll-target="#lisibilité-des-badges"><span class="header-section-number">2.3</span> Lisibilité des badges</a></li>
+  <li><a href="#vue-densemble" id="toc-vue-densemble" class="nav-link" data-scroll-target="#vue-densemble"><span class="header-section-number">1.1</span> Vue d’ensemble</a></li>
+  <li><a href="#rattachement-des-variables" id="toc-rattachement-des-variables" class="nav-link" data-scroll-target="#rattachement-des-variables"><span class="header-section-number">1.2</span> Rattachement des variables</a></li>
+  <li><a href="#phase-floue-appariement-par-valeur" id="toc-phase-floue-appariement-par-valeur" class="nav-link" data-scroll-target="#phase-floue-appariement-par-valeur"><span class="header-section-number">1.3</span> Phase floue : appariement par valeur</a></li>
+  <li><a href="#décisions-conservées-et-listes-écartées" id="toc-décisions-conservées-et-listes-écartées" class="nav-link" data-scroll-target="#décisions-conservées-et-listes-écartées"><span class="header-section-number">1.4</span> Décisions conservées et listes écartées</a></li>
+  <li><a href="#changer-la-liste-maître" id="toc-changer-la-liste-maître" class="nav-link" data-scroll-target="#changer-la-liste-maître"><span class="header-section-number">1.5</span> Changer la liste maître</a></li>
+  <li><a href="#codes-déchappement" id="toc-codes-déchappement" class="nav-link" data-scroll-target="#codes-déchappement"><span class="header-section-number">1.6</span> Codes d’échappement</a></li>
+  <li><a href="#listes-suspectes" id="toc-listes-suspectes" class="nav-link" data-scroll-target="#listes-suspectes"><span class="header-section-number">1.7</span> Listes suspectes</a></li>
+  <li><a href="#versions-ddi-et-filiation" id="toc-versions-ddi-et-filiation" class="nav-link" data-scroll-target="#versions-ddi-et-filiation"><span class="header-section-number">1.8</span> Versions DDI et filiation</a></li>
+  <li><a href="#api" id="toc-api" class="nav-link" data-scroll-target="#api"><span class="header-section-number">1.9</span> API</a></li>
+  <li><a href="#tests-ajoutés" id="toc-tests-ajoutés" class="nav-link" data-scroll-target="#tests-ajoutés"><span class="header-section-number">1.10</span> Tests ajoutés</a></li>
+  <li><a href="#reste-à-traiter" id="toc-reste-à-traiter" class="nav-link" data-scroll-target="#reste-à-traiter"><span class="header-section-number">1.11</span> Reste à traiter</a></li>
   </ul></li>
-  <li><a href="#registre-nettoyé" id="toc-registre-nettoyé" class="nav-link" data-scroll-target="#registre-nettoyé"><span class="header-section-number">3</span> Registre nettoyé</a>
+  <li><a href="#version-précédente-22-octobre-2026" id="toc-version-précédente-22-octobre-2026" class="nav-link" data-scroll-target="#version-précédente-22-octobre-2026"><span class="header-section-number">2</span> Version précédente (22 octobre 2026)</a></li>
+  <li><a href="#onglet-validation-des-doublons" id="toc-onglet-validation-des-doublons" class="nav-link" data-scroll-target="#onglet-validation-des-doublons"><span class="header-section-number">3</span> Onglet Validation des doublons</a>
   <ul class="collapse">
-  <li><a href="#ajout-en-lot" id="toc-ajout-en-lot" class="nav-link" data-scroll-target="#ajout-en-lot"><span class="header-section-number">3.1</span> Ajout en lot</a></li>
-  <li><a href="#retrait-dune-liste-ajoutée-par-erreur" id="toc-retrait-dune-liste-ajoutée-par-erreur" class="nav-link" data-scroll-target="#retrait-dune-liste-ajoutée-par-erreur"><span class="header-section-number">3.2</span> Retrait d’une liste ajoutée par erreur</a></li>
+  <li><a href="#deux-colonnes" id="toc-deux-colonnes" class="nav-link" data-scroll-target="#deux-colonnes"><span class="header-section-number">3.1</span> Deux colonnes</a></li>
+  <li><a href="#filtres" id="toc-filtres" class="nav-link" data-scroll-target="#filtres"><span class="header-section-number">3.2</span> Filtres</a></li>
+  <li><a href="#lisibilité-des-badges" id="toc-lisibilité-des-badges" class="nav-link" data-scroll-target="#lisibilité-des-badges"><span class="header-section-number">3.3</span> Lisibilité des badges</a></li>
   </ul></li>
-  <li><a href="#détection" id="toc-détection" class="nav-link" data-scroll-target="#détection"><span class="header-section-number">4</span> Détection</a>
+  <li><a href="#registre-nettoyé" id="toc-registre-nettoyé" class="nav-link" data-scroll-target="#registre-nettoyé"><span class="header-section-number">4</span> Registre nettoyé</a>
   <ul class="collapse">
-  <li><a href="#score-flou-symétrique" id="toc-score-flou-symétrique" class="nav-link" data-scroll-target="#score-flou-symétrique"><span class="header-section-number">4.1</span> Score flou symétrique</a></li>
-  <li><a href="#confiance-100-réservé-à-lexact" id="toc-confiance-100-réservé-à-lexact" class="nav-link" data-scroll-target="#confiance-100-réservé-à-lexact"><span class="header-section-number">4.2</span> Confiance : 100 % réservé à l’exact</a></li>
-  <li><a href="#double-signalement-entre-phases" id="toc-double-signalement-entre-phases" class="nav-link" data-scroll-target="#double-signalement-entre-phases"><span class="header-section-number">4.3</span> Double signalement entre phases</a></li>
-  <li><a href="#badges-propres-à-la-liste-principale" id="toc-badges-propres-à-la-liste-principale" class="nav-link" data-scroll-target="#badges-propres-à-la-liste-principale"><span class="header-section-number">4.4</span> Badges propres à la liste principale</a></li>
+  <li><a href="#ajout-en-lot" id="toc-ajout-en-lot" class="nav-link" data-scroll-target="#ajout-en-lot"><span class="header-section-number">4.1</span> Ajout en lot</a></li>
+  <li><a href="#retrait-dune-liste-ajoutée-par-erreur" id="toc-retrait-dune-liste-ajoutée-par-erreur" class="nav-link" data-scroll-target="#retrait-dune-liste-ajoutée-par-erreur"><span class="header-section-number">4.2</span> Retrait d’une liste ajoutée par erreur</a></li>
   </ul></li>
-  <li><a href="#étape-sémantique-visible" id="toc-étape-sémantique-visible" class="nav-link" data-scroll-target="#étape-sémantique-visible"><span class="header-section-number">5</span> Étape sémantique visible</a></li>
-  <li><a href="#sorties-dun-run" id="toc-sorties-dun-run" class="nav-link" data-scroll-target="#sorties-dun-run"><span class="header-section-number">6</span> Sorties d’un run</a></li>
-  <li><a href="#api" id="toc-api" class="nav-link" data-scroll-target="#api"><span class="header-section-number">7</span> API</a></li>
-  <li><a href="#hors-périmètre-et-suites-possibles" id="toc-hors-périmètre-et-suites-possibles" class="nav-link" data-scroll-target="#hors-périmètre-et-suites-possibles"><span class="header-section-number">8</span> Hors périmètre et suites possibles</a></li>
-  <li><a href="#tests-ajoutés" id="toc-tests-ajoutés" class="nav-link" data-scroll-target="#tests-ajoutés"><span class="header-section-number">9</span> Tests ajoutés</a></li>
+  <li><a href="#détection" id="toc-détection" class="nav-link" data-scroll-target="#détection"><span class="header-section-number">5</span> Détection</a>
+  <ul class="collapse">
+  <li><a href="#score-flou-symétrique" id="toc-score-flou-symétrique" class="nav-link" data-scroll-target="#score-flou-symétrique"><span class="header-section-number">5.1</span> Score flou symétrique</a></li>
+  <li><a href="#confiance-100-réservé-à-lexact" id="toc-confiance-100-réservé-à-lexact" class="nav-link" data-scroll-target="#confiance-100-réservé-à-lexact"><span class="header-section-number">5.2</span> Confiance : 100 % réservé à l’exact</a></li>
+  <li><a href="#double-signalement-entre-phases" id="toc-double-signalement-entre-phases" class="nav-link" data-scroll-target="#double-signalement-entre-phases"><span class="header-section-number">5.3</span> Double signalement entre phases</a></li>
+  <li><a href="#badges-propres-à-la-liste-principale" id="toc-badges-propres-à-la-liste-principale" class="nav-link" data-scroll-target="#badges-propres-à-la-liste-principale"><span class="header-section-number">5.4</span> Badges propres à la liste principale</a></li>
+  </ul></li>
+  <li><a href="#étape-sémantique-visible" id="toc-étape-sémantique-visible" class="nav-link" data-scroll-target="#étape-sémantique-visible"><span class="header-section-number">6</span> Étape sémantique visible</a></li>
+  <li><a href="#sorties-dun-run" id="toc-sorties-dun-run" class="nav-link" data-scroll-target="#sorties-dun-run"><span class="header-section-number">7</span> Sorties d’un run</a></li>
+  <li><a href="#api-1" id="toc-api-1" class="nav-link" data-scroll-target="#api-1"><span class="header-section-number">8</span> API</a></li>
+  <li><a href="#hors-périmètre-à-lépoque" id="toc-hors-périmètre-à-lépoque" class="nav-link" data-scroll-target="#hors-périmètre-à-lépoque"><span class="header-section-number">9</span> Hors périmètre à l’époque</a></li>
+  <li><a href="#tests-ajoutés-1" id="toc-tests-ajoutés-1" class="nav-link" data-scroll-target="#tests-ajoutés-1"><span class="header-section-number">10</span> Tests ajoutés</a></li>
   </ul>
 </nav>
     </div>
@@ -210,9 +224,317 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Ce document décrit ce qui a changé depuis le dernier push (<code>4be5503</code>, « Truncate codelist for embedding »). Il regroupe l’évolution de l’onglet <strong>Validation des doublons</strong>, les correctifs de détection issus des remarques de Guillaume sur l’ancienne version, et la nouvelle organisation des fichiers de sortie.</p>
-<section id="vue-densemble" class="level1" data-number="1">
-<h1 data-number="1"><span class="header-section-number">1</span> Vue d’ensemble</h1>
+<p>Ce document décrit les changements récents en deux parties :</p>
+<ol type="1">
+<li><strong>Suite des observations</strong> : traitement des remarques de <code>observations.md</code> sur les doublons BTS, BPE et EAR (branche <code>fix/rattachement-variables</code>).</li>
+<li><strong>Version précédente</strong> : onglet Validation en deux colonnes, correctifs de détection et sorties datées (commits du 22 octobre, depuis <code>4be5503</code>).</li>
+</ol>
+<section id="suite-des-observations" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Suite des observations</h1>
+<section id="vue-densemble" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="vue-densemble"><span class="header-section-number">1.1</span> Vue d’ensemble</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Thème</th>
+<th>Effet principal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Variables</td>
+<td>Les variables DDI 3.3 (<code>VariableRepresentation</code>) sont rattachées : EAR passe de 0 à 656/656 CodeLists liées</td>
+</tr>
+<tr class="even">
+<td>Phase floue</td>
+<td>Appariement par valeur : limite portée de 100 à 5 000 codes, EAR 515 s → 83 s</td>
+</tr>
+<tr class="odd">
+<td>Décisions</td>
+<td>Conservées d’un run à l’autre (<code>decisions.json</code>) ; listes sans doublon « écartées »</td>
+</tr>
+<tr class="even">
+<td>Liste maître</td>
+<td>Un doublon peut devenir maître ; liens entre doublons affichés</td>
+</tr>
+<tr class="odd">
+<td>Codes d’échappement</td>
+<td>Détections « exact hors échappement » et « libellés »</td>
+</tr>
+<tr class="even">
+<td>Listes suspectes</td>
+<td>Renvoi vers une nomenclature, représentation numérique, code unique (⚠)</td>
+</tr>
+<tr class="odd">
+<td>Versions DDI</td>
+<td>Agence, version, <code>BasedOnObject</code> lus ; dernière version gardée</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Impact sur les résultats
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Le nombre et la composition des groupes changent : les listes de 101 à 5 000 codes sont de nouveau comparées, de nouvelles paires apparaissent (hors échappement, libellés) et les listes « placeholder » ne sont plus regroupées sur leurs codes. Sur BTS, le groupe « Voir dictionnaire des nomenclatures » (catégorie juridique + 16 listes) se réduit aux vrais doublons de nom. Les registres produits avant ces changements se chargent toujours, mais ne permettent pas de changer de maître (pas de liens) : relancer le pipeline.</p>
+</div>
+</div>
+</section>
+<section id="rattachement-des-variables" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="rattachement-des-variables"><span class="header-section-number">1.2</span> Rattachement des variables</h2>
+<p>L’étape 3 de <code>main.py</code> ne lisait que les références posées directement sous la variable. En DDI 3.3, elles sont sous <code>VariableRepresentation</code> : sur EAR, aucune CodeList n’avait de variable. <code>_link_variables</code> s’appuie maintenant sur <code>extract_variables</code>.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Fichier</th>
+<th>Avant</th>
+<th>Après</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>EAR.xml</td>
+<td>0 / 656</td>
+<td>656 / 656</td>
+</tr>
+<tr class="even">
+<td>BPE.xml</td>
+<td>120 / 126</td>
+<td>126 / 126</td>
+</tr>
+</tbody>
+</table>
+<p>Cela répare le signal d’usage, la phase sémantique « via variables » et le compteur de variables, désormais affiché aussi dans la colonne de gauche.</p>
+<p>La règle de choix de la liste maître est documentée (note méthodologique) : première liste du groupe dans l’ordre du XML, registre nettoyé en tête.</p>
+</section>
+<section id="phase-floue-appariement-par-valeur" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="phase-floue-appariement-par-valeur"><span class="header-section-number">1.3</span> Phase floue : appariement par valeur</h2>
+<p><code>_code_similarity</code> apparie d’abord les codes de même valeur (index, coût linéaire), puis cherche le meilleur appariement des codes restants seulement si chaque reste compte au plus 100 codes. Une paire dont le rapport des tailles est sous 0,75 est écartée sans calcul.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Avant</th>
+<th>Après</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Limite de taille</td>
+<td>100 codes</td>
+<td>5 000 codes (communes et IRIS restent exclus)</td>
+</tr>
+<tr class="even">
+<td>Phase floue sur EAR</td>
+<td>515 s</td>
+<td>83 s, mêmes 205 paires</td>
+</tr>
+<tr class="odd">
+<td>Types d’équipements BPE (150 à 232 codes)</td>
+<td>exclus</td>
+<td>comparés : <code>L_TYPEQU_2024_DIFF</code> ~ <code>L_TYPEQU_2024</code> (0,93)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="décisions-conservées-et-listes-écartées" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="décisions-conservées-et-listes-écartées"><span class="header-section-number">1.4</span> Décisions conservées et listes écartées</h2>
+<p>La sauvegarde écrit <code>decisions.json</code> à la racine des sorties, à côté de <code>cleaned_codelists.json</code> : décisions <em>approuvé</em> / <em>rejeté</em> par paire (valables dans les deux sens), listes écartées et maîtres choisies. Au run suivant, le pipeline les réapplique.</p>
+<ul>
+<li>Une décision reprise est marquée <strong>↻ reprise</strong> sur la carte ; la changer efface la marque.</li>
+<li>Une paire remise en attente est retirée du fichier ; les décisions des autres fichiers sources sont conservées.</li>
+<li><strong>🚫 Écarter</strong> / <strong>↩︎ Annuler l’écart</strong> sur une CodeList sans doublon : elle n’a plus de case à cocher et n’est pas prise par « Ajouter toutes les CodeLists sans doublon ». Filtre décision <em>Écartées</em>.</li>
+<li><code>run_summary.json</code> compte <code>decisions_carried</code>.</li>
+</ul>
+</section>
+<section id="changer-la-liste-maître" class="level2" data-number="1.5">
+<h2 data-number="1.5" class="anchored" data-anchor-id="changer-la-liste-maître"><span class="header-section-number">1.5</span> Changer la liste maître</h2>
+<ul>
+<li>Chaque membre d’un groupe porte ses <code>links</code> : toutes ses paires avec les autres membres.</li>
+<li><strong>⇅ Définir comme maître</strong> sur une carte : le doublon devient maître, l’ancienne maître devient doublon en attente ; badges, confiance et « via » sont recalculés depuis les liens ; les autres décisions sont conservées.</li>
+<li>Le choix est conservé (<code>decisions.json</code>, <code>masters</code>). Priorité au run suivant : registre nettoyé, maître choisie, ordre du XML.</li>
+<li>Registre nettoyé : l’entrée de l’ancienne maître perd les listes du groupe (supprimée si elle devient vide).</li>
+<li>Une maître issue du registre nettoyé ne peut pas être remplacée ici (409).</li>
+<li>Les cartes indiquent <strong>🔗 lié aussi à …</strong> (paires avec d’autres doublons) et, pour un doublon rejeté encore lié, suggèrent de le définir comme maître.</li>
+</ul>
+</section>
+<section id="codes-déchappement" class="level2" data-number="1.6">
+<h2 data-number="1.6" class="anchored" data-anchor-id="codes-déchappement"><span class="header-section-number">1.6</span> Codes d’échappement</h2>
+<p><code>quality.split_codes</code> sépare codes métier et codes d’échappement : libellé commençant par « sans objet », « non concerné », « non renseigné », « non réponse », « indéterminé », « hors champ »…, ou valeur <code>_Z</code>, <code>_U</code>, <code>/</code>. Deux détections s’ajoutent après la phase floue :</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Type (badge)</th>
+<th>Règle</th>
+<th>Confiance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>exact_business</code> (« exact hors échappement »)</td>
+<td>Mêmes codes métier, codes d’échappement différents</td>
+<td>0,98</td>
+</tr>
+<tr class="even">
+<td><code>labels</code> (« libellés »)</td>
+<td>Mêmes libellés métier, valeurs différentes</td>
+<td>0,95</td>
+</tr>
+</tbody>
+</table>
+<p>Au moins 2 codes métier sont exigés. Sur BPE : <code>L_QUALITE_ZONAGE</code> / <code>_2023</code>, <code>L_VAR_SPECIF_2023</code> / <code>L_PRESENCE_ABSENCE</code>, <code>L_VAR_SPECIF_2023</code> / <code>_2021</code> (<code>1</code>/<code>0</code> contre <code>oui</code>/<code>non</code>), <code>L_QUALITE_XY</code> (<code>A</code> contre <code>Acceptable</code>). La carte rappelle les codes d’échappement de la maître et du doublon.</p>
+</section>
+<section id="listes-suspectes" class="level2" data-number="1.7">
+<h2 data-number="1.7" class="anchored" data-anchor-id="listes-suspectes"><span class="header-section-number">1.7</span> Listes suspectes</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Indicateur (badge ⚠)</th>
+<th>Exemples</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>placeholder</code> (« renvoi »)</td>
+<td>« Voir dictionnaire des nomenclatures », « Code quartier du QVA », « Code sur 6 positions »</td>
+</tr>
+<tr class="even">
+<td><code>numeric_range</code> (« numérique »)</td>
+<td>« 0 à 7 », « 00 à 23 », « de 0 à N » (au plus 2 codes métier)</td>
+</tr>
+<tr class="odd">
+<td><code>single_code</code> (« code unique »)</td>
+<td>Un seul code métier</td>
+</tr>
+</tbody>
+</table>
+<p>Une liste <code>placeholder</code> est comparée sur son <strong>nom</strong> normalisé, plus sur ses codes. Filtre origine <em>Listes suspectes ⚠</em> ; confirmation avant d’ajouter une liste suspecte au registre nettoyé. <code>run_summary.json</code> compte <code>placeholder</code>.</p>
+</section>
+<section id="versions-ddi-et-filiation" class="level2" data-number="1.8">
+<h2 data-number="1.8" class="anchored" data-anchor-id="versions-ddi-et-filiation"><span class="header-section-number">1.8</span> Versions DDI et filiation</h2>
+<ul>
+<li>L’extraction lit <code>r:Agency</code>, <code>r:Version</code> et <code>BasedOnObject</code>.</li>
+<li>Une seule version par identifiant, la plus récente (BPE : version 6 de <code>3ca0b23e</code> gardée, version 5 ignorée) ; compteur <code>older_versions_ignored</code>.</li>
+<li>L’en-tête affiche <code>agence:id:version</code> ; une carte indique « basé sur … » entre listes d’un même groupe (43 cas sur BPE). Indicateur seulement : pas de rejet automatique.</li>
+</ul>
+</section>
+<section id="api" class="level2" data-number="1.9">
+<h2 data-number="1.9" class="anchored" data-anchor-id="api"><span class="header-section-number">1.9</span> API</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Méthode</th>
+<th>Route</th>
+<th>Rôle</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>POST</code></td>
+<td><code>/api/registry/dismiss</code></td>
+<td>Écarte ou réintègre des CodeLists sans doublon. Corps : <code>{"cl_ids": [...], "dismissed": true}</code>. Réponse : <code>updated</code>, <code>not_found</code>, <code>skipped_with_duplicates</code>.</td>
+</tr>
+<tr class="even">
+<td><code>POST</code></td>
+<td><code>/api/registry/swap-parent</code></td>
+<td>Fait d’un doublon la maître. Corps : <code>{"parent_id", "new_parent_id"}</code>. Réponse : <code>old_parent_id</code>, <code>entry</code>. 404 si introuvable, 409 si maître du registre nettoyé ou registre sans liens.</td>
+</tr>
+<tr class="odd">
+<td><code>POST</code></td>
+<td><code>/api/registry/save</code></td>
+<td>Écrit aussi <code>decisions.json</code> ; réponse enrichie de <code>decisions_path</code> et <code>decisions_count</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Nouveaux champs du registre des doublons : <code>links</code>, <code>escape_codes</code>, <code>quality_flags</code>, <code>agency</code>, <code>version</code>, <code>based_on</code> (toutes les listes), <code>decision_carried</code> (doublon), <code>dismissed</code>, <code>master_chosen</code>, <code>previous_parent</code> (entrée).</p>
+</section>
+<section id="tests-ajoutés" class="level2" data-number="1.10">
+<h2 data-number="1.10" class="anchored" data-anchor-id="tests-ajoutés"><span class="header-section-number">1.10</span> Tests ajoutés</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Fichier</th>
+<th>Couvre</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>tests/test_scrubber.py</code></td>
+<td>Rattachement des variables sous <code>VariableRepresentation</code></td>
+</tr>
+<tr class="even">
+<td><code>tests/test_detection_fixes.py</code></td>
+<td>Grandes listes, appariement par valeur, pré-filtre de taille</td>
+</tr>
+<tr class="odd">
+<td><code>tests/test_decisions.py</code></td>
+<td><code>decisions.json</code>, reprise au run suivant, route d’écart</td>
+</tr>
+<tr class="even">
+<td><code>tests/test_swap_parent.py</code></td>
+<td>Liens, changement de maître, persistance, sync du registre nettoyé</td>
+</tr>
+<tr class="odd">
+<td><code>tests/test_escape_codes.py</code></td>
+<td>Codes d’échappement, détections hors échappement et libellés</td>
+</tr>
+<tr class="even">
+<td><code>tests/test_quality_flags.py</code></td>
+<td>Listes suspectes, groupement des placeholders par nom</td>
+</tr>
+<tr class="odd">
+<td><code>tests/test_versions.py</code></td>
+<td>Agence, version, <code>BasedOnObject</code>, dernière version</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="reste-à-traiter" class="level2" data-number="1.11">
+<h2 data-number="1.11" class="anchored" data-anchor-id="reste-à-traiter"><span class="header-section-number">1.11</span> Reste à traiter</h2>
+<ul>
+<li>CodeLists non référencées : export des listes sans variable référente (nécessite le XML complet du repository).</li>
+<li>Mise à jour des objets via l’API Colectica (<code>RegisterOrReplace</code>, <code>DELETE</code>).</li>
+<li>Variables <code>OPENAI_BASE_URL</code> / <code>OPENAI_API_KEY</code> à fournir au déploiement pour l’étape sémantique.</li>
+<li>Règle métier à décider pour <code>BasedOnObject</code> (rejet d’une liste dérivée d’une liste rejetée).</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="version-précédente-22-octobre-2026" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Version précédente (22 octobre 2026)</h1>
+<p>Cette partie décrit ce qui avait changé depuis le push <code>4be5503</code> (« Truncate codelist for embedding ») : évolution de l’onglet <strong>Validation des doublons</strong>, correctifs de détection issus des remarques de Guillaume sur l’ancienne version, et nouvelle organisation des fichiers de sortie.</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -249,10 +571,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <hr>
 </section>
-<section id="onglet-validation-des-doublons" class="level1" data-number="2">
-<h1 data-number="2"><span class="header-section-number">2</span> Onglet Validation des doublons</h1>
-<section id="deux-colonnes" class="level2" data-number="2.1">
-<h2 data-number="2.1" class="anchored" data-anchor-id="deux-colonnes"><span class="header-section-number">2.1</span> Deux colonnes</h2>
+<section id="onglet-validation-des-doublons" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Onglet Validation des doublons</h1>
+<section id="deux-colonnes" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="deux-colonnes"><span class="header-section-number">3.1</span> Deux colonnes</h2>
 <ul>
 <li><strong>Colonne de gauche</strong> : une ligne par CodeList de référence (nom, identifiant, pastilles <em>approuvés / rejetés / en attente / total</em>). La première ligne est sélectionnée à l’ouverture.</li>
 <li><strong>Colonne de droite</strong> : l’en-tête de la CodeList sélectionnée, le tableau de ses <strong>modalités</strong> (valeur et étiquette de chaque code, repliable), puis une carte par doublon. Chaque carte garde sa décision, sa confiance, ses badges de détection et un bouton « Détails » qui ouvre la comparaison avec la CodeList principale.</li>
@@ -260,16 +582,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Stats, actions en masse, filtres et pagination restent au-dessus, sur toute la largeur, et s’appliquent à la colonne de gauche.</li>
 </ul>
 </section>
-<section id="filtres" class="level2" data-number="2.2">
-<h2 data-number="2.2" class="anchored" data-anchor-id="filtres"><span class="header-section-number">2.2</span> Filtres</h2>
+<section id="filtres" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="filtres"><span class="header-section-number">3.2</span> Filtres</h2>
 <ul>
 <li>Les filtres <em>décision</em> et <em>origine</em> s’appliquent dès qu’on les change ; la recherche s’applique après 300 ms sans frappe. Le bouton « Filtrer » reste disponible.</li>
 <li>Le panneau de droite ne montre que les doublons correspondant au filtre de décision (par exemple « en attente »), avec la mention « X sur Y, filtre actif ».</li>
 <li>La recherche porte aussi sur le nom et l’identifiant des doublons et renvoie leur CodeList de référence.</li>
 </ul>
 </section>
-<section id="lisibilité-des-badges" class="level2" data-number="2.3">
-<h2 data-number="2.3" class="anchored" data-anchor-id="lisibilité-des-badges"><span class="header-section-number">2.3</span> Lisibilité des badges</h2>
+<section id="lisibilité-des-badges" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="lisibilité-des-badges"><span class="header-section-number">3.3</span> Lisibilité des badges</h2>
 <ul>
 <li>Infobulles sur les pastilles de décision et sur les badges de détection.</li>
 <li>Une légende d’une ligne sous les filtres.</li>
@@ -278,10 +600,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <hr>
 </section>
 </section>
-<section id="registre-nettoyé" class="level1" data-number="3">
-<h1 data-number="3"><span class="header-section-number">3</span> Registre nettoyé</h1>
-<section id="ajout-en-lot" class="level2" data-number="3.1">
-<h2 data-number="3.1" class="anchored" data-anchor-id="ajout-en-lot"><span class="header-section-number">3.1</span> Ajout en lot</h2>
+<section id="registre-nettoyé" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Registre nettoyé</h1>
+<section id="ajout-en-lot" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="ajout-en-lot"><span class="header-section-number">4.1</span> Ajout en lot</h2>
 <p>Les CodeLists <strong>sans doublon</strong> peuvent être ajoutées au registre nettoyé sans décision, avec <code>replaces</code> vide.</p>
 <ul>
 <li>Une case à cocher par ligne éligible ; les CodeLists avec doublons n’en ont pas.</li>
@@ -291,18 +613,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Une seule lecture et une seule écriture du fichier par action (un seul aller-retour S3), au lieu d’une écriture par CodeList.</li>
 </ul>
 </section>
-<section id="retrait-dune-liste-ajoutée-par-erreur" class="level2" data-number="3.2">
-<h2 data-number="3.2" class="anchored" data-anchor-id="retrait-dune-liste-ajoutée-par-erreur"><span class="header-section-number">3.2</span> Retrait d’une liste ajoutée par erreur</h2>
+<section id="retrait-dune-liste-ajoutée-par-erreur" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="retrait-dune-liste-ajoutée-par-erreur"><span class="header-section-number">4.2</span> Retrait d’une liste ajoutée par erreur</h2>
 <p>Le bouton « ↩︎ Retirer du registre nettoyé » apparaît dans le panneau de droite pour une CodeList sans doublon déjà présente dans le registre. Seules les entrées sans <code>replaces</code> sont retirables : les autres résultent de décisions approuvées et se corrigent en changeant la décision puis en sauvegardant.</p>
 <p>Au chargement d’un registre, l’interface lit le registre nettoyé existant : le ✅ d’une CodeList déjà ajoutée est donc correct d’une session à l’autre.</p>
 <hr>
 </section>
 </section>
-<section id="détection" class="level1" data-number="4">
-<h1 data-number="4"><span class="header-section-number">4</span> Détection</h1>
+<section id="détection" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Détection</h1>
 <p>Ces changements corrigent des comportements relevés dans les observations sur l’ancienne version.</p>
-<section id="score-flou-symétrique" class="level2" data-number="4.1">
-<h2 data-number="4.1" class="anchored" data-anchor-id="score-flou-symétrique"><span class="header-section-number">4.1</span> Score flou symétrique</h2>
+<section id="score-flou-symétrique" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="score-flou-symétrique"><span class="header-section-number">5.1</span> Score flou symétrique</h2>
 <p><code>_code_similarity</code> (<code>funnel.py</code>) divisait le nombre de codes appariés par la taille de la <strong>première</strong> liste de la paire. Une liste incluse dans une plus grande obtenait 100 % si elle passait en premier, et la paire était écartée dans l’ordre inverse. Le score dépendait donc de l’ordre des listes.</p>
 <p>Le score est maintenant rapporté à la taille de la <strong>plus grande</strong> liste :</p>
 <table class="caption-top table">
@@ -337,16 +659,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 </section>
-<section id="confiance-100-réservé-à-lexact" class="level2" data-number="4.2">
-<h2 data-number="4.2" class="anchored" data-anchor-id="confiance-100-réservé-à-lexact"><span class="header-section-number">4.2</span> Confiance : 100 % réservé à l’exact</h2>
+<section id="confiance-100-réservé-à-lexact" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="confiance-100-réservé-à-lexact"><span class="header-section-number">5.2</span> Confiance : 100 % réservé à l’exact</h2>
 <p>La confiance des détections floues et sémantiques est plafonnée à <strong>0,99</strong>. Un score de 100 % signifie désormais « signature exacte ».</p>
 </section>
-<section id="double-signalement-entre-phases" class="level2" data-number="4.3">
-<h2 data-number="4.3" class="anchored" data-anchor-id="double-signalement-entre-phases"><span class="header-section-number">4.3</span> Double signalement entre phases</h2>
+<section id="double-signalement-entre-phases" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="double-signalement-entre-phases"><span class="header-section-number">5.3</span> Double signalement entre phases</h2>
 <p><code>used.update(master.id, slave.id)</code> ajoutait les <strong>caractères</strong> des identifiants au lieu des identifiants. Le filtre <code>in used</code> ne fonctionnait donc plus après la phase floue et une même paire pouvait ressortir aussi en « usage » ou « sémantique ». Les esclaves flous sont désormais marqués après la boucle floue : toutes les paires floues restent détectées (chaînes a→b→c comprises), mais les phases suivantes ne les re-signalent plus.</p>
 </section>
-<section id="badges-propres-à-la-liste-principale" class="level2" data-number="4.4">
-<h2 data-number="4.4" class="anchored" data-anchor-id="badges-propres-à-la-liste-principale"><span class="header-section-number">4.4</span> Badges propres à la liste principale</h2>
+<section id="badges-propres-à-la-liste-principale" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="badges-propres-à-la-liste-principale"><span class="header-section-number">5.4</span> Badges propres à la liste principale</h2>
 <p>Le registre est présenté « doublon par rapport à la CodeList principale », mais les types de détection et la confiance d’un doublon étaient fusionnés avec toutes les paires l’impliquant, y compris avec d’autres doublons. Un doublon pouvait ainsi afficher « exact » et 100 % alors que ses codes différaient de ceux de la liste principale.</p>
 <ul>
 <li>Les types et la confiance viennent d’abord de la <strong>paire directe</strong> avec la liste principale.</li>
@@ -370,17 +692,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <hr>
 </section>
 </section>
-<section id="étape-sémantique-visible" class="level1" data-number="5">
-<h1 data-number="5"><span class="header-section-number">5</span> Étape sémantique visible</h1>
+<section id="étape-sémantique-visible" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Étape sémantique visible</h1>
 <p>Quand les variables <code>OPENAI_BASE_URL</code> et <code>OPENAI_API_KEY</code> manquent, l’étape sémantique est sautée. Cela n’était visible que dans la console.</p>
 <ul>
-<li>Le run enregistre un avertissement <code>{phase, status, reason}</code> dans <code>run_summary.json</code>. <code>status</code> vaut <code>skipped</code> (variables absentes), <code>disabled</code> (<code>--no-llm</code>) ou <code>partial</code> (listes de plus de 100 codes exclues de la détection floue).</li>
+<li>Le run enregistre un avertissement <code>{phase, status, reason}</code> dans <code>run_summary.json</code>. <code>status</code> vaut <code>skipped</code> (variables absentes), <code>disabled</code> (<code>--no-llm</code>) ou <code>partial</code> (listes trop longues exclues de la détection floue ; la limite, alors de 100 codes, est passée à 5 000 depuis).</li>
 <li>Un <strong>bandeau jaune</strong> l’affiche dans l’onglet Pipeline, à la fin du run, et en haut de l’onglet Validation quand le registre chargé a un <code>run_summary.json</code>.</li>
 </ul>
 <hr>
 </section>
-<section id="sorties-dun-run" class="level1" data-number="6">
-<h1 data-number="6"><span class="header-section-number">6</span> Sorties d’un run</h1>
+<section id="sorties-dun-run" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Sorties d’un run</h1>
 <p>Chaque exécution écrit dans son propre dossier daté (UTC), sous la racine de sortie :</p>
 <pre><code>scrubber_output/
 ├── cleaned_codelists.json            # registre nettoyé, partagé et cumulé entre les runs
@@ -411,8 +733,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
 </section>
-<section id="api" class="level1" data-number="7">
-<h1 data-number="7"><span class="header-section-number">7</span> API</h1>
+<section id="api-1" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> API</h1>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">
@@ -447,21 +769,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Les CodeLists qui ont des doublons sont refusées côté serveur par l’ajout en lot (<code>skipped_with_duplicates</code>), même si l’appel ne vient pas de l’interface.</p>
 <hr>
 </section>
-<section id="hors-périmètre-et-suites-possibles" class="level1" data-number="8">
-<h1 data-number="8"><span class="header-section-number">8</span> Hors périmètre et suites possibles</h1>
-<p>Points soulevés dans les observations sur l’ancienne version, <strong>non traités</strong> :</p>
-<ul>
-<li>changer la liste maître d’un groupe depuis l’interface ;</li>
-<li>écarter une CodeList du registre sans l’ajouter ;</li>
-<li>valeurs d’échappement (<code>MissingCodeRepresentation</code>) : les comparer à part ;</li>
-<li>versions des objets DDI et <code>BasedOnObject</code> : ils ne sont pas lus aujourd’hui ;</li>
-<li>CodeLists non référencées, et mise à jour des objets via l’API Colectica ;</li>
-<li>indicateur du nombre de variables qui utilisent une CodeList.</li>
-</ul>
+<section id="hors-périmètre-à-lépoque" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span> Hors périmètre à l’époque</h1>
+<p>Points alors non traités, repris depuis dans la partie <em>Suite des observations</em> : changer la liste maître, écarter une CodeList, valeurs d’échappement, versions et <code>BasedOnObject</code>, nombre de variables. Restent ouverts : CodeLists non référencées et mise à jour via l’API Colectica.</p>
 <hr>
 </section>
-<section id="tests-ajoutés" class="level1" data-number="9">
-<h1 data-number="9"><span class="header-section-number">9</span> Tests ajoutés</h1>
+<section id="tests-ajoutés-1" class="level1" data-number="10">
+<h1 data-number="10"><span class="header-section-number">10</span> Tests ajoutés</h1>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">

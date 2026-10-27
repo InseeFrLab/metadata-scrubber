@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-10-22">
+<meta name="dcterms.date" content="2026-10-27">
 
 <title>Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0) – Metadata Scrubber</title>
 <style>
@@ -81,7 +81,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-d3c09cf01b9717715406c5b992d80823.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-55617497126496852ff9f5a59253c640.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -199,6 +199,7 @@ window.Quarto = {
   <li><a href="#structure-xml-code" id="toc-structure-xml-code" class="nav-link" data-scroll-target="#structure-xml-code"><span class="header-section-number">1.1.1</span> Structure XML : <code>&lt;Code&gt;</code></a></li>
   <li><a href="#structure-xml-category" id="toc-structure-xml-category" class="nav-link" data-scroll-target="#structure-xml-category"><span class="header-section-number">1.1.2</span> Structure XML : <code>&lt;Category&gt;</code></a></li>
   <li><a href="#structure-xml-variable-référençant-une-codelist" id="toc-structure-xml-variable-référençant-une-codelist" class="nav-link" data-scroll-target="#structure-xml-variable-référençant-une-codelist"><span class="header-section-number">1.1.3</span> Structure XML : <code>&lt;Variable&gt;</code> référençant une <code>CodeList</code></a></li>
+  <li><a href="#versions-et-filiation" id="toc-versions-et-filiation" class="nav-link" data-scroll-target="#versions-et-filiation"><span class="header-section-number">1.1.4</span> Versions et filiation</a></li>
   </ul></li>
   <li><a href="#pipeline-dextraction-4-phases" id="toc-pipeline-dextraction-4-phases" class="nav-link" data-scroll-target="#pipeline-dextraction-4-phases"><span class="header-section-number">1.2</span> Pipeline d’extraction (4 phases)</a></li>
   </ul></li>
@@ -208,17 +209,20 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#exemple-18-listes-à-1-code" id="toc-exemple-18-listes-à-1-code" class="nav-link" data-scroll-target="#exemple-18-listes-à-1-code"><span class="header-section-number">2.1.1</span> Exemple : 18 listes à 1 code</a></li>
   <li><a href="#caractéristiques" id="toc-caractéristiques" class="nav-link" data-scroll-target="#caractéristiques"><span class="header-section-number">2.1.2</span> Caractéristiques</a></li>
+  <li><a href="#choix-de-la-codelist-maître" id="toc-choix-de-la-codelist-maître" class="nav-link" data-scroll-target="#choix-de-la-codelist-maître"><span class="header-section-number">2.1.3</span> Choix de la CodeList maître</a></li>
   </ul></li>
   <li><a href="#phase-1-bis-quasi-doublons-similarité-floue" id="toc-phase-1-bis-quasi-doublons-similarité-floue" class="nav-link" data-scroll-target="#phase-1-bis-quasi-doublons-similarité-floue"><span class="header-section-number">2.2</span> Phase 1 bis — Quasi-Doublons (Similarité Floue)</a>
   <ul class="collapse">
   <li><a href="#exemples-bts.xml" id="toc-exemples-bts.xml" class="nav-link" data-scroll-target="#exemples-bts.xml"><span class="header-section-number">2.2.1</span> Exemples BTS.xml</a></li>
   <li><a href="#caractéristiques-1" id="toc-caractéristiques-1" class="nav-link" data-scroll-target="#caractéristiques-1"><span class="header-section-number">2.2.2</span> Caractéristiques</a></li>
   </ul></li>
-  <li><a href="#phase-2-doublons-sémantiques-embeddings-llm" id="toc-phase-2-doublons-sémantiques-embeddings-llm" class="nav-link" data-scroll-target="#phase-2-doublons-sémantiques-embeddings-llm"><span class="header-section-number">2.3</span> Phase 2 — Doublons Sémantiques (Embeddings + LLM)</a>
+  <li><a href="#listes-suspectes-quality_flags" id="toc-listes-suspectes-quality_flags" class="nav-link" data-scroll-target="#listes-suspectes-quality_flags"><span class="header-section-number">2.3</span> Listes suspectes (<code>quality_flags</code>)</a></li>
+  <li><a href="#phase-1-ter-codes-déchappement-et-libellés" id="toc-phase-1-ter-codes-déchappement-et-libellés" class="nav-link" data-scroll-target="#phase-1-ter-codes-déchappement-et-libellés"><span class="header-section-number">2.4</span> Phase 1 ter — Codes d’échappement et libellés</a></li>
+  <li><a href="#phase-2-doublons-sémantiques-embeddings-llm" id="toc-phase-2-doublons-sémantiques-embeddings-llm" class="nav-link" data-scroll-target="#phase-2-doublons-sémantiques-embeddings-llm"><span class="header-section-number">2.5</span> Phase 2 — Doublons Sémantiques (Embeddings + LLM)</a>
   <ul class="collapse">
-  <li><a href="#embeddings-de-codelists" id="toc-embeddings-de-codelists" class="nav-link" data-scroll-target="#embeddings-de-codelists"><span class="header-section-number">2.3.1</span> Embeddings de CodeLists</a></li>
-  <li><a href="#embeddings-de-variables-usage" id="toc-embeddings-de-variables-usage" class="nav-link" data-scroll-target="#embeddings-de-variables-usage"><span class="header-section-number">2.3.2</span> Embeddings de Variables (usage)</a></li>
-  <li><a href="#caractéristiques-2" id="toc-caractéristiques-2" class="nav-link" data-scroll-target="#caractéristiques-2"><span class="header-section-number">2.3.3</span> Caractéristiques</a></li>
+  <li><a href="#embeddings-de-codelists" id="toc-embeddings-de-codelists" class="nav-link" data-scroll-target="#embeddings-de-codelists"><span class="header-section-number">2.5.1</span> Embeddings de CodeLists</a></li>
+  <li><a href="#embeddings-de-variables-usage" id="toc-embeddings-de-variables-usage" class="nav-link" data-scroll-target="#embeddings-de-variables-usage"><span class="header-section-number">2.5.2</span> Embeddings de Variables (usage)</a></li>
+  <li><a href="#caractéristiques-2" id="toc-caractéristiques-2" class="nav-link" data-scroll-target="#caractéristiques-2"><span class="header-section-number">2.5.3</span> Caractéristiques</a></li>
   </ul></li>
   </ul></li>
   <li><a href="#signaux-de-renforcement-var_sig" id="toc-signaux-de-renforcement-var_sig" class="nav-link" data-scroll-target="#signaux-de-renforcement-var_sig"><span class="header-section-number">3</span> Signaux de Renforcement : <code>var_sig</code></a>
@@ -239,6 +243,7 @@ window.Quarto = {
   <li><a href="#ce-que-fait---registry-dans-le-pipeline-main.py-2-bis" id="toc-ce-que-fait---registry-dans-le-pipeline-main.py-2-bis" class="nav-link" data-scroll-target="#ce-que-fait---registry-dans-le-pipeline-main.py-2-bis"><span class="header-section-number">4.3</span> Ce que fait <code>--registry</code> dans le pipeline (main.py, §2 bis)</a></li>
   <li><a href="#schéma-du-registre-nettoyé-v2" id="toc-schéma-du-registre-nettoyé-v2" class="nav-link" data-scroll-target="#schéma-du-registre-nettoyé-v2"><span class="header-section-number">4.4</span> Schéma du registre nettoyé (v2)</a></li>
   <li><a href="#sync-incrémental-sync_cleaned_registry" id="toc-sync-incrémental-sync_cleaned_registry" class="nav-link" data-scroll-target="#sync-incrémental-sync_cleaned_registry"><span class="header-section-number">4.5</span> Sync incrémental (<code>sync_cleaned_registry</code>)</a></li>
+  <li><a href="#décisions-conservées-entre-les-runs-decisions.json" id="toc-décisions-conservées-entre-les-runs-decisions.json" class="nav-link" data-scroll-target="#décisions-conservées-entre-les-runs-decisions.json"><span class="header-section-number">4.6</span> Décisions conservées entre les runs (<code>decisions.json</code>)</a></li>
   </ul></li>
   <li><a href="#walkthrough-exemples-avec-les-datasets-demo" id="toc-walkthrough-exemples-avec-les-datasets-demo" class="nav-link" data-scroll-target="#walkthrough-exemples-avec-les-datasets-demo"><span class="header-section-number">5</span> Walkthrough : Exemples avec les Datasets Demo</a>
   <ul class="collapse">
@@ -288,7 +293,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 22, 2026</p>
+      <p class="date">October 27, 2026</p>
     </div>
   </div>
   
@@ -361,6 +366,11 @@ window.Quarto = {
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  &lt;/<span class="kw">VariableRepresentation</span>&gt;</span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>&lt;/<span class="kw">Variable</span>&gt;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="versions-et-filiation" class="level3" data-number="1.1.4">
+<h3 data-number="1.1.4" class="anchored" data-anchor-id="versions-et-filiation"><span class="header-section-number">1.1.4</span> Versions et filiation</h3>
+<p>Pour chaque CodeList, l’extraction lit aussi <code>r:Agency</code>, <code>r:Version</code> et les identifiants des <code>r:BasedOnObject/r:BasedOnReference</code>. Quand un fichier contient plusieurs versions d’une même CodeList (BPE : versions 5 et 6 d’un même identifiant), seule la plus récente est gardée (<code>latest_versions</code>, comparaison numérique) ; <code>run_summary.json</code> compte les versions ignorées (<code>older_versions_ignored</code>).</p>
+<p><code>BasedOnObject</code> est un <strong>indicateur</strong>, sans effet sur la détection : la carte d’un doublon indique « basé sur … » quand il dérive d’une autre liste du groupe (43 cas dans les groupes de BPE.xml). Faut-il rejeter automatiquement une liste dérivée d’une liste rejetée ? La question reste ouverte côté métier.</p>
+</section>
 </section>
 <section id="pipeline-dextraction-4-phases" class="level2" data-number="1.2">
 <h2 data-number="1.2" class="anchored" data-anchor-id="pipeline-dextraction-4-phases"><span class="header-section-number">1.2</span> Pipeline d’extraction (4 phases)</h2>
@@ -418,6 +428,7 @@ window.Quarto = {
 </table>
 <p>Toutes 18 partagent <strong>exactement la même signature</strong> → doublons exacts. Probablement des <strong>codes génériques</strong> « consulter le dictionnaire » dupliqués par l’outil de modélisation (Colectica).</p>
 <blockquote class="blockquote">
+<p><strong>Traitement actuel</strong> : ces listes sont marquées <code>placeholder</code> (voir <em>Listes suspectes</em> ci-dessous) et comparées sur leur <strong>nom</strong> normalisé au lieu de leurs codes : <code>N-region</code> et <code>N-REGION</code> restent doublons, mais plus <code>N-region</code> et <code>N-conv_coll</code>.</p>
 <p><strong>Limite connue</strong> : ce ne sont pas de vrais doublons conceptuels. Il s’agit d’un raccourci arbitraire du producteur, qui — au lieu de créer ou référencer les listes de codes spécifiques (existantes ou à créer) — a renvoyé vers un document statique unique censé toutes les regrouper. Cette pratique est désormais corrigée systématiquement à la validation de la documentation avant publication (référence directe vers la liste de codes spécifique). Le regroupement en doublon exact reste pertinent sur les données passées pour <strong>signaler l’anomalie</strong>, mais le choix d’une CodeList « maître » parmi les 18 est arbitraire/cosmétique — aucune n’est réellement correcte. La vraie correction (créer les 18 listes de codes spécifiques) reste un travail humain hors périmètre de l’outil.</p>
 </blockquote>
 </section>
@@ -454,6 +465,12 @@ window.Quarto = {
 </tbody>
 </table>
 <p>Sur BTS.xml : <strong>29 groupes</strong> détectés, <strong>54</strong> CodeLists redondantes.</p>
+</section>
+<section id="choix-de-la-codelist-maître" class="level3" data-number="2.1.3">
+<h3 data-number="2.1.3" class="anchored" data-anchor-id="choix-de-la-codelist-maître"><span class="header-section-number">2.1.3</span> Choix de la CodeList maître</h3>
+<p>Aucune distance ni aucun score n’intervient dans le choix de la maître. Toutes les paires détectées (exactes, floues, usage, sémantiques) sont réunies en <strong>composantes connexes</strong> (<code>build_duplicates_registry</code>). Dans chaque composante, la maître est la <strong>première CodeList rencontrée dans l’ordre du fichier XML</strong> ; les autres membres sont ses doublons. Les entrées du registre nettoyé (<code>--registry</code>) sont placées en tête de cet ordre et restent donc toujours maîtres.</p>
+<p>L’utilisateur peut changer la maître d’un groupe depuis l’interface (<code>swap_parent</code>). Chaque membre porte ses <code>links</code> (toutes ses paires avec les autres membres), ce qui permet de recalculer badges, confiance et <code>via</code> sans relancer le pipeline. Le choix est conservé dans <code>decisions.json</code> (<code>masters</code>) : au run suivant, la priorité devient registre nettoyé, puis maître choisie, puis ordre du XML.</p>
+<p>Un doublon relié à la maître seulement via un autre doublon affiche « lien indirect, via … ».</p>
 </section>
 </section>
 <section id="phase-1-bis-quasi-doublons-similarité-floue" class="level2" data-number="2.2">
@@ -530,15 +547,86 @@ window.Quarto = {
 </tbody>
 </table>
 <blockquote class="blockquote">
-<p><strong>Seuil <code>MAX_CODES_FOR_FUZZY</code> (défaut 100)</strong> : la comparaison code-à-code (<code>_code_similarity</code>) est en <span class="math inline">\(O(\text{len}(a.codes) \times \text{len}(b.codes))\)</span>, indépendamment du nombre de CodeLists. Une seule liste volumineuse (ex. la nomenclature des communes, ~35 000 codes) suffit à rendre une paire impraticable (plusieurs dizaines de minutes). Les CodeLists dépassant ce seuil sont donc exclues de la phase floue et listées explicitement dans les logs — un vrai doublon parmi elles serait de toute façon capté par la phase exacte (§ précédent).</p>
+<p><strong>Appariement des codes et seuils</strong> : <code>_code_similarity</code> apparie d’abord les codes de <strong>même valeur</strong> (index par valeur, coût linéaire), puis cherche le meilleur appariement des codes restants en <span class="math inline">\(O(\text{restants}_a \times \text{restants}_b)\)</span>, seulement si chaque reste compte au plus <code>MAX_CODES_PAIRWISE</code> (100) codes. Une paire dont le rapport des tailles est inférieur à <code>min_code_sim</code> (0,75) est écartée sans calcul, car sa similarité de codes ne peut pas atteindre ce seuil.</p>
+<p>Les CodeLists de plus de <code>MAX_CODES_FOR_FUZZY</code> (5 000) codes, comme les communes (~35 000 codes) ou les IRIS, sont exclues de la phase floue et listées dans les logs et dans <code>run_summary.json</code>. Un vrai doublon parmi elles reste capté par la phase exacte (§ précédent). Avant, ce seuil valait 100 : des listes métier comme les types d’équipements de la BPE (150 à 232 codes) échappaient à la phase floue.</p>
 </blockquote>
 </section>
 </section>
-<section id="phase-2-doublons-sémantiques-embeddings-llm" class="level2" data-number="2.3">
-<h2 data-number="2.3" class="anchored" data-anchor-id="phase-2-doublons-sémantiques-embeddings-llm"><span class="header-section-number">2.3</span> Phase 2 — Doublons Sémantiques (Embeddings + LLM)</h2>
+<section id="listes-suspectes-quality_flags" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="listes-suspectes-quality_flags"><span class="header-section-number">2.3</span> Listes suspectes (<code>quality_flags</code>)</h2>
+<p><code>quality.quality_flags</code> signale à l’étape 4 les listes qui ne devraient probablement pas être des listes de codes, sur leurs codes métier :</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Indicateur</th>
+<th>Règle</th>
+<th>Exemples</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>placeholder</code> (« renvoi »)</td>
+<td>Valeur <code>cf</code> ou <code>xxx…</code> ; valeur ou libellé commençant par « voir », contenant « cliquer ici » ou « sur N positions » ; commençant par « code » si la liste a au plus 2 codes métier</td>
+<td>« Voir dictionnaire des nomenclatures », « Code quartier du QVA », « Code sur 6 positions »</td>
+</tr>
+<tr class="even">
+<td><code>numeric_range</code> (« numérique »)</td>
+<td>Au plus 2 codes métier, dont un motif de bornes</td>
+<td>« 0 à 7 », « 00 à 23 », « de 0 à N »</td>
+</tr>
+<tr class="odd">
+<td><code>single_code</code> (« code unique »)</td>
+<td>Un seul code métier</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Une liste <code>placeholder</code> a pour signature son nom normalisé (<code>quality.name_key</code>) et est exclue des comparaisons de codes (hors échappement, libellés, flou) : ses codes renvoient ailleurs et ne sont pas comparables. Les indicateurs sont écrits dans le registre (<code>quality_flags</code>) ; l’interface les affiche (⚠), permet de filtrer les listes suspectes et demande confirmation avant d’en ajouter une au registre nettoyé.</p>
+</section>
+<section id="phase-1-ter-codes-déchappement-et-libellés" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="phase-1-ter-codes-déchappement-et-libellés"><span class="header-section-number">2.4</span> Phase 1 ter — Codes d’échappement et libellés</h2>
+<p>Beaucoup de listes ajoutent directement leurs codes d’échappement (<em>sans objet</em>, <em>non réponse</em>, <em>non concerné</em>, <em>indéterminé</em>…) au lieu d’utiliser un <code>MissingCodeRepresentation</code>. Deux listes aux mêmes codes métier ne sont alors plus des doublons exacts, et leur score flou peut tomber sous le seuil.</p>
+<p><code>quality.split_codes</code> sépare les codes métier des codes d’échappement. Un code est d’échappement si son libellé normalisé <strong>commence</strong> par un motif connu (« sans objet », « non concerné », « non renseigné », « non réponse », « indéterminé », « hors champ », « valeur manquante »…) ou si sa valeur est du type <code>_Z</code>, <code>_U</code> ou <code>/</code>. L’ancrage en début de libellé évite les faux positifs (« Contrat à durée indéterminée » reste un code métier).</p>
+<p>Deux détections en découlent, après la phase floue :</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>Règle</th>
+<th>Confiance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>exact_business</code> (« exact hors échappement »)</td>
+<td>Même signature des codes métier, signatures complètes différentes, au moins 2 codes métier</td>
+<td>0,98</td>
+</tr>
+<tr class="even">
+<td><code>labels</code> (« libellés »)</td>
+<td>Mêmes libellés de codes métier, valeurs différentes (ex. <code>1</code>/<code>0</code> et <code>oui</code>/<code>non</code>, <code>A</code> et <code>Acceptable</code>), au moins 2 libellés</td>
+<td>0,95</td>
+</tr>
+</tbody>
+</table>
+<p>Le minimum de 2 codes évite de regrouper les listes d’indicateurs d’EAR dont le seul code métier est « Cohérent ». Le registre indique pour chaque liste ses <code>escape_codes</code>, affichés sur la carte du doublon.</p>
+<p>Sur BPE.xml : 7 doublons « hors échappement » (dont <code>L_QUALITE_ZONAGE</code> / <code>L_QUALITE_ZONAGE_2023</code> et <code>L_VAR_SPECIF_2023</code> / <code>L_PRESENCE_ABSENCE</code>) et 5 par libellés (dont <code>L_VAR_SPECIF_2023</code> / <code>L_VAR_SPECIF_2021</code> et <code>L_QUALITE_XY_2022</code> / <code>L_QUALITE_XY_2024</code>, valeurs <code>Acceptable</code> et <code>A</code>).</p>
+</section>
+<section id="phase-2-doublons-sémantiques-embeddings-llm" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="phase-2-doublons-sémantiques-embeddings-llm"><span class="header-section-number">2.5</span> Phase 2 — Doublons Sémantiques (Embeddings + LLM)</h2>
 <p>Les deux phases précédentes ne comprennent <strong>pas le sens</strong> : possible de “Sexe” vs “Genre” avec codes différents.</p>
-<section id="embeddings-de-codelists" class="level3" data-number="2.3.1">
-<h3 data-number="2.3.1" class="anchored" data-anchor-id="embeddings-de-codelists"><span class="header-section-number">2.3.1</span> Embeddings de CodeLists</h3>
+<section id="embeddings-de-codelists" class="level3" data-number="2.5.1">
+<h3 data-number="2.5.1" class="anchored" data-anchor-id="embeddings-de-codelists"><span class="header-section-number">2.5.1</span> Embeddings de CodeLists</h3>
 <ol type="1">
 <li>Vectorisation : modèle <code>qwen3-embedding-8b</code> sur nom + label + codes</li>
 <li>Cosinus entre toutes les paires (102 vecteurs → 102×102)</li>
@@ -557,8 +645,8 @@ window.Quarto = {
 <p><strong>Pas de barème</strong> : il n’existe pas de grille de notation ou de critères pondérés en aval. <code>confiance</code> est une valeur continue entre 0 et 1 <strong>auto-évaluée par le LLM lui-même</strong> (température 0, un seul appel par paire), accompagnée d’une justification en texte libre. Seules les 20 meilleures paires (triées par score cosinus) sont soumises au juge.</p>
 </blockquote>
 </section>
-<section id="embeddings-de-variables-usage" class="level3" data-number="2.3.2">
-<h3 data-number="2.3.2" class="anchored" data-anchor-id="embeddings-de-variables-usage"><span class="header-section-number">2.3.2</span> Embeddings de Variables (usage)</h3>
+<section id="embeddings-de-variables-usage" class="level3" data-number="2.5.2">
+<h3 data-number="2.5.2" class="anchored" data-anchor-id="embeddings-de-variables-usage"><span class="header-section-number">2.5.2</span> Embeddings de Variables (usage)</h3>
 <p><strong>Approche inversée</strong> : on compare les <strong>variables</strong> qui référencent les CodeLists.</p>
 <table class="caption-top table">
 <colgroup>
@@ -588,8 +676,8 @@ window.Quarto = {
 </table>
 <p>Même sémantique des 2 premières variables → mêmes concept métier. Particulièrement efficace quand toutes les CodeLists sont référencées (BTS.xml : 156/156).</p>
 </section>
-<section id="caractéristiques-2" class="level3" data-number="2.3.3">
-<h3 data-number="2.3.3" class="anchored" data-anchor-id="caractéristiques-2"><span class="header-section-number">2.3.3</span> Caractéristiques</h3>
+<section id="caractéristiques-2" class="level3" data-number="2.5.3">
+<h3 data-number="2.5.3" class="anchored" data-anchor-id="caractéristiques-2"><span class="header-section-number">2.5.3</span> Caractéristiques</h3>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 15%">
@@ -842,6 +930,23 @@ window.Quarto = {
 <li><strong>Name/label/codes/vars</strong> ne sont <strong>JAMAIS</strong> modifiés par le sync (éditions manuelles préservées)</li>
 </ul>
 <hr>
+</section>
+<section id="décisions-conservées-entre-les-runs-decisions.json" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="décisions-conservées-entre-les-runs-decisions.json"><span class="header-section-number">4.6</span> Décisions conservées entre les runs (<code>decisions.json</code>)</h2>
+<p>La sauvegarde écrit aussi <code>decisions.json</code> à la racine des sorties, à côté de <code>cleaned_codelists.json</code> :</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"version"</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"pairs"</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">"&lt;id_a&gt;|&lt;id_b&gt;"</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">"decision"</span><span class="fu">:</span> <span class="st">"reject"</span><span class="fu">,</span> <span class="dt">"updated_at"</span><span class="fu">:</span> <span class="st">"..."</span><span class="fu">}},</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"dismissed"</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">"&lt;cl_id&gt;"</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">"updated_at"</span><span class="fu">:</span> <span class="st">"..."</span><span class="fu">}},</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"masters"</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">"&lt;cl_id&gt;"</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">"updated_at"</span><span class="fu">:</span> <span class="st">"..."</span><span class="fu">}}</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li>Clé de paire : les deux ids triés, la décision vaut dans les deux sens.</li>
+<li>Seules <em>approuvé</em> et <em>rejeté</em> sont conservées ; une paire remise en attente est retirée. Les paires absentes du registre sauvegardé (autres fichiers sources) sont gardées.</li>
+<li><code>dismissed</code> : CodeLists sans doublon écartées du registre nettoyé.</li>
+<li><code>masters</code> : CodeLists choisies comme maîtres (voir <em>Choix de la CodeList maître</em>).</li>
+</ul>
+<p>À l’étape 9, le pipeline réapplique ces décisions (<code>apply_decisions</code>) : le doublon reçoit <code>decision_carried: true</code>, la liste écartée <code>dismissed: true</code>, et <code>run_summary.json</code> compte <code>decisions_carried</code>. Les paires approuvées dont le doublon figure déjà dans les <code>replaces</code> du registre nettoyé n’apparaissent pas, puisque <code>--registry</code> exclut ces listes de la détection : la reprise sert donc surtout aux rejets.</p>
 </section>
 </section>
 <section id="walkthrough-exemples-avec-les-datasets-demo" class="level1" data-number="5">

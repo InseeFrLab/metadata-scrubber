@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://InseeFrLab.github.io/metadata-scrubber/index.html</loc>
-    <lastmod>2026-10-22T07:00:35.828Z</lastmod>
-  </url>
-  <url>
     <loc>https://InseeFrLab.github.io/metadata-scrubber/note_methodologique_dedoublonnage.html</loc>
-    <lastmod>2026-10-22T07:00:35.829Z</lastmod>
+    <lastmod>2026-10-27T15:17:00.849Z</lastmod>
   </url>
   <url>
     <loc>https://InseeFrLab.github.io/metadata-scrubber/guide_utilisateur.html</loc>
-    <lastmod>2026-10-22T07:00:35.826Z</lastmod>
+    <lastmod>2026-10-27T15:17:00.847Z</lastmod>
+  </url>
+  <url>
+    <loc>https://InseeFrLab.github.io/metadata-scrubber/index.html</loc>
+    <lastmod>2026-10-27T15:17:00.849Z</lastmod>
   </url>
   <url>
     <loc>https://InseeFrLab.github.io/metadata-scrubber/modifications_recentes.html</loc>
-    <lastmod>2026-10-22T07:00:35.829Z</lastmod>
+    <lastmod>2026-10-27T15:17:00.849Z</lastmod>
   </url>
 </urlset>
