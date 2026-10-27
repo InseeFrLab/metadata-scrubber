@@ -6,7 +6,9 @@ from metadata_scrubber.cleaned_registry import (
     add_entry_from_parent,
     cleaned_registry_path,
     empty_cleaned_doc,
+    find_codelist,
     load_cleaned_codelists,
+    manual_add_blocker,
     migrate_cleaned_doc,
     sync_cleaned_registry,
     validate_cleaned_doc,
@@ -54,7 +56,7 @@ def test_sync_cree_entree_avec_replaces():
     assert [r["id"] for r in entry["replaces"]] == ["dup-1"]
     assert entry["replaces"][0]["detection_types"] == ["exact"]
     assert entry["first_added_at"] == entry["updated_at"]
-    assert cleaned["version"] == 2
+    assert cleaned["version"] == 3
 
 
 def test_sync_pas_dentree_sans_approbation():
@@ -172,7 +174,7 @@ def test_migration_merged_duplicates_vers_replaces():
         },
     }
     doc = migrate_cleaned_doc(doc)
-    assert doc["version"] == 2
+    assert doc["version"] == 3
     assert doc["codelists"]["a"]["replaces"] == [{"id": "b"}]
     assert "merged_duplicates" not in doc["codelists"]["a"]
 
@@ -349,3 +351,40 @@ def test_origin_serialise_dans_le_registre_des_doublons():
     parent = registry["reg-1"]
     assert parent["origin"] == "registry"
     assert parent["duplicates"][0]["origin"] == "xml"
+
+
+# ────────────────────────────────────────────────────────────────────────
+# Faux doublons : ajout à la main de la maître et du doublon rejeté
+# ────────────────────────────────────────────────────────────────────────
+
+
+def test_find_codelist_maitre_et_doublon():
+    reg = _registry()
+    assert find_codelist(reg, "parent-1") == (reg["parent-1"], None)
+    dup, parent = find_codelist(reg, "dup-1")
+    assert dup["name"] == "SEXE_2" and parent == "parent-1"
+    assert find_codelist(reg, "zzz") == (None, None)
+
+
+def test_manual_add_blocker():
+    assert manual_add_blocker(_registry("reject"), "dup-1") is None
+    assert manual_add_blocker(_registry("reject"), "parent-1") is None
+    assert manual_add_blocker(_registry("pending"), "parent-1") is None
+    assert manual_add_blocker(_registry("pending"), "dup-1")
+    assert manual_add_blocker(_registry("approve"), "dup-1")
+    assert manual_add_blocker(_registry("approve"), "parent-1")
+    assert manual_add_blocker(_registry(), "zzz")
+
+
+def test_sync_supprime_lentree_manuelle_dun_doublon_approuve():
+    cleaned = empty_cleaned_doc()
+    reg = _registry("reject")
+    add_entry_from_parent(cleaned, find_codelist(reg, "dup-1")[0])
+    add_entry_from_parent(cleaned, reg["parent-1"])
+
+    reg["parent-1"]["duplicates"][0]["decision"] = "approve"
+    cleaned, stats = sync_cleaned_registry(reg, cleaned, "reg.json")
+
+    assert list(cleaned["codelists"]) == ["parent-1"]
+    assert [r["id"] for r in cleaned["codelists"]["parent-1"]["replaces"]] == ["dup-1"]
+    assert stats["entries_deleted"] == 1

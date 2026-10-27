@@ -1,0 +1,134 @@
+---
+title: "Service de contrôle scrubber-check"
+format: html
+---
+
+`scrubber-check` répond à une question : **les CodeLists de ce fichier DDI
+existent-elles déjà parmi les CodeLists publiées ?** On l'utilise avant d'ajouter
+une opération, en ligne de commande, en intégration continue ou par une API HTTP.
+Il est publié à part de l'appli de validation (image et déploiement propres),
+sans interface et sans LLM : le contrôle est déterministe et prend quelques
+secondes.
+
+# Principe
+
+```
+            (une fois par nuit)                              (à la demande)
+API Insee ─► scrubber-check index build ─► reference_index.json.gz ─┐
+ séries → opérations → fichiers → CodeLists                          ├─► contrôle ─► rapport
+ + nomenclatures du COG (/geo/*)        fichier DDI fourni ──────────┘
+```
+
+L'API Métadonnées n'offre ni recherche ni liste globale des CodeLists : les
+interroger pour chaque fichier demanderait des milliers d'appels. On construit
+donc un **index de référence** une fois, et chaque contrôle ne compare que le
+fichier fourni à cet index. Les objets DDI versionnés sont mis en cache : une
+reconstruction ne retélécharge que les nouvelles versions.
+
+Les détections (exact, hors codes d'échappement, mêmes libellés, sous-ensemble,
+extension, lignée `BasedOnObject`, proche) sont décrites dans la
+[note méthodologique](note_methodologique_dedoublonnage.qmd).
+
+## Volumes sur la base complète (mesurés le 26/10/2026)
+
+| Mesure | Valeur |
+|---|---|
+| Opérations parcourues | 617 (33 avec fichiers DDI, 584 sans) |
+| CodeLists dans l'index | 7 083 publiées + 13 listes du COG (11 suggérées « commune ») |
+| Objets non diffusés (HTTP 401) | 6, ignorés |
+| Construction de l'index | ~27 min au premier passage (7 881 appels), puis rapide grâce au cache |
+| Taille de l'index | 3,3 Mo (JSON compressé) |
+| Chargement de l'index | ~9 s (une fois, au démarrage de l'API) |
+| Contrôle de BTS 2024 (47 listes) | ~8 s contre la base complète, < 1 s contre une série |
+
+Le temps de contrôle est surtout celui du score flou (comparaison des libellés
+avec `difflib`), calculé seulement pour les listes qui partagent au moins la
+moitié de leurs codes (valeur ou libellé) avec la liste contrôlée.
+
+
+# Statuts du rapport
+
+| Statut | Signification | Action conseillée |
+|---|---|---|
+| **doublon** | Liste équivalente déjà publiée | Réutiliser la liste trouvée (nomenclature officielle, liste commune, ou liste d'une autre série) |
+| **inclusion** | Sous-ensemble, ou extension (codes en plus) d'une liste publiée | Réutiliser la liste, ou vérifier la restriction / les codes ajoutés (codes d'échappement ?) |
+| **proche** | Liste proche, ou copiée d'une liste publiée puis modifiée | Vérifier les différences avant de créer une nouvelle liste |
+| **nouvelle** | Aucune liste équivalente | — |
+| **réutilisée** | La liste publiée elle-même (même identifiant) | Rien à faire |
+
+Chaque correspondance donne la liste trouvée (nom, URN, niveau, opérations et
+séries qui l'utilisent), la détection, la confiance et les différences de codes
+(`codes_en_plus`, `codes_en_moins`, `libelles_differents`). Les doublons à
+l'intérieur du fichier sont listés à part. Les listes suspectes (renvoi vers une
+nomenclature, représentation numérique, code unique) sont signalées.
+
+# En ligne de commande
+
+```bash
+# Construire l'index (toute la base ; --serie pour restreindre, --operation pour ne garder que certaines opérations de ces séries)
+uv run scrubber-check index build --output s3://projet-metadonnees-rmes/scrubber_check/reference_index.json.gz
+
+# Décrire un index
+uv run scrubber-check index info --index …/reference_index.json.gz
+
+# Contrôler un fichier
+uv run scrubber-check nouvelle_operation.xml --index …/reference_index.json.gz
+uv run scrubber-check bts2024.xml --exclude-operation s2297    # re-contrôle d'une opération publiée
+uv run scrubber-check fichier.xml --serie s1998 --format csv --output rapport.csv
+```
+
+| Option | Rôle |
+|---|---|
+| `--index` | Index de référence, local ou S3 (défaut : `$SCRUBBER_CHECK_INDEX`, sinon `reference_index.json.gz`) |
+| `--serie`, `--operation` | Ne comparer qu'aux listes de ces séries / opérations (les nomenclatures officielles restent) |
+| `--exclude-operation` | Ignorer les listes propres à une opération (sinon une opération déjà publiée est entièrement « réutilisée ») |
+| `--format` | `table` (défaut), `json` ou `csv` |
+| `--fail-on` | `doublon` (défaut : doublons, inclusions ou doublons internes), `proche` (aussi les listes proches) ou `never` |
+
+Codes de sortie : **0** rien à signaler, **1** constats selon `--fail-on`,
+**2** erreur. On peut ainsi bloquer un chargement dans Colectica ou un job
+d'intégration continue tant que des doublons subsistent.
+
+# API HTTP
+
+`scrubber-check-api` démarre une API FastAPI (port 8000) ; sa documentation
+OpenAPI est servie sur `/docs`.
+
+| Route | Rôle |
+|---|---|
+| `POST /v1/check` | Fichier DDI en `multipart/form-data` (champ `file`) ou corps XML brut ; paramètres `serie`, `operation`, `exclude_operation`, `format=json\|csv` |
+| `GET /v1/index` | Métadonnées de l'index chargé (date, périmètre, volumes) |
+| `GET /health` | État du service |
+
+```bash
+curl -u équipe:$MOT_DE_PASSE -F file=@nouvelle_operation.xml \
+     "https://scrubber-check.lab.sspcloud.fr/v1/check?format=csv"
+```
+
+| Variable | Rôle |
+|---|---|
+| `SCRUBBER_CHECK_INDEX` | Index de référence (local ou S3), rechargé quand le fichier change (vérification toutes les 5 min) |
+| `SCRUBBER_CHECK_MAX_MB` | Taille maximale d'un fichier reçu (défaut 50) |
+| `SCRUBBER_CHECK_AUTH_PASSWORD` | Si défini, mot de passe partagé (Basic Auth) sur `/v1/*` |
+| `INSEE_METADATA_API_URL` | Racine de l'API Métadonnées (défaut : production) |
+
+Le XML reçu est lu sans résolution d'entités ni accès réseau. Le service ne fait
+que **lire** l'API Insee : il n'écrit rien dans Colectica.
+
+L'écran **Pré-contrôle** de l'appli de validation utilise le même moteur
+(voir le [guide](guide_utilisateur.qmd#precontrole)).
+
+# Déploiement
+
+- Image `ghcr.io/inseefrlab/scrubber-check` (`Dockerfile.check`) : dépendances
+  de base seulement, sans openai, numpy ni pandas. Elle est construite par le
+  même workflow GitHub Actions que l'appli.
+- `deploy/check/` : `deployment.yaml`, `service.yaml`, `ingress.yaml`
+  (`scrubber-check.lab.sspcloud.fr`) et `cronjob.yaml`, qui reconstruit l'index
+  chaque nuit à 2 h 30 vers S3 (cache des objets DDI dans
+  `s3://projet-metadonnees-rmes/scrubber_check/api_cache`).
+- `deploy/check/application.yaml` : application Argo CD du service, à appliquer
+  une fois (le dossier `deploy/` n'est pas lu récursivement).
+- Le service lit les identifiants S3 dans le Secret `scrubber-config` et reprend
+  son mot de passe partagé (`SCRUBBER_AUTH_PASSWORD`) ; retirer cette variable
+  du déploiement pour une API ouverte.

@@ -1,435 +1,607 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-bs-theme="light">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metadata Scrubber — Pipeline de dédoublonnage DDI</title>
-    <!-- Bootstrap 5 for layout -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Metadata Scrubber</title>
+    <meta name="scrubber-output-root" content="{{OUTPUT_ROOT}}">
+    <!-- Thème clair / sombre selon le système, avant le premier rendu -->
+    <script>
+        (function () {
+            const mq = window.matchMedia('(prefers-color-scheme: dark)');
+            const apply = () => document.documentElement.setAttribute('data-bs-theme', mq.matches ? 'dark' : 'light');
+            apply();
+            mq.addEventListener('change', apply);
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+        rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="static/css/style.css">
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">🔍 Metadata Scrubber</a>
-            <span class="navbar-text ms-3 text-light small">Pipeline de dédoublonnage CodeLists DDI 3.3/6.0</span>
-            <span id="health-status" class="navbar-text ms-auto text-success small">● En ligne</span>
-        </div>
-    </nav>
+    <!-- Icônes (référencées par icon() dans main.js) -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="m2 13 10 5 10-5"/></symbol>
+        <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8L7 4Z"/></symbol>
+        <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5 10 17l9-10"/></symbol>
+        <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+        <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+        <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+        <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></symbol>
+        <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5Z"/><path d="M4 19a2 2 0 0 1 2-2h13"/></symbol>
+        <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+        <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+        <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 2.5 20h19L12 4Z"/><path d="M12 10v4.5M12 17.5v.01"/></symbol>
+        <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/></symbol>
+        <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.5-4.5L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.5 4.5L20 16"/><path d="M20 20v-4h-4"/></symbol>
+        <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+        <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></symbol>
+        <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5"/></symbol>
+        <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/></symbol>
+        <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+        <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+        <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+        <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.5 3.2 8.2 7.5 9.5 4.3-1.3 7.5-5 7.5-9.5V6L12 3Z"/><path d="m9 12 2 2 4-4"/></symbol>
+        <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 4v16m0-16L3.5 7.5M7 4l3.5 3.5"/><path d="M17 20V4m0 16 3.5-3.5M17 20l-3.5-3.5"/></symbol>
+        <symbol id="i-columns" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></symbol>
+        <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m6 6 12 12"/></symbol>
+        <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></symbol>
+        <symbol id="i-history" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6L3.5 8.5"/><path d="M3.5 4v4.5H8"/><path d="M12 8v4l3 2"/></symbol>
+        <symbol id="i-git" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 8v8M8 6h4a4 4 0 0 1 4 4"/></symbol>
+        <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 16.5v.01"/></symbol>
+        <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8v.01"/></symbol>
+    </svg>
 
-    <div class="container-fluid mt-3">
-        <!-- Tabs -->
-        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
-            <li class="nav-item" role="presentation">
+    <header class="appbar">
+        <div class="appbar-in gutter">
+            <a class="brand" href="./"><span class="brand-mark"><svg class="i"><use href="#i-layers"/></svg></span>Metadata Scrubber</a>
+
+            <nav class="nav app-nav" id="mainTabs" role="tablist" aria-label="Étapes">
                 <button class="nav-link active" id="pipeline-tab" data-bs-toggle="tab" data-bs-target="#pipeline"
                     type="button" role="tab" aria-controls="pipeline" aria-selected="true">
-                    🚀 Pipeline
+                    <span class="step-n">1</span>Analyser
                 </button>
-            </li>
-            <li class="nav-item" role="presentation">
+                <span class="nav-sep" aria-hidden="true"><svg class="i sm"><use href="#i-chevron"/></svg></span>
                 <button class="nav-link" id="validation-tab" data-bs-toggle="tab" data-bs-target="#validation"
                     type="button" role="tab" aria-controls="validation" aria-selected="false">
-                    🔍 Validation des doublons
+                    <span class="step-n">2</span>Valider
                 </button>
-            </li>
-            <li class="nav-item" role="presentation">
+                <span class="nav-sep" aria-hidden="true"><svg class="i sm"><use href="#i-chevron"/></svg></span>
                 <button class="nav-link" id="cleaned-tab" data-bs-toggle="tab" data-bs-target="#cleaned"
                     type="button" role="tab" aria-controls="cleaned" aria-selected="false">
-                    🧹 Registre nettoyé
+                    <span class="step-n">3</span>Référentiel
                 </button>
-            </li>
-        </ul>
+                <span class="nav-gap" aria-hidden="true"></span>
+                <button class="nav-link" id="precheck-tab" data-bs-toggle="tab" data-bs-target="#precheck"
+                    type="button" role="tab" aria-controls="precheck" aria-selected="false">
+                    <svg class="i"><use href="#i-shield"/></svg>Pré-contrôle
+                </button>
+            </nav>
 
+            <div class="ctx">
+                <div class="dropdown">
+                    <button class="ctx-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                        aria-expanded="false" title="Dossier de sortie (commun à tous les écrans)">
+                        <svg class="i"><use href="#i-folder"/></svg><span class="mono" data-output-root></span>
+                    </button>
+                    <form class="dropdown-menu dropdown-menu-end root-menu" id="outputRootForm">
+                        <label for="outputRoot" class="form-label">Dossier de sortie (local ou S3)</label>
+                        <input type="text" class="form-control form-control-sm mono" id="outputRoot"
+                            placeholder="s3://<bucket>/scrubber_output" autocomplete="off">
+                        <div class="form-text">Chaque run y crée un sous-dossier daté. Le référentiel et les décisions sont
+                            partagés à la racine.</div>
+                        <div class="d-flex justify-content-end mt-2">
+                            <button type="submit" class="btn btn-primary btn-sm">Appliquer</button>
+                        </div>
+                    </form>
+                </div>
+                <button type="button" class="ctx-item ctx-run d-none" id="ctxRun" title="Run ouvert dans Valider">
+                    <svg class="i"><use href="#i-clock"/></svg><span id="ctxRunLabel"></span>
+                </button>
+                <span class="ctx-item" id="saveStatus" aria-live="polite"></span>
+                <span class="ctx-item" id="health-status" title="État du serveur"><span class="dot"></span><span class="label">Connexion…</span></span>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main gutter">
         <div class="tab-content" id="mainTabsContent">
-            <!-- ================================================================
-                 TAB 1: PIPELINE
-                 ================================================================ -->
-            <div class="tab-pane fade show active" id="pipeline" role="tabpanel" aria-labelledby="pipeline-tab">
-                <div class="card mt-3">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">Configurer et lancer le pipeline</h5>
-                    </div>
-                    <div class="card-body">
-                        <form id="pipelineForm">
-                            <div class="mb-3">
-                                <label for="xmlSource" class="form-label">Chemin DDI (XML) — local ou S3</label>
-                                <input type="text" class="form-control" id="xmlSource"
-                                    value="s3://projet-metadonnees-rmes/BTS.xml"
-                                    placeholder="s3://<bucket>/data/input/dde-metadonnees.xml" required>
-                                <div class="form-text">URL S3 ou chemin local vers le fichier DDI à analyser.</div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="outputBase" class="form-label">Dossier de sortie — local ou S3</label>
-                                <input type="text" class="form-control" id="outputBase"
-                                    value="s3://projet-metadonnees-rmes/scrubber_output"
-                                    placeholder="s3://<bucket>/output/scrubber" required>
-                                <div class="form-text">S3 : écrit les outputs sur le bucket. Local : dossier temporaire.
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="pipelineRegistryPath" class="form-label">Registre nettoyé (optionnel)</label>
-                                <input type="text" class="form-control" id="pipelineRegistryPath"
-                                    value="s3://projet-metadonnees-rmes/scrubber_output/cleaned_codelists.json"
-                                    placeholder="s3://<bucket>/output/scrubber/cleaned_codelists.json">
-                                <div class="form-text">Les listes de ce registre sont prioritaires (masters) ;
-                                    les listes déjà remplacées sont exclues de la détection.
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="runLlm" checked>
-                                        <label class="form-check-label" for="runLlm">
-                                            Exécuter les phases LLM / embeddings
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="verbose">
-                                        <label class="form-check-label" for="verbose">
-                                            Mode verbeux
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-primary" id="launchBtn">
-                                🚀 Lancer le pipeline
-                            </button>
-                        </form>
 
-                        <!-- Progress section -->
-                        <div id="progressSection" class="mt-4 d-none">
-                            <div class="progress mb-2" style="height: 25px;">
-                                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated"
-                                    role="progressbar" style="width: 0%">0%</div>
+            <!-- ================================================================
+                 1. ANALYSER (pipeline)
+                 ================================================================ -->
+            <section class="tab-pane fade show active" id="pipeline" role="tabpanel" aria-labelledby="pipeline-tab">
+                <div class="page-head">
+                    <div>
+                        <h1>Analyser des CodeLists</h1>
+                        <p>Charge un fichier DDI ou des opérations publiées, détecte les doublons et prépare un run à valider.</p>
+                    </div>
+                    <div class="actions">
+                        <button type="button" class="btn btn-primary" id="launchBtn">
+                            <svg class="i"><use href="#i-play"/></svg><span class="label">Lancer l'analyse</span>
+                        </button>
+                    </div>
+                </div>
+
+                <form id="pipelineForm" class="steps" onsubmit="return false">
+                    <fieldset class="panel step">
+                        <h2><span class="n">1</span>Source</h2>
+                        <div class="segctl" role="radiogroup" aria-label="Source des CodeLists">
+                            <input type="radio" class="btn-check" name="sourceKind" id="sourceXml" value="xml" checked>
+                            <label for="sourceXml">Fichier DDI</label>
+                            <input type="radio" class="btn-check" name="sourceKind" id="sourceApi" value="api">
+                            <label for="sourceApi">API Métadonnées</label>
+                        </div>
+                        <div id="sourceXmlFields">
+                            <label for="xmlSource" class="form-label">Chemin du fichier DDI (local ou S3)</label>
+                            <input type="text" class="form-control mono" id="xmlSource"
+                                value="s3://projet-metadonnees-rmes/BTS.xml"
+                                placeholder="s3://<bucket>/data/input/dde-metadonnees.xml">
+                        </div>
+                        <div id="sourceApiFields" class="d-none">
+                            <div class="d-grid gap-2">
+                                <div>
+                                    <label for="apiSeriesInput" class="form-label">Séries</label>
+                                    <div class="idpick" id="apiSeriesPicker"></div>
+                                    <input type="hidden" id="apiSeries">
+                                </div>
+                                <div>
+                                    <label for="apiOperationsInput" class="form-label">Opérations (facultatif)</label>
+                                    <div class="idpick" id="apiOperationsPicker"></div>
+                                    <input type="hidden" id="apiOperations">
+                                    <div class="form-text" id="apiOperationsNote" aria-live="polite"></div>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="apiAll">
+                                    <label class="form-check-label" for="apiAll">Toute la base (long au premier lancement)</label>
+                                </div>
+                                <div class="form-text">Tapez un identifiant ou un nom. Sans opération choisie, toute
+                                    la série est analysée. Seules les opérations décrites en DDI sont chargées ; les
+                                    objets téléchargés sont mis en cache.</div>
                             </div>
-                            <p id="phaseLabel" class="text-muted">Phase : —</p>
-                            <div class="accordion" id="logsAccordion">
-                                <div class="accordion-item">
-                                    <h2 class="accordion-header">
-                                        <button class="accordion-button collapsed" type="button"
-                                            data-bs-toggle="collapse" data-bs-target="#logsCollapse">
-                                            📋 Logs d'exécution <span id="logCount">(0)</span>
-                                        </button>
-                                    </h2>
-                                    <div id="logsCollapse" class="accordion-collapse collapse"
-                                        data-bs-parent="#logsAccordion">
-                                        <div class="accordion-body">
-                                            <pre id="logsContainer" class="bg-black text-white p-3 rounded"
-                                                style="max-height: 400px; overflow-y: auto; font-size: 0.85rem;"></pre>
-                                        </div>
-                                    </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="panel step">
+                        <h2><span class="n">2</span>Sortie</h2>
+                        <div>
+                            <div class="field-label">Dossier de sortie</div>
+                            <div class="root-display" data-output-root></div>
+                            <div class="form-text">Réglage commun à tous les écrans, modifiable dans la barre du haut.
+                                Chaque run crée un sous-dossier daté.</div>
+                        </div>
+                        <div>
+                            <label for="pipelineRegistryPath" class="form-label">Référentiel injecté</label>
+                            <input type="text" class="form-control form-control-sm mono" id="pipelineRegistryPath"
+                                placeholder="s3://<bucket>/scrubber_output/cleaned_codelists.json">
+                            <div class="form-text">Par défaut celui du dossier de sortie. Ses listes sont maîtres ;
+                                les listes déjà remplacées sont exclues de la détection.</div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="panel step">
+                        <h2><span class="n">3</span>Options</h2>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="runLlm" checked>
+                            <label class="form-check-label" for="runLlm">Détection sémantique (embeddings et LLM)</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="verbose">
+                            <label class="form-check-label" for="verbose">Journal détaillé</label>
+                        </div>
+                        <div class="form-text">Sans la détection sémantique, un run prend quelques secondes.</div>
+                    </fieldset>
+                </form>
+
+                <!-- Run en cours -->
+                <div id="progressSection" class="panel run-strip d-none" aria-live="polite">
+                    <div class="run-strip-head">
+                        <strong id="phaseLabel">Lancement…</strong>
+                        <span class="text-muted num" id="progressPct">0 %</span>
+                    </div>
+                    <div class="phases" id="phaseStrip"></div>
+                    <details id="logsDetails" open>
+                        <summary class="text-muted small">Journal <span id="logCount">(0)</span></summary>
+                        <pre id="logsContainer" class="console"></pre>
+                    </details>
+                </div>
+
+                <!-- Résultat -->
+                <div id="resultSection" class="mt-3 d-none">
+                    <div class="notice ok" id="resultAlert">
+                        <svg class="i"><use href="#i-check"/></svg>
+                        <div class="flex-grow-1">
+                            <strong>Analyse terminée</strong> en <span id="resultDuration">-</span>.
+                            <details class="mt-1">
+                                <summary>Fichiers produits</summary>
+                                <div id="fileLinks" class="result-files"></div>
+                            </details>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="goToValidationBtn" type="button">
+                            Valider ce run<svg class="i"><use href="#i-chevron"/></svg>
+                        </button>
+                    </div>
+                    <div class="notice error d-none" id="resultError">
+                        <svg class="i"><use href="#i-alert"/></svg>
+                        <div><strong>Analyse en échec.</strong> <span class="msg"></span>
+                            Le journal complet est dans le dossier daté du run.</div>
+                    </div>
+                    <div id="resultWarnings"></div>
+                </div>
+
+                <div class="section-title">
+                    <span>Derniers runs</span>
+                    <button class="btn btn-ghost btn-sm" id="refreshRunsBtn" type="button">
+                        <svg class="i"><use href="#i-refresh"/></svg>Actualiser
+                    </button>
+                </div>
+                <div class="panel tbl-wrap">
+                    <table class="tbl runs-table">
+                        <thead>
+                            <tr><th>Date (UTC)</th><th>Source</th><th>Statut</th>
+                                <th class="r">Candidats</th><th></th></tr>
+                        </thead>
+                        <tbody id="runsTableBody">
+                            <tr><td colspan="5" class="text-muted">Chargement…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ================================================================
+                 2. VALIDER
+                 ================================================================ -->
+            <section class="tab-pane fade" id="validation" role="tabpanel" aria-labelledby="validation-tab">
+                <div class="page-head">
+                    <div>
+                        <h1>Valider les doublons</h1>
+                        <p>Pour chaque CodeList, approuvez ou rejetez les doublons détectés. Chaque décision est
+                            enregistrée aussitôt.</p>
+                    </div>
+                    <div class="actions">
+                        <div class="run-picker">
+                            <label for="runSelect" class="visually-hidden">Run</label>
+                            <select class="form-select form-select-sm" id="runSelect">
+                                <option value="">Chargement des runs…</option>
+                            </select>
+                            <button class="btn btn-quiet btn-sm" id="openRunBtn" type="button">Ouvrir</button>
+                        </div>
+                        <button class="btn btn-ghost btn-sm" id="shortcutsHelpBtn" type="button"
+                            title="Raccourcis clavier (?)"><svg class="i"><use href="#i-keyboard"/></svg>Raccourcis</button>
+                        <div class="dropdown">
+                            <button class="btn btn-quiet btn-sm" type="button" data-bs-toggle="dropdown"
+                                aria-expanded="false" aria-label="Plus d'actions"><svg class="i"><use href="#i-more"/></svg></button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><button class="dropdown-item" id="downloadBtn" type="button">
+                                    <svg class="i"><use href="#i-download"/></svg>Télécharger le registre des doublons</button></li>
+                                <li><button class="dropdown-item" id="downloadCleanedBtn" type="button">
+                                    <svg class="i"><use href="#i-download"/></svg>Télécharger le référentiel</button></li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="saveBtn" type="button"
+                            title="Les décisions sont déjà enregistrées ; ce bouton reporte les doublons approuvés dans le référentiel">
+                            <svg class="i"><use href="#i-book"/></svg><span class="label">Mettre à jour le référentiel</span>
+                        </button>
+                    </div>
+                </div>
+
+                <details class="advanced mb-3" id="advancedLoad">
+                    <summary>Ouvrir un registre par son chemin</summary>
+                    <div class="d-flex gap-2 mt-2 flex-wrap">
+                        <input type="text" class="form-control form-control-sm mono flex-grow-1" id="registryPath"
+                            style="min-width: 0; flex-basis: 320px"
+                            placeholder="s3://<bucket>/scrubber_output/<run>/codelist_duplicates.json"
+                            aria-label="Chemin du registre des doublons">
+                        <button class="btn btn-quiet btn-sm" id="loadRegistryBtn" type="button">Charger</button>
+                    </div>
+                </details>
+
+                <div id="runWarnings"></div>
+
+                <div id="statsSection" class="d-none">
+                    <div class="panel workbar">
+                        <div class="progress-row">
+                            <div class="seg" id="decisionProgress" role="img" aria-label="Avancement des décisions">
+                                <span class="s-ok" id="decisionSegOk" style="width: 0%"></span>
+                                <span class="s-ko" id="decisionSegKo" style="width: 0%"></span>
+                            </div>
+                            <div class="legend" id="decisionLegend"></div>
+                        </div>
+                        <div class="filters">
+                            <input type="hidden" id="decisionFilter" value="todo">
+                            <div class="chips" id="decisionChips" role="group" aria-label="Afficher"></div>
+                            <label for="originFilter" class="visually-hidden">Origine</label>
+                            <select class="form-select form-select-sm" id="originFilter">
+                                <option value="all" selected>Toutes origines</option>
+                                <option value="registry">Référentiel</option>
+                                <option value="suspect">Listes suspectes</option>
+                                <option value="level:officielle">Niveau officielle</option>
+                                <option value="level:commune">Niveau commune</option>
+                                <option value="level:specifique">Niveau spécifique</option>
+                            </select>
+                            <label for="sortBy" class="visually-hidden">Trier par</label>
+                            <select class="form-select form-select-sm" id="sortBy">
+                                <option value="pending" selected>En attente d'abord</option>
+                                <option value="confidence">Confiance max</option>
+                                <option value="name">Nom</option>
+                                <option value="vars">Nb de variables</option>
+                                <option value="series">Nb de séries</option>
+                            </select>
+                            <div class="dropdown">
+                                <button class="btn btn-quiet btn-sm" type="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false">Actions sur l'affichage</button>
+                                <ul class="dropdown-menu">
+                                    <li><button class="dropdown-item" id="bulkApproveExact" type="button">
+                                        <svg class="i"><use href="#i-check"/></svg>Approuver les exacts en attente
+                                        <span class="count-hint" id="bulkExactCount">0</span></button></li>
+                                    <li><button class="dropdown-item" id="bulkApproveHighConf" type="button">
+                                        <svg class="i"><use href="#i-check"/></svg>Approuver ceux à 95 % ou plus
+                                        <span class="count-hint" id="bulkHighCount">0</span></button></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><button class="dropdown-item danger" id="bulkRejectAll" type="button">
+                                        <svg class="i"><use href="#i-x"/></svg>Rejeter les doublons affichés</button></li>
+                                    <li><button class="dropdown-item" id="bulkPendingAll" type="button">
+                                        <svg class="i"><use href="#i-undo"/></svg>Remettre en attente les doublons affichés</button></li>
+                                </ul>
+                            </div>
+                            <span class="legend-help" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" id="legendHelp"
+                                aria-label="Légende"
+                                data-bs-title="Rond ambre : doublons en attente · vert : tout est décidé · pointillé : sans doublon · bleu : dans le référentiel.&lt;br&gt;Étiquettes d'un doublon (exact, proche…) : sa détection par rapport à la CodeList maître.&lt;br&gt;Triangle : liste suspecte (renvoi vers une nomenclature, représentation numérique, code unique).">
+                                <svg class="i"><use href="#i-help"/></svg>
+                            </span>
+                            <label class="search">
+                                <svg class="i"><use href="#i-search"/></svg>
+                                <input type="search" id="searchFilter" placeholder="Nom ou identifiant…"
+                                    aria-label="Rechercher une CodeList"><kbd>/</kbd>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="split" id="splitView">
+                        <div class="panel cl-list">
+                            <div class="cl-list-head">
+                                <span id="listCount"></span>
+                                <span class="pager" id="pagination"></span>
+                            </div>
+                            <div id="codelistNav" role="listbox" aria-label="CodeLists"></div>
+                            <div class="sel-bar" id="batchBar">
+                                <div class="sel-bar-row">
+                                    <input type="checkbox" class="form-check-input" id="batchSelectAll">
+                                    <label for="batchSelectAll">Sans doublon de la page</label>
+                                    <span class="ms-auto"><span id="batchCount" class="num">0</span> sél.</span>
+                                    <span class="pager" id="paginationBottom"></span>
+                                </div>
+                                <div class="sel-bar-row">
+                                    <button class="btn btn-quiet btn-sm flex-grow-1" id="batchAddBtn" type="button" disabled>
+                                        Ajouter la sélection</button>
+                                    <button class="btn btn-quiet btn-sm flex-grow-1" id="addAllNoDupBtn" type="button" disabled><span>Toutes (<span id="noDupCount">0</span>)</span></button>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Result section -->
-                        <div id="resultSection" class="mt-4 d-none">
-                            <div class="alert alert-success" id="resultAlert">
-                                <h5>✅ Pipeline terminé !</h5>
-                                <p>Durée : <span id="resultDuration">-</span></p>
-                                <div id="fileLinks"></div>
+                        <div>
+                            <div class="detail-top">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="autoAdvance">
+                                    <label class="form-check-label" for="autoAdvance">
+                                        Passer à la CodeList suivante quand tout est décidé</label>
+                                </div>
                             </div>
-                            <div id="resultWarnings"></div>
-                            <div class="mt-3">
-                                <button class="btn btn-outline-primary" id="goToValidationBtn">
-                                    🔍 Aller à l'onglet Validation
-                                </button>
-                            </div>
+                            <div id="codelistDetail" class="detail"></div>
                         </div>
                     </div>
                 </div>
-            </div>
+
+                <div id="emptyState" class="panel empty">
+                    <svg class="i"><use href="#i-columns"/></svg>
+                    <strong>Aucun run ouvert</strong>
+                    <span>Choisissez un run ci-dessus puis « Ouvrir », ou lancez une analyse depuis l'étape 1.</span>
+                </div>
+            </section>
 
             <!-- ================================================================
-                 TAB 2: VALIDATION
+                 3. RÉFÉRENTIEL (registre nettoyé)
                  ================================================================ -->
-            <div class="tab-pane fade" id="validation" role="tabpanel" aria-labelledby="validation-tab">
-                <div class="card mt-3">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="mb-0">Valider les doublons de CodeLists</h5>
+            <section class="tab-pane fade" id="cleaned" role="tabpanel" aria-labelledby="cleaned-tab">
+                <div class="page-head">
+                    <div>
+                        <h1>Référentiel des CodeLists</h1>
+                        <p>Les listes retenues après validation, classées en trois niveaux. C'est la référence des
+                            analyses et du pré-contrôle suivants.</p>
                     </div>
-                    <div class="card-body">
-                        <!-- Load registry -->
-                        <div class="row g-2 mb-3">
-                            <div class="col-md-8">
-                                <input type="text" class="form-control form-control-sm" id="registryPath"
-                                    value="s3://projet-metadonnees-rmes/scrubber_output/codelist_duplicates.json"
-                                    placeholder="s3://<bucket>/output/scrubber/codelist_duplicates.json">
-                            </div>
-                            <div class="col-md-4">
-                                <button class="btn btn-sm btn-outline-primary w-100" id="loadRegistryBtn">
-                                    📂 Charger le registre
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Avertissements du run (étape sémantique sautée, etc.) -->
-                        <div id="runWarnings"></div>
-
-                        <!-- Stats -->
-                        <div id="statsSection" class="d-none">
-                            <div class="row mb-3">
-                                <div class="col-sm-3 col-6">
-                                    <div class="card bg-light">
-                                        <div class="card-body text-center p-2">
-                                            <h6 class="mb-0 text-muted">CodeLists</h6>
-                                            <h4 class="mb-0" id="statTotalCL">0</h4>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-3 col-6">
-                                    <div class="card bg-light">
-                                        <div class="card-body text-center p-2">
-                                            <h6 class="mb-0 text-muted">Doublons</h6>
-                                            <h4 class="mb-0" id="statTotalDups">0</h4>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-3 col-6">
-                                    <div class="card bg-light">
-                                        <div class="card-body text-center p-2">
-                                            <h6 class="mb-0 text-muted">Approuvés</h6>
-                                            <h4 class="mb-0 text-success" id="statApproved">0</h4>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-sm-3 col-6">
-                                    <div class="card bg-light">
-                                        <div class="card-body text-center p-2">
-                                            <h6 class="mb-0 text-muted">En attente</h6>
-                                            <h4 class="mb-0 text-warning" id="statPending">0</h4>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Bulk actions -->
-                            <div class="row g-2 mb-3">
-                                <div class="col-6 col-md-3">
-                                    <button class="btn btn-sm btn-outline-success w-100" id="bulkApproveExact">
-                                        ✅ Approuver exactes
-                                    </button>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <button class="btn btn-sm btn-outline-success w-100" id="bulkApproveHighConf">
-                                        ✅ Approuver ≥0.95
-                                    </button>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <button class="btn btn-sm btn-outline-danger w-100" id="bulkRejectAll">
-                                        ❌ Tout rejeter
-                                    </button>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <button class="btn btn-sm btn-outline-secondary w-100" id="bulkPendingAll">
-                                        🔄 Tout remettre en attente
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Filters -->
-                            <div class="row g-2 mb-3 align-items-end">
-                                <div class="col-md-2">
-                                    <label class="form-label small">Filtre décision</label>
-                                    <select class="form-select form-select-sm" id="decisionFilter">
-                                        <option value="approve,reject,pending" selected>Toutes</option>
-                                        <option value="pending">En attente uniquement</option>
-                                        <option value="approve">Approuvés uniquement</option>
-                                        <option value="reject">Rejetés uniquement</option>
-                                        <option value="none">Sans doublon</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small">Origine</label>
-                                    <select class="form-select form-select-sm" id="originFilter">
-                                        <option value="all" selected>Toutes</option>
-                                        <option value="registry">Registre uniquement</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small">Recherche</label>
-                                    <input type="text" class="form-control form-control-sm" id="searchFilter"
-                                        placeholder="Nom de la CodeList...">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small">Afficher</label>
-                                    <select class="form-select form-select-sm" id="pageSize">
-                                        <option value="20">20</option>
-                                        <option value="50" selected>50</option>
-                                        <option value="100">100</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <button class="btn btn-sm btn-secondary w-100" id="applyFilters">
-                                        🔍 Filtrer
-                                    </button>
-                                </div>
-                            </div>
-
-                            <p class="small text-muted mb-2">
-                                Pastilles d'une CodeList : <span class="badge bg-success">approuvés</span>
-                                <span class="badge bg-danger">rejetés</span>
-                                <span class="badge bg-warning text-dark">en attente</span>
-                                <span class="badge bg-secondary">total des doublons</span>
-                                — les badges d'un doublon (exact, fuzzy…) décrivent sa détection
-                                par rapport à la CodeList principale.
-                            </p>
-
-                            <!-- Pagination -->
-                            <nav aria-label="Pagination">
-                                <ul class="pagination pagination-sm" id="pagination"></ul>
-                            </nav>
-
-                            <!-- Codelists (left) / duplicates of the selected one (right) -->
-                            <div class="row g-3 mb-3" id="splitView">
-                                <div class="col-md-4 col-lg-3">
-                                    <!-- Batch add to cleaned registry (lists without duplicates) -->
-                                    <div id="batchBar" class="mb-2">
-                                        <div class="d-flex align-items-center gap-2 mb-1">
-                                            <input type="checkbox" class="form-check-input mt-0" id="batchSelectAll"
-                                                title="Sélectionner les CodeLists sans doublon de la page">
-                                            <label class="small mb-0" for="batchSelectAll">
-                                                Tout sélectionner (sans doublon)
-                                            </label>
-                                            <span class="small text-muted ms-auto">
-                                                <span id="batchCount">0</span> sél.
-                                            </span>
-                                        </div>
-                                        <div class="d-grid gap-1">
-                                            <button class="btn btn-sm btn-outline-success" id="batchAddBtn" disabled>
-                                                ➕ Ajouter la sélection
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-success" id="addAllNoDupBtn" disabled>
-                                                ➕ Ajouter toutes les CodeLists sans doublon (<span id="noDupCount">0</span>)
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div id="codelistNav" class="list-group split-nav">
-                                        <!-- Will be filled by JS -->
-                                    </div>
-                                </div>
-                                <div class="col-md-8 col-lg-9">
-                                    <div id="codelistDetail" class="split-detail">
-                                        <!-- Will be filled by JS -->
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Save/Download -->
-                            <div class="row g-2 mt-3">
-                                <div class="col-md-4">
-                                    <button class="btn btn-outline-secondary w-100" id="downloadBtn">
-                                        ⬇️ Télécharger JSON
-                                    </button>
-                                </div>
-                                <div class="col-md-4">
-                                    <button class="btn btn-outline-success w-100" id="downloadCleanedBtn">
-                                        ⬇️ Registre nettoyé
-                                    </button>
-                                </div>
-                                <div class="col-md-4">
-                                    <button class="btn btn-outline-primary w-100" id="saveBtn">
-                                        💾 Sauvegarder
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Empty state -->
-                        <div id="emptyState">
-                            <div class="text-center py-5">
-                                <p class="text-muted">
-                                    👈 Chargez le registre via le formulaire ci-dessus
-                                    ou lancez un pipeline depuis l'onglet Pipeline.
-                                </p>
-                            </div>
-                        </div>
+                    <div class="actions">
+                        <button class="btn btn-quiet btn-sm" id="loadCleanedBtn" type="button">
+                            <svg class="i"><use href="#i-refresh"/></svg>Recharger</button>
+                        <button class="btn btn-quiet btn-sm" id="downloadCleanedFileBtn" type="button">
+                            <svg class="i"><use href="#i-download"/></svg>Télécharger</button>
                     </div>
                 </div>
-            </div>
+
+                <details class="advanced mb-3">
+                    <summary>Fichier du référentiel</summary>
+                    <input type="text" class="form-control form-control-sm mono mt-2" id="cleanedPath"
+                        aria-label="Chemin du référentiel"
+                        placeholder="s3://<bucket>/scrubber_output/cleaned_codelists.json">
+                    <div class="form-text">Déduit du dossier de sortie, sauf si vous le modifiez ici.</div>
+                </details>
+
+                <div class="panel d-none" id="cleanedToolbar">
+                    <div class="tabs" role="tablist" id="cleanedLevelTabs" aria-label="Niveau"></div>
+                    <div class="ref-tools">
+                        <label class="search">
+                            <svg class="i"><use href="#i-search"/></svg>
+                            <input type="search" id="cleanedSearch" placeholder="Nom, libellé ou identifiant…"
+                                aria-label="Rechercher dans le référentiel">
+                        </label>
+                        <span class="text-muted small" id="cleanedCount"></span>
+                    </div>
+                    <div class="bulk-bar d-none" id="cleanedBulkBar" role="toolbar" aria-label="Classer la sélection">
+                        <strong id="cleanedSelCount"></strong>
+                        <span class="text-muted">Classer en</span>
+                        <div class="lvl-pick">
+                            <button type="button" data-bulk-level="officielle">Officielle</button>
+                            <button type="button" data-bulk-level="commune">Commune</button>
+                            <button type="button" data-bulk-level="specifique">Spécifique</button>
+                            <button type="button" data-bulk-level="">À classer</button>
+                        </div>
+                        <button type="button" class="btn btn-quiet btn-sm" data-action="bulk-suggested">Appliquer le niveau suggéré</button>
+                        <button type="button" class="btn btn-ghost btn-sm ms-auto" data-action="bulk-clear">Désélectionner</button>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead>
+                                <tr><th class="sel"><input type="checkbox" class="form-check-input" id="cleanedSelectAll"
+                                        aria-label="Sélectionner toutes les entrées affichées"></th>
+                                    <th>CodeList</th><th>Niveau</th><th>Source</th><th class="r">Codes</th>
+                                    <th class="r">Remplace</th><th>Séries</th><th></th></tr>
+                            </thead>
+                            <tbody id="cleanedContainer"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="dirty-bar d-none" id="cleanedDirty">
+                    <span>Modifications non enregistrées</span>
+                    <button class="btn btn-sm" id="saveCleanedBtn" type="button">Enregistrer</button>
+                </div>
+
+                <div id="cleanedEmptyState" class="panel empty">
+                    <svg class="i"><use href="#i-book"/></svg>
+                    <strong>Pas encore de référentiel</strong>
+                    <span>Validez des doublons à l'étape 2 puis « Mettre à jour le référentiel », ou importez les
+                        nomenclatures officielles (<code>scrubber seed-officielles</code>).</span>
+                </div>
+            </section>
 
             <!-- ================================================================
-                 TAB 3: REGISTRE NETTOYÉ
+                 PRÉ-CONTRÔLE (moteur du service scrubber-check)
                  ================================================================ -->
-            <div class="tab-pane fade" id="cleaned" role="tabpanel" aria-labelledby="cleaned-tab">
-                <div class="card mt-3">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0">Registre des CodeLists nettoyées</h5>
+            <section class="tab-pane fade" id="precheck" role="tabpanel" aria-labelledby="precheck-tab">
+                <div class="page-head">
+                    <div>
+                        <h1>Pré-contrôle avant publication</h1>
+                        <p>Chaque CodeList du fichier est comparée aux CodeLists publiées dans l'API Métadonnées et
+                            aux nomenclatures géographiques officielles. Rien n'est enregistré.</p>
                     </div>
-                    <div class="card-body">
-                        <!-- Chemin + actions -->
-                        <div class="row g-2 mb-3">
-                            <div class="col-md-6">
-                                <input type="text" class="form-control form-control-sm" id="cleanedPath"
-                                    value="s3://projet-metadonnees-rmes/scrubber_output/cleaned_codelists.json"
-                                    placeholder="s3://<bucket>/output/scrubber/cleaned_codelists.json">
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-sm btn-outline-primary w-100" id="loadCleanedBtn">
-                                    📂 Charger
-                                </button>
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-sm btn-outline-success w-100" id="saveCleanedBtn">
-                                    💾 Sauvegarder
-                                </button>
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-sm btn-outline-secondary w-100" id="downloadCleanedFileBtn">
-                                    ⬇️ Télécharger
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Infos + recherche -->
-                        <div class="row g-2 mb-3 align-items-center d-none" id="cleanedToolbar">
-                            <div class="col-md-4">
-                                <span class="badge bg-success" id="cleanedCount">0 entrées</span>
-                                <span class="badge bg-warning text-dark d-none" id="cleanedDirty">modifications non sauvegardées</span>
-                            </div>
-                            <div class="col-md-8">
-                                <input type="text" class="form-control form-control-sm" id="cleanedSearch"
-                                    placeholder="Rechercher (nom, libellé, id)...">
-                            </div>
-                        </div>
-
-                        <!-- Entrées -->
-                        <div id="cleanedContainer"></div>
-
-                        <!-- État vide -->
-                        <div id="cleanedEmptyState">
-                            <div class="text-center py-5">
-                                <p class="text-muted">
-                                    👈 Chargez un registre nettoyé, ou validez des doublons
-                                    puis sauvegardez depuis l'onglet Validation.
-                                </p>
-                            </div>
-                        </div>
+                    <div class="actions">
+                        <button class="btn btn-quiet btn-sm" id="precheckCsvBtn" type="button" disabled>
+                            <svg class="i"><use href="#i-download"/></svg>Rapport CSV</button>
                     </div>
+                </div>
+
+                <div class="drop" id="precheckDrop">
+                    <span class="ico"><svg class="i"><use href="#i-upload"/></svg></span>
+                    <div class="txt">
+                        <strong>Déposez le fichier DDI de l'opération</strong>
+                        <span>ou <label for="precheckFile">choisissez-le sur votre poste</label> · XML</span>
+                        <input type="file" class="visually-hidden" id="precheckFile" accept=".xml,application/xml,text/xml">
+                    </div>
+                    <span class="file-pill d-none" id="precheckFileName"><svg class="i"><use href="#i-file"/></svg><span class="mono"></span></span>
+                    <div class="field">
+                        <label for="precheckExclude" class="form-label">Ignorer l'opération (re-contrôle)</label>
+                        <input type="text" class="form-control form-control-sm" id="precheckExclude" placeholder="ex. s2297" autocomplete="off">
+                    </div>
+                    <button class="btn btn-primary" id="precheckBtn" type="button">
+                        <svg class="i"><use href="#i-search"/></svg><span class="label">Contrôler</span></button>
+                </div>
+                <details class="advanced mt-2">
+                    <summary>Index de référence</summary>
+                    <input type="text" class="form-control form-control-sm mono mt-2" id="precheckIndex"
+                        placeholder="Défaut du serveur (SCRUBBER_CHECK_INDEX)" aria-label="Index de référence">
+                    <div class="form-text">Construit par <code>scrubber-check index build</code> (chaque nuit en production).</div>
+                </details>
+
+                <div id="precheckResult" class="d-none">
+                    <div class="panel dist" id="precheckSummary"></div>
+                    <div class="section-title"><span>Détail par CodeList</span></div>
+                    <div class="panel tbl-wrap">
+                        <table class="tbl precheck-table">
+                            <thead>
+                                <tr><th>Statut</th><th>CodeList du fichier</th><th>Liste publiée la plus proche</th>
+                                    <th>Niveau</th><th>Détection</th><th class="r">Confiance</th></tr>
+                            </thead>
+                            <tbody id="precheckRows"></tbody>
+                        </table>
+                    </div>
+                    <div id="precheckInternal"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Édition d'une entrée du référentiel -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="cleanedEditor" aria-labelledby="cleanedEditorTitle">
+        <div class="offcanvas-header">
+            <h2 class="offcanvas-title" id="cleanedEditorTitle">CodeList</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fermer"></button>
+        </div>
+        <div class="offcanvas-body" id="cleanedEditorBody"></div>
+    </div>
+
+    <!-- Confirmation (confirmDialog, main.js) -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalTitle">Confirmer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body" id="confirmModalBody" style="white-space: pre-line;"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-quiet" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" id="confirmModalOk">Confirmer</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Toast notifications -->
-    <div id="toastContainer" class="toast-container" style="position: fixed; top: 16px; left: 16px; right: 16px; z-index: 9999;"></div>
+    <!-- Aide : raccourcis clavier de Valider -->
+    <div class="modal fade" id="shortcutsModal" tabindex="-1" aria-labelledby="shortcutsModalTitle" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="shortcutsModalTitle">Raccourcis clavier</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="tbl shortcuts-table">
+                        <tbody>
+                            <tr><td><kbd>j</kbd> <kbd>k</kbd></td><td>CodeList suivante / précédente</td></tr>
+                            <tr><td><kbd>n</kbd></td><td>Prochaine CodeList avec des doublons en attente</td></tr>
+                            <tr><td><kbd>↓</kbd> <kbd>↑</kbd></td><td>Doublon suivant / précédent</td></tr>
+                            <tr><td><kbd>a</kbd></td><td>Approuver le doublon actif</td></tr>
+                            <tr><td><kbd>r</kbd></td><td>Rejeter le doublon actif</td></tr>
+                            <tr><td><kbd>p</kbd></td><td>Remettre le doublon actif en attente</td></tr>
+                            <tr><td><kbd>c</kbd></td><td>Afficher / masquer la comparaison des codes</td></tr>
+                            <tr><td><kbd>/</kbd></td><td>Aller à la recherche</td></tr>
+                            <tr><td><kbd>?</kbd></td><td>Cette aide</td></tr>
+                        </tbody>
+                    </table>
+                    <p class="small text-muted mt-2 mb-0">Les raccourcis sont inactifs pendant la saisie dans un champ.
+                        Chaque décision est enregistrée automatiquement.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Bootstrap JS -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
-    <!-- App scripts -->
     <script src="static/js/config.js"></script>
     <script src="static/js/main.js"></script>
     <script src="static/js/pipeline.js"></script>
     <script src="static/js/registry.js"></script>
     <script src="static/js/cleaned.js"></script>
+    <script src="static/js/precheck.js"></script>
 </body>
 
 </html>

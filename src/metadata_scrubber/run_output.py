@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import io
 import logging
+import os
 import re
 import sys
 from datetime import datetime, timezone
@@ -26,6 +27,28 @@ def make_run_dir(audit_dir: str, now: datetime | None = None) -> tuple[str, str]
     """
     run_id = (now or datetime.now(timezone.utc)).strftime(RUN_ID_FORMAT)
     return run_id, f"{audit_dir.rstrip('/')}/{run_id}"
+
+
+def list_run_dirs(audit_dir: str) -> list[str]:
+    """Dossiers de run (AAAAMMJJ-HHMMSS) de la racine de sortie, du plus récent au plus ancien.
+
+    Racine absente → liste vide.
+    """
+    root = audit_dir.rstrip("/")
+    if root.startswith("s3://"):
+        from .s3 import make_s3_filesystem
+
+        try:
+            entries = make_s3_filesystem().ls(root, detail=False)
+        except FileNotFoundError:
+            return []
+        names = [e.rstrip("/").rsplit("/", 1)[-1] for e in entries]
+    else:
+        if not os.path.isdir(root):
+            return []
+        names = os.listdir(root)
+    runs = sorted((n for n in names if RUN_DIR_PATTERN.match(n)), reverse=True)
+    return [f"{root}/{n}" for n in runs]
 
 
 class _Tee(io.TextIOBase):

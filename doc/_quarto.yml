@@ -7,8 +7,12 @@ website:
     left:
       - href: index.qmd
         text: Accueil
+      - href: demarrage.qmd
+        text: Prise en main
       - href: guide_utilisateur.qmd
         text: Guide Utilisateur
+      - href: scrubber_check.qmd
+        text: Service de contrôle
       - href: note_methodologique_dedoublonnage.qmd
         text: Note Méthodologique
       - href: modifications_recentes.qmd

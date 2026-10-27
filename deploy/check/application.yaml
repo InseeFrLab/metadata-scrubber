@@ -1,0 +1,22 @@
+# Application Argo CD du service scrubber-check (deploy/check), à appliquer une fois,
+# comme deploy/application.yaml pour l'appli (le dossier deploy/ n'est pas récursif).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: scrubber-check
+  namespace: projet-metadonnees-rmes
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/inseefrlab/metadata-scrubber.git
+    targetRevision: main
+    path: deploy/check
+    directory:
+      exclude: application.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: projet-metadonnees-rmes
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

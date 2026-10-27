@@ -1,0 +1,48 @@
+# Preview Documentation for pull requests
+#
+# Each PR touching doc/ is rendered and published on GitHub Pages under
+# pr-preview/pr-<number>/ ; the link is commented on the PR and the preview is
+# removed when the PR is closed. PRs from forks are skipped (no write token).
+
+name: Preview Documentation
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+    paths:
+      - "doc/**"
+      - ".github/workflows/preview-docs.yml"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Quarto
+        if: github.event.action != 'closed'
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render
+        if: github.event.action != 'closed'
+        uses: quarto-dev/quarto-actions/render@v2
+        with:
+          path: doc
+
+      - name: Deploy preview
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: doc/_site
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          action: auto

@@ -1,8 +1,8 @@
 # Publish Documentation to GitHub Pages
 #
-# After first push:
-# 1. Go to repo Settings > Pages > Source → choose `gh-pages` branch
-# 2. (Optional) set Workflow permissions to "Read and write"
+# Repo Settings > Pages > Source → « Deploy from a branch », `gh-pages` / (root).
+# The site is rendered then pushed to `gh-pages`, keeping the `pr-preview/`
+# folder managed by preview-docs.yml.
 
 name: Publish Documentation
 
@@ -14,6 +14,13 @@ on:
       - ".github/workflows/publish-docs.yml"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,10 +31,17 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Render and Publish
-        uses: quarto-dev/quarto-actions/publish@v2
+      - name: Render
+        uses: quarto-dev/quarto-actions/render@v2
         with:
-          target: gh-pages
           path: doc
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Disable Jekyll
+        run: touch doc/_site/.nojekyll
+
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: doc/_site
+          branch: gh-pages
+          clean-exclude: pr-preview/

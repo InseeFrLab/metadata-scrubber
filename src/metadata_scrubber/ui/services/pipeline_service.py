@@ -82,6 +82,7 @@ def _run_pipeline_internal(
     capture,
     progress,
     registry_path: str | None = None,
+    api_scope: dict | None = None,
 ) -> dict[str, Any]:
     """Logique interne — peut être réutilisée."""
     print(
@@ -90,7 +91,8 @@ def _run_pipeline_internal(
         f"\n  output (local tmp): {local_tmp}"
         f"\n  run_llm: {run_llm}"
         f"\n  verbose: {verbose}"
-        f"\n  registre nettoye: {registry_path or '—'}",
+        f"\n  registre nettoye: {registry_path or '—'}"
+        f"\n  source API: {api_scope or '—'}",
         file=capture,
         flush=True,
     )
@@ -105,6 +107,7 @@ def _run_pipeline_internal(
             run_llm=run_llm,
             verbose=verbose,
             registry_path=registry_path,
+            api_scope=api_scope,
         )
 
         # --- Result : les chemins viennent du pipeline (dossier daté du run) ---
@@ -165,6 +168,7 @@ def _run_pipeline_in_thread(
     run_llm: bool,
     verbose: bool,
     registry_path: str | None = None,
+    api_scope: dict | None = None,
 ) -> None:
     """Target du thread qui execute le pipeline et publie sur SSE."""
 
@@ -235,6 +239,7 @@ def _run_pipeline_in_thread(
         result = _run_pipeline_internal(
             xml_source, audit_dir, run_llm, verbose, capture, _progress,
             registry_path=registry_path,
+            api_scope=api_scope,
         )
         duration = time.time() - start
         result["duration_seconds"] = duration
@@ -275,6 +280,7 @@ def start_pipeline_job(
     run_llm: bool = True,
     verbose: bool = False,
     registry_path: str | None = None,
+    api_scope: dict | None = None,
 ) -> str:
     """Creer un job de pipeline et le lancer dans un thread separe.
 
@@ -288,7 +294,7 @@ def start_pipeline_job(
 
     t = threading.Thread(
         target=_run_pipeline_in_thread,
-        args=(job_id, job_manager, xml_source, audit_dir, run_llm, verbose, registry_path),
+        args=(job_id, job_manager, xml_source, audit_dir, run_llm, verbose, registry_path, api_scope),
         daemon=True,
         name="pipeline-worker",
     )

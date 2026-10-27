@@ -56,6 +56,14 @@ uv run scrubber input.xml --audit-dir ./audit
 
 # Mode verbeux (détails LLM/embeddings)
 uv run scrubber input.xml --verbose
+
+# Source API Métadonnées de l'Insee au lieu d'un XML (cache dans <audit-dir>/api_cache)
+uv run scrubber --serie s1998 --no-llm            # toutes les opérations d'une série
+uv run scrubber --operation s2219 --operation s2297
+uv run scrubber --all-operations                  # toute la base publiée
+
+# Amorcer le registre nettoyé avec les nomenclatures officielles (COG)
+uv run scrubber seed-officielles --registry s3://projet-metadonnees-rmes/scrubber_output/cleaned_codelists.json
 ```
 
 **Sorties d'un run** — chaque exécution crée son propre dossier daté (UTC) sous `--audit-dir` :
@@ -63,6 +71,8 @@ uv run scrubber input.xml --verbose
 ```
 scrubber_output/
 ├── cleaned_codelists.json            # registre nettoyé, partagé et cumulé entre les runs
+├── decisions.json                    # décisions (enregistrées à chaque clic dans l'appli)
+├── api_cache/                        # objets DDI versionnés téléchargés depuis l'API
 ├── 20261022-140509/
 │   ├── codelist_duplicates.json      # registre des doublons du run
 │   ├── run_summary.json              # statut, durée, compteurs et avertissements
@@ -72,7 +82,7 @@ scrubber_output/
 
 `run_summary.json` signale notamment l'étape sémantique sautée (variables
 `OPENAI_BASE_URL` / `OPENAI_API_KEY` absentes) et les CodeLists exclues de la
-détection floue (> 100 codes).
+détection floue (> 5 000 codes).
 
 **Arguments CLI :**
 
@@ -84,6 +94,29 @@ détection floue (> 100 codes).
 | `--no-llm` | — | Sauter les phases sémantiques |
 | `--verbose` | `False` | Afficher détails LLM/embeddings |
 | `--registry` | `—` | Injecter un registre nettoyé (v. ci-dessous) |
+| `--serie ID` / `--operation ID` | — | Source API : séries / opérations (répétables), à la place de `xml_source` |
+| `--all-operations` | — | Source API : toutes les opérations de toutes les séries |
+
+Avec la source API, chaque CodeList porte ses opérations et séries
+utilisatrices (`operations`, `series`, `urn` dans `codelist_duplicates.json`).
+Les listes copiées d'une autre (`BasedOnObject`) sont détectées (`lineage`).
+`INSEE_METADATA_API_URL` change la racine de l'API (défaut : production).
+
+---
+
+## Service de contrôle `scrubber-check`
+
+Contrôle un fichier DDI contre les CodeLists **publiées** dans l'API (doublons,
+sous-ensembles, listes proches), sans LLM. Image et déploiement à part
+(`Dockerfile.check`, `deploy/check/`). Documentation : `doc/scrubber_check.qmd`.
+
+```bash
+uv run scrubber-check index build --output reference_index.json.gz   # index de toute la base
+uv run scrubber-check operation.xml --index reference_index.json.gz  # rapport (table|json|csv)
+SCRUBBER_CHECK_INDEX=reference_index.json.gz uv run scrubber-check-api   # POST /v1/check
+```
+
+Codes de sortie : 0 rien à signaler, 1 doublons (`--fail-on`), 2 erreur.
 
 ---
 
@@ -98,7 +131,7 @@ scrubber-web  ─── FastAPI monolithique ───────────�
                     │  • SSE temps réel pour progression pipeline │──┘
                     │  • API REST (registry CRUD, pipeline, upload)
                     │  • Frontend HTML/JS inline (importlib_resources)
-                    │  • API cleaned (CRUD registre nettoyé v2)
+                    │  • API cleaned (CRUD registre nettoyé v3)
                     └────────────┬─────────────────────────────────┘
                                  │
               ┌──────────────────┼──────────────────┐
@@ -177,7 +210,7 @@ codelist_duplicates.json  (regroupe toutes les paires)
 
 ## Feature : `--registry` (dédoublonnage transversal itératif)
 
-Le registre nettoyé (`cleaned_codelists.json`, schéma v2) est un **catalogue transversal
+Le registre nettoyé (`cleaned_codelists.json`, schéma v3) est un **catalogue transversal
 de vérité** qui s'incrémente opération par opération (BTS.xml → cleaned → BPE.xml →
 cleaned → CPE.xml → …). Chaque fichier traité enrichit le registre, ce qui améliore la
 détection sur les fichiers suivants, y compris les appariements **cross-opération**.
@@ -221,11 +254,11 @@ uv run scrubber --registry cleaned_codelists.json demo/BPE_demo.xml
 # → registre enrichi BTS + BPE
 ```
 
-### 3. Schéma `cleaned_codelists.json` (v2)
+### 3. Schéma `cleaned_codelists.json` (v3)
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "generated_at": "2025-xx-xxTxx:xx:xx+00:00",
   "source_registry": "s3://.../codelist_duplicates.json",
   "codelists": {
@@ -244,6 +277,11 @@ uv run scrubber --registry cleaned_codelists.json demo/BPE_demo.xml
           "confidence": 1.0
         }
       ],
+      "level": "commune",              // officielle | commune | specifique | "" (validé)
+      "level_suggested": "commune",    // d'après les séries utilisatrices
+      "source": "validation",          // validation | manuel | api-geo | api-structures
+      "agency": "fr.insee", "version": "2", "urn": "urn:ddi:fr.insee:uuid-master:2",
+      "operations": ["s2219"], "series": ["s1998"],
       "first_added_at": "2025-xx-xx...",
       "updated_at": "2025-xx-xx..."
     }
@@ -251,9 +289,14 @@ uv run scrubber --registry cleaned_codelists.json demo/BPE_demo.xml
 }
 ```
 
+Un registre v1 ou v2 est migré à la lecture.
+
 ### 4. Comportement injecté dans le pipeline (`main.py` §2 bis)
 
-- Les entrées du registre deviennent les **masters** de leur groupe (prépended à la liste).
+- Les entrées du registre deviennent les **masters** de leur groupe. Ordre de
+  choix de la maître (`levels.master_rank`) : registre nettoyé, niveau validé
+  (officielle d'abord), maître choisie par l'expert, niveau suggéré, nombre de
+  séries puis de variables utilisatrices.
 - Les CodeLists dont l'`id` figure dans `replaces[].id` sont **exclues** de la détection.
 
 ---
@@ -307,14 +350,22 @@ Le pipeline produit un seul fichier JSON par CodeList :
 | `GET` | `/api/registry` | Charger `codelist_duplicates.json` |
 | `POST` | `/api/registry/save` | Sauvegarder + sync `cleaned_codelists.json` |
 | `GET` | `/api/registry/cleaned` | Lire le registre nettoyé associé |
-| `PATCH` | `/api/registry/decision` | Mettre à jour une décision |
-| `POST` | `/api/registry/bulk` | Décisions batch (approve/reject par critère) |
+| `PATCH` | `/api/registry/decision` | Mettre à jour une décision (enregistrée dans `decisions.json`) |
+| `POST` | `/api/registry/decisions` | Plusieurs décisions ; renvoie les précédentes (annulation) |
+| `POST` | `/api/registry/persist` | Relancer l'enregistrement de `decisions.json` |
+| `POST` | `/api/registry/bulk` | Décisions par critère sur tout le registre (ancienne route) |
 | `GET` | `/api/registry/codelists` | Liste paginée avec filtres |
 | `GET` | `/api/registry/codelist/{id}` | Détail d'une CodeList |
-| `GET` | `/api/cleaned?path=...` | Lire un registre nettoyé v2 |
-| `POST` | `/api/cleaned/save?path=...` | Sauvegarder un registre nettoyé v2 |
+| `GET` | `/api/cleaned?path=...` | Lire un registre nettoyé (migré en v3) |
+| `POST` | `/api/cleaned/save?path=...` | Sauvegarder un registre nettoyé v3 |
+| `GET` | `/api/runs?root=...` | Runs d'une racine de sortie et leur résumé |
+| `GET` | `/api/insee/series` | Séries de l'API Métadonnées (aide à la saisie) |
+| `POST` | `/api/precheck` | Pré-contrôle d'un fichier DDI (moteur de `scrubber-check`) |
 | `POST` | `/api/registry/add-to-cleaned` | Ajouter une CodeList (sans doublon) au registre nettoyé |
 | `POST` | `/api/upload` | Upload d'un fichier vers S3 |
+
+Les routes `/api/registry/*` prennent un paramètre `path` (registre ouvert) ;
+sans lui, le dernier registre chargé.
 
 > **OpenAPI auto-découvrable** : `/docs` (ReDoc) et `/openapi.json`.
 
@@ -376,7 +427,12 @@ metadata-scrubber/
 ├── src/
 │   ├── metadata_scrubber/
 │   │   ├── main.py               # Orchestrateur CLI (scrubber)
-│   │   ├── cleaned_registry.py   # Cycle v2 cleaned_codelists.json
+│   │   ├── cleaned_registry.py   # Cycle v3 cleaned_codelists.json (niveaux)
+│   │   ├── insee_api.py          # Client de l'API Métadonnées (cache par version)
+│   │   ├── corpus.py             # Opérations API → objets DDI + provenance
+│   │   ├── levels.py             # Niveaux, choix de la maître, nomenclature d'un renvoi
+│   │   ├── decisions.py          # decisions.json
+│   │   ├── check/                # scrubber-check : index, engine, report, cli, api
 │   │   ├── extractor.py          # Parsing DDI 3.3 (lxml)
 │   │   ├── normalize.py          # NFC, lowercase, signature
 │   │   ├── funnel.py             # Détection exacte + flou
@@ -394,13 +450,14 @@ metadata-scrubber/
 │   │       │   └── index.html    # Frontend embarqué
 │   │       └── static/
 │   │           ├── css/style.css
-│   │           └── js/*.js       # config, main, pipeline, registry, cleaned
+│   │           └── js/*.js       # config, main, pipeline, registry, cleaned, precheck
 │   └── metadata_scrubber.egg-info/
 ├── tests/
 │   └── test_scrubber.py          # ~63 tests unitaires
 ├── doc/
 │   └── note_methodologique_dedoublonnage.qmd
-├── pyproject.toml                # uv (pipeline + app + dev)
+├── Dockerfile.check              # Image légère de scrubber-check
+├── pyproject.toml                # uv : base, groupes web (appli, LLM) et dev
 ├── uv.lock                       # Verrouillage des dépendances
 └── README.md
 ```
@@ -502,3 +559,45 @@ boîte Basic Auth demande le mot de passe partagé.
 - `/health` — check public (jamais protégé)
 - `/docs` — swagger UI (jamais protégé)
 - Reste de l'API et du Frontend — protégé par Basic Auth
+
+### Service `scrubber-check`
+
+Déployé à part (`deploy/check/`, application Argo CD `deploy/check/application.yaml`
+à appliquer une fois) : image `ghcr.io/inseefrlab/scrubber-check` construite par
+le même workflow, API sur `https://scrubber-check.lab.sspcloud.fr`, CronJob qui
+reconstruit chaque nuit l'index de référence vers
+`s3://projet-metadonnees-rmes/scrubber_check/reference_index.json.gz`. Il lit le
+Secret `scrubber-config` (S3) et reprend le mot de passe partagé
+(`SCRUBBER_CHECK_AUTH_PASSWORD` ← `SCRUBBER_AUTH_PASSWORD`).
+
+### Instance V2 (à côté de l'appli en production)
+
+Pour essayer une branche sans toucher l'appli déployée depuis `main`,
+`deploy/v2/` décrit une seconde instance, avec ses propres ressources.
+
+| | V1 (`deploy/`) | V2 (`deploy/v2/`) |
+|---|---|---|
+| Application Argo CD | `metadata-scrubber` (suit `main`) | `metadata-scrubber-v2` (suit `refactor/use-api`) |
+| Image | `metadata-scrubber:latest` | `metadata-scrubber:v2` |
+| Adresse | `metadata-scrubber.lab.sspcloud.fr` | `metadata-scrubber-v2.lab.sspcloud.fr` |
+| Sorties par défaut (`SCRUBBER_OUTPUT_ROOT`) | `s3://projet-metadonnees-rmes/scrubber_output` | `s3://projet-metadonnees-rmes/scrubber_output_v2` |
+
+Le Secret `scrubber-config` (S3 et mot de passe) est partagé. Comme les
+dossiers de sortie sont distincts, les décisions et le référentiel de la V2 ne
+modifient pas ceux de la V1. Mise en place :
+
+```bash
+# 1. Image :v2 : construite à chaque push sur refactor/use-api (deploy.yml),
+#    ou via « Run workflow » sur une autre branche
+# 2. Déclarer l'application Argo CD (une fois)
+kubectl apply -f deploy/v2/application.yaml -n projet-metadonnees-rmes
+# 3. (Facultatif) partir du référentiel de la V1
+mc cp s3/projet-metadonnees-rmes/scrubber_output/cleaned_codelists.json \
+      s3/projet-metadonnees-rmes/scrubber_output_v2/
+# 4. Prendre une nouvelle image :v2 (le tag ne change pas)
+kubectl rollout restart deployment/metadata-scrubber-v2 -n projet-metadonnees-rmes
+```
+
+Pour suivre une autre branche, changer `targetRevision` dans
+`deploy/v2/application.yaml` et la branche dans `deploy.yml`. Pour supprimer la
+V2 : `kubectl delete application metadata-scrubber-v2 -n projet-metadonnees-rmes`.

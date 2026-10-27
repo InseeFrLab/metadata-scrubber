@@ -328,6 +328,19 @@ class TestExtractFromXML:
         # cl-001 et cl-002 ont exactement les mêmes codes → doivent être groupés
         assert len(groups) == 1
 
+    def test_link_variables_under_variable_representation(self):
+        from metadata_scrubber.extractor import parse_xml, extract_codelists
+        from metadata_scrubber.main import _link_variables
+        objects = parse_xml(XML_SAMPLE)
+        codelists = extract_codelists(objects)
+
+        # var-1 référence cl-001 sous VariableRepresentation (DDI 3.3)
+        assert _link_variables(codelists, objects) == 1
+        cl1 = next(c for c in codelists if c.id == "cl-001")
+        cl2 = next(c for c in codelists if c.id == "cl-002")
+        assert cl1.vars == ["statut"]
+        assert cl2.vars == []
+
     def test_full_extract(self):
 
         result = full_extract(XML_SAMPLE)

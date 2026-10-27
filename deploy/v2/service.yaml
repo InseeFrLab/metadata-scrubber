@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: metadata-scrubber-v2
+  namespace: projet-metadonnees-rmes
+  labels:
+    app: metadata-scrubber-v2
+spec:
+  selector: { app: metadata-scrubber-v2 }
+  ports:
+    - port: 80
+      targetPort: 8000
