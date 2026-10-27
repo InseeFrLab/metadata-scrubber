@@ -74,6 +74,18 @@ MAX_NON_EXACT_CONFIDENCE = 0.99
 DEFAULT_XML_SOURCE = "s3://projet-metadonnees-rmes/BTS.xml"
 
 
+def _id_list(ids: list[str], limit: int = 10) -> str:
+    """« s1, s2, … et 5 autres » pour les avertissements."""
+    more = f" … et {len(ids) - limit} autres" if len(ids) > limit else ""
+    return ", ".join(ids[:limit]) + more
+
+
+def _name_list(codelists: list, limit: int = 10) -> str:
+    """Noms des CodeLists avec leur nombre de codes, pour les avertissements."""
+    sizes = [f"{len(cl.codes):,}".replace(",", "\u202f") for cl in codelists]
+    return _id_list([f"{cl.name or cl.id} ({n} codes)" for cl, n in zip(codelists, sizes)], limit)
+
+
 def describe_api_scope(api_scope: dict | None) -> str:
     """Libellé de la source API (run_summary, journal) : « api:toutes » ou « api:s1998,s2219 »."""
     if not api_scope:
@@ -292,8 +304,9 @@ def _run_pipeline_body(
             "phase": "fuzzy",
             "status": "partial",
             "reason": (
-                f"{len(excluded)} CodeList(s) de plus de {MAX_CODES_FOR_FUZZY} codes "
-                "exclue(s) de la détection floue."
+                f"{len(excluded)} CodeList(s) de plus de {MAX_CODES_FOR_FUZZY} codes non comparée(s) "
+                f"en détection floue (calcul trop coûteux) : {_name_list(excluded)}. "
+                "Elles restent comparées en détection exacte."
             ),
         })
 
@@ -444,14 +457,21 @@ def _load_api_corpus(api_scope: dict, audit_dir: str, summary: dict):
         "cache_hits": client.cache_hits,
     }
     if corpus.skipped:
-        summary["warnings"].append({
-            "phase": "api",
-            "status": "partial",
-            "reason": (
-                f"{len(corpus.skipped)} opération(s) sans description DDI dans l'API "
-                f"({', '.join(sorted(corpus.skipped)[:10])}{'…' if len(corpus.skipped) > 10 else ''})."
-            ),
-        })
+        no_ddi = sorted(op for op, why in corpus.skipped.items() if why == "pas de description DDI")
+        no_file = sorted(op for op, why in corpus.skipped.items() if why != "pas de description DDI")
+        n_total = len(corpus.operations) + len(corpus.skipped)
+        parts = [
+            f"{len(corpus.skipped)} opération(s) sur {n_total} ignorée(s), sans effet sur le reste du run ; "
+            f"les {len(corpus.operations)} autres ont été analysées."
+        ]
+        if no_ddi:
+            parts.append(
+                f"{len(no_ddi)} n'ont pas de description DDI publiée dans l'API (variables, listes de "
+                f"codes), elles n'apportent donc aucune CodeList : {_id_list(no_ddi)}."
+            )
+        if no_file:
+            parts.append(f"{len(no_file)} n'ont aucun fichier décrit : {_id_list(no_file)}.")
+        summary["warnings"].append({"phase": "api", "status": "partial", "reason": " ".join(parts)})
     if corpus.restricted:
         summary["warnings"].append({
             "phase": "api",

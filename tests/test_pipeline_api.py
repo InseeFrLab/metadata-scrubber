@@ -35,7 +35,10 @@ def test_pipeline_from_api_serie(tmp_path, monkeypatch):
     assert summary["status"] == "success"
     assert summary["xml_source"] == "api:s1998"
     assert summary["api"]["skipped_operations"] == {"s2022": "pas de description DDI"}
-    assert any(w["phase"] == "api" for w in summary["warnings"])
+    api_warning = next(w["reason"] for w in summary["warnings"] if w["phase"] == "api")
+    assert "1 opération(s) sur 3 ignorée(s)" in api_warning
+    assert "les 2 autres ont été analysées" in api_warning
+    assert "description DDI" in api_warning and "s2022" in api_warning
     # Le cache des objets versionnés est à la racine des sorties, partagé entre les runs
     assert (tmp_path / "out" / "api_cache" / "codelist" / "fr.insee" / "pays" / "1.xml").exists()
 
@@ -44,3 +47,14 @@ def test_describe_api_scope():
     assert describe_api_scope({"all_operations": True}) == "api:toutes"
     assert describe_api_scope({"series": ["s1998"], "operations": ["s2219"]}) == "api:s1998,s2219"
     assert describe_api_scope(None) == ""
+
+
+def test_warning_names_large_codelists():
+    from metadata_scrubber.main import _name_list
+    from metadata_scrubber.types import CodeList
+
+    big = [CodeList(id=f"cl{i}", name=f"Liste {i}", label="", codes=[(str(c), "x") for c in range(6000)])
+           for i in range(12)]
+    text = _name_list(big)
+    assert text.startswith("Liste 0 (6\u202f000 codes), Liste 1")
+    assert text.endswith("… et 2 autres")
