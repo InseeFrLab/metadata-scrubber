@@ -1,0 +1,562 @@
+[
+  {
+    "objectID": "note_methodologique_dedoublonnage.html",
+    "href": "note_methodologique_dedoublonnage.html",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "",
+    "text": "Cette note décrit la méthodologie implémentée dans le pipeline metadata-scrubber pour identifier les listes de codes (CodeList) redondantes au sein d’un fichier XML DDI (Data Documentation Initiative).\n\nScénario : un fichier de métadonnées peut contenir plusieurs définitions de CodeList qui, bien que nommées différemment ou légèrement variées, décrivent le même concept.\n\nRéférence : le fichier BTS.xml (réf. 4,7 Mo) — 156 CodeLists, 831 catégories, 503 références Variable → CodeList, 54 CodeLists redondantes dans 29 groupes."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#structure-du-fichier-ddi",
+    "href": "note_methodologique_dedoublonnage.html#structure-du-fichier-ddi",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "1.1 Structure du fichier DDI",
+    "text": "1.1 Structure du fichier DDI\nUn fichier DDI 3.3 est une suite d’objets enfermés dans des balises &lt;Fragment&gt; (~2 573 pour BTS.xml). Chaque Fragment contient exactement un objet identifiable, versionnable et maintenable :\n\nCodeList : la liste de codes elle-même\nCategory : le libellé d’une valeur de code\nVariable / RepresentedVariable : référence une CodeList\n\n\nOrdre arbitraire : les CodeList peuvent apparaître avant les Category correspondantes → approche en deux passes obligatoire.\n\n\n1.1.1 Structure XML : &lt;Code&gt;\nChaque &lt;Code&gt; ne contient pas le libellé directement :\n&lt;Code&gt;\n  &lt;r:ID&gt;4dd22a77-9078-4417-9710-48699af3298a&lt;/r:ID&gt;\n  &lt;r:CategoryReference&gt;\n    &lt;r:ID&gt;d72b4a6c-b668-46c9-98d9-7ba4663e7fa0&lt;/r:ID&gt;\n  &lt;/r:CategoryReference&gt;\n  &lt;r:Value&gt;4&lt;/r:Value&gt;\n&lt;/Code&gt;\n\nr:Value : valeur brute\nr:CategoryReference &gt; r:ID : référence vers une Category\n\n\n\n1.1.2 Structure XML : &lt;Category&gt;\nLe libellé est stocké séparément :\n&lt;Category&gt;\n  &lt;r:ID&gt;d72b4a6c-b668-46c9-98d9-7ba4663e7fa0&lt;/r:ID&gt;\n  &lt;r:Label&gt;&lt;r:Content xml:lang=\"fr-FR\"&gt;Autres organismes publics&lt;/r:Content&gt;&lt;/r:Label&gt;\n  &lt;CategoryName&gt;domempl-4&lt;/CategoryName&gt;\n&lt;/Category&gt;\n\n\n1.1.3 Structure XML : &lt;Variable&gt; référençant une CodeList\n&lt;Variable&gt;\n  &lt;r:ID&gt;7686be9c-7849-4941-bccc-62206f764a12&lt;/r:ID&gt;\n  &lt;VariableName&gt;&lt;r:String xml:lang=\"fr-FR\"&gt;domempl&lt;/r:String&gt;&lt;/VariableName&gt;\n  &lt;r:Label&gt;&lt;r:Content xml:lang=\"fr-FR\"&gt;Domaine d'emploi&lt;/r:Content&gt;&lt;/r:Label&gt;\n  &lt;VariableRepresentation&gt;\n    &lt;r:CodeRepresentation&gt;\n      &lt;r:CodeListReference&gt;\n        &lt;r:ID&gt;36a67d27-866b-40c6-9e4d-286d1f3d31d1&lt;/r:ID&gt;\n      &lt;/r:CodeListReference&gt;\n    &lt;/r:CodeRepresentation&gt;\n  &lt;/VariableRepresentation&gt;\n&lt;/Variable&gt;\n\n\n1.1.4 Versions et filiation\nPour chaque CodeList, l’extraction lit aussi r:Agency, r:Version et les identifiants des r:BasedOnObject/r:BasedOnReference. Quand un fichier contient plusieurs versions d’une même CodeList (BPE : versions 5 et 6 d’un même identifiant), seule la plus récente est gardée (latest_versions, comparaison numérique) ; run_summary.json compte les versions ignorées (older_versions_ignored).\nBasedOnObject est un indicateur, sans effet sur la détection : la carte d’un doublon indique « basé sur … » quand il dérive d’une autre liste du groupe (43 cas dans les groupes de BPE.xml). Faut-il rejeter automatiquement une liste dérivée d’une liste rejetée ? La question reste ouverte côté métier."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#pipeline-dextraction-4-phases",
+    "href": "note_methodologique_dedoublonnage.html#pipeline-dextraction-4-phases",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "1.2 Pipeline d’extraction (4 phases)",
+    "text": "1.2 Pipeline d’extraction (4 phases)\n┌───────────────────────────────────────────────────────┐\n│ 1. Lecture XML (lxml, namespaces ignorés)            │\n│    filtrer par local(frag) == \"Fragment\"              │\n├───────────────────────────────────────────────────────┤\n│ 2. Passe 1 — Indexer les Catégories                  │\n│    {r:ID → r:Label &gt; r:Content.text}                  │\n│    Résultat : 831 cat_id → libellé                    │\n├───────────────────────────────────────────────────────┤\n│ 3. Passe 2 — Extraire les CodeLists                   │\n│    Pour chaque &lt;Code&gt; : extraire Value + CategoryRef  │\n│    Résoudre libellé via index                          │\n│    Résultat : 156 codelists avec codes résolus        │\n├───────────────────────────────────────────────────────┤\n│ 4. Passe 3 — Extraire les références Variables        │\n│    Chercher CodeListReference au plus profond         │\n│    Résultat : 503 références Variable → CodeList      │\n└───────────────────────────────────────────────────────┘"
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#phase-1-doublons-exact",
+    "href": "note_methodologique_dedoublonnage.html#phase-1-doublons-exact",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "2.1 Phase 1 — Doublons Exact",
+    "text": "2.1 Phase 1 — Doublons Exact\nMéthode :\n\nNormalisation : Unicode NFC, minuscule, espaces multiples → unique\nSignature : tuple trié des paires (valeur, libellé) normalisées\nRegroupement par signature identique\n\n\nNom et identifiant volontairement exclus de la signature → deux listes identiques nommées différemment sont détectées.\n\n\n2.1.1 Exemple : 18 listes à 1 code\n18 CodeLists nommées différentes (N-categorie_juridique, N-region, N-conv_coll, N_DEpartements, …).\nChacune contient un seul code :\n\n\n\nValeur\nLibellé\n\n\n\n\ncf\nVoir dictionnaire des nomenclatures\n\n\n\nToutes 18 partagent exactement la même signature → doublons exacts. Probablement des codes génériques « consulter le dictionnaire » dupliqués par l’outil de modélisation (Colectica).\n\nTraitement actuel : ces listes sont marquées placeholder (voir Listes suspectes ci-dessous) et comparées sur leur nom normalisé au lieu de leurs codes : N-region et N-REGION restent doublons, mais plus N-region et N-conv_coll.\nLimite connue : ce ne sont pas de vrais doublons conceptuels. Il s’agit d’un raccourci arbitraire du producteur, qui — au lieu de créer ou référencer les listes de codes spécifiques (existantes ou à créer) — a renvoyé vers un document statique unique censé toutes les regrouper. Cette pratique est désormais corrigée systématiquement à la validation de la documentation avant publication (référence directe vers la liste de codes spécifique). Le regroupement en doublon exact reste pertinent sur les données passées pour signaler l’anomalie, mais le choix d’une CodeList « maître » parmi les 18 est arbitraire/cosmétique — aucune n’est réellement correcte. La vraie correction (créer les 18 listes de codes spécifiques) reste un travail humain hors périmètre de l’outil.\n\n\n\n2.1.2 Caractéristiques\n\n\n\n\n\n\n\nAspect\nDétail\n\n\n\n\nComplexité\n\\(O(N \\cdot C)\\) — linéaire, \\(N\\) = nb CodeLists, \\(C\\) = nb codes moyen\n\n\nRéseau\nAucun appel nécessaire\n\n\nPrécision\n100 % — zéro faux-positif\n\n\nLimite\n1 différence dans une liste de 10 suffit pour passer\n\n\n\nSur BTS.xml : 29 groupes détectés, 54 CodeLists redondantes.\n\n\n2.1.3 Choix de la CodeList maître\nAucune distance ni aucun score n’intervient dans le choix de la maître. Toutes les paires détectées (exactes, floues, usage, sémantiques, lignée) sont réunies en composantes connexes (build_duplicates_registry). Dans chaque composante, la maître est la première CodeList dans l’ordre établi avant la détection par levels.master_rank :\n\nentrées du registre nettoyé (--registry), qui restent donc toujours maîtres ;\nniveau validé : officielle, puis commune, puis spécifique ;\nmaître choisie par l’expert lors d’un run précédent (decisions.json) ;\nniveau suggéré (au moins deux séries utilisatrices → commune) ;\nnombre de séries, puis de variables qui utilisent la liste ;\nà égalité, l’ordre du fichier.\n\nUn choix de l’expert l’emporte ainsi sur une simple suggestion, mais pas sur une nomenclature officielle validée.\nL’utilisateur peut changer la maître d’un groupe depuis l’interface (swap_parent). Chaque membre porte ses links (toutes ses paires avec les autres membres), ce qui permet de recalculer badges, confiance et via sans relancer le pipeline. Le choix est conservé dans decisions.json (masters) et pris en compte au run suivant (rang 3 ci-dessus).\nUn doublon relié à la maître seulement via un autre doublon affiche « lien indirect, via … »."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#phase-1-bis-quasi-doublons-similarité-floue",
+    "href": "note_methodologique_dedoublonnage.html#phase-1-bis-quasi-doublons-similarité-floue",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "2.2 Phase 1 bis — Quasi-Doublons (Similarité Floue)",
+    "text": "2.2 Phase 1 bis — Quasi-Doublons (Similarité Floue)\nMéthode :\n\nÀ partir des uniques (une par groupe exact → ~102 pour BTS.xml), comparer toutes les paires de CodeLists\nSimilarité des codes (_code_similarity) : chaque code de la première liste est apparié au meilleur code encore libre de la seconde (valeur puis libellé, via difflib.SequenceMatcher) ; un code est apparié si son score atteint 0.65. La similarité est le nombre de codes appariés rapporté à la taille de la plus grande des deux listes : elle est symétrique, et une liste incluse dans une plus grande n’atteint pas 100 % (13 codes inclus dans 22 → 0.59, paire écartée)\nScore hybride = 0.6 × similarité des codes + 0.4 × similarité des noms (les noms de moins de 3 caractères sont ignorés). Si les codes sont quasi identiques (≥ 0.95) mais les noms très différents (&lt; 0.5), le score est relevé à 0.95\nSeuils : ≥ 0.90 = détecté ; ≥ 0.80 = flagged pour inspection ; similarité des codes minimale 0.75\nLa confiance d’une détection non exacte est plafonnée à 0.99 : 100 % est réservé à la signature exacte\n\n\n2.2.1 Exemples BTS.xml\n\n\n\n\n\n\n\n\nPaire\nScore\nDifférence\n\n\n\n\nSOURCE ↔︎ SOURCE_1\n0.9985\nIdentique (casse près)\n\n\nN_tr_ca_23 ↔︎ TR_CA\n0.9896\nMajuscules/espace sur 2 codes\n\n\nETAT_ET ↔︎ ETAT_ET_1\n0.9961\nQuasi-identique\n\n\nN_domempl_23 ↔︎ DOMEMPL\n0.86\nNON détectée (accent + ordre)\n\n\n\n\n\n2.2.2 Caractéristiques\n\n\n\nAspect\nDétail\n\n\n\n\nComplexité\n\\(O(U^2 \\cdot L)\\), \\(U\\) ≈ 102 uniques\n\n\nFaux négatifs\nDifférence &gt; ~10 % du texte\n\n\nFaux positifs\nDeux listes de plages de valeurs similaires\n\n\n\n\nAppariement des codes et seuils : _code_similarity apparie d’abord les codes de même valeur (index par valeur, coût linéaire), puis cherche le meilleur appariement des codes restants en \\(O(\\text{restants}_a \\times \\text{restants}_b)\\), seulement si chaque reste compte au plus MAX_CODES_PAIRWISE (100) codes. Une paire dont le rapport des tailles est inférieur à min_code_sim (0,75) est écartée sans calcul, car sa similarité de codes ne peut pas atteindre ce seuil.\nLes CodeLists de plus de MAX_CODES_FOR_FUZZY (5 000) codes, comme les communes (~35 000 codes) ou les IRIS, sont exclues de la phase floue et listées dans les logs et dans run_summary.json. Un vrai doublon parmi elles reste capté par la phase exacte (§ précédent). Avant, ce seuil valait 100 : des listes métier comme les types d’équipements de la BPE (150 à 232 codes) échappaient à la phase floue."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#listes-suspectes-quality_flags",
+    "href": "note_methodologique_dedoublonnage.html#listes-suspectes-quality_flags",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "2.3 Listes suspectes (quality_flags)",
+    "text": "2.3 Listes suspectes (quality_flags)\nquality.quality_flags signale à l’étape 4 les listes qui ne devraient probablement pas être des listes de codes, sur leurs codes métier :\n\n\n\n\n\n\n\n\nIndicateur\nRègle\nExemples\n\n\n\n\nplaceholder (« renvoi »)\nValeur cf ou xxx… ; valeur ou libellé commençant par « voir », contenant « cliquer ici » ou « sur N positions » ; commençant par « code » si la liste a au plus 2 codes métier\n« Voir dictionnaire des nomenclatures », « Code quartier du QVA », « Code sur 6 positions »\n\n\nnumeric_range (« numérique »)\nAu plus 2 codes métier, dont un motif de bornes\n« 0 à 7 », « 00 à 23 », « de 0 à N »\n\n\nsingle_code (« code unique »)\nUn seul code métier\n\n\n\n\nUne liste placeholder a pour signature son nom normalisé (quality.name_key) et est exclue des comparaisons de codes (hors échappement, libellés, flou) : ses codes renvoient ailleurs et ne sont pas comparables. Les indicateurs sont écrits dans le registre (quality_flags) ; l’interface les affiche (⚠), permet de filtrer les listes suspectes et demande confirmation avant d’en ajouter une au registre nettoyé."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#phase-1-ter-codes-déchappement-et-libellés",
+    "href": "note_methodologique_dedoublonnage.html#phase-1-ter-codes-déchappement-et-libellés",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "2.4 Phase 1 ter — Codes d’échappement et libellés",
+    "text": "2.4 Phase 1 ter — Codes d’échappement et libellés\nBeaucoup de listes ajoutent directement leurs codes d’échappement (sans objet, non réponse, non concerné, indéterminé…) au lieu d’utiliser un MissingCodeRepresentation. Deux listes aux mêmes codes métier ne sont alors plus des doublons exacts, et leur score flou peut tomber sous le seuil.\nquality.split_codes sépare les codes métier des codes d’échappement. Un code est d’échappement si son libellé normalisé commence par un motif connu (« sans objet », « non concerné », « non renseigné », « non réponse », « indéterminé », « hors champ », « valeur manquante »…) ou si sa valeur est du type _Z, _U ou /. L’ancrage en début de libellé évite les faux positifs (« Contrat à durée indéterminée » reste un code métier).\nDeux détections en découlent, après la phase floue :\n\n\n\n\n\n\n\n\nType\nRègle\nConfiance\n\n\n\n\nexact_business (« exact hors échappement »)\nMême signature des codes métier, signatures complètes différentes, au moins 2 codes métier\n0,98\n\n\nlabels (« libellés »)\nMêmes libellés de codes métier, valeurs différentes (ex. 1/0 et oui/non, A et Acceptable), au moins 2 libellés\n0,95\n\n\n\nLe minimum de 2 codes évite de regrouper les listes d’indicateurs d’EAR dont le seul code métier est « Cohérent ». Le registre indique pour chaque liste ses escape_codes, affichés sur la carte du doublon.\nSur BPE.xml : 7 doublons « hors échappement » (dont L_QUALITE_ZONAGE / L_QUALITE_ZONAGE_2023 et L_VAR_SPECIF_2023 / L_PRESENCE_ABSENCE) et 5 par libellés (dont L_VAR_SPECIF_2023 / L_VAR_SPECIF_2021 et L_QUALITE_XY_2022 / L_QUALITE_XY_2024, valeurs Acceptable et A)."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#phase-2-doublons-sémantiques-embeddings-llm",
+    "href": "note_methodologique_dedoublonnage.html#phase-2-doublons-sémantiques-embeddings-llm",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "2.5 Phase 2 — Doublons Sémantiques (Embeddings + LLM)",
+    "text": "2.5 Phase 2 — Doublons Sémantiques (Embeddings + LLM)\nLes deux phases précédentes ne comprennent pas le sens : possible de “Sexe” vs “Genre” avec codes différents.\n\n2.5.1 Embeddings de CodeLists\n\nVectorisation : modèle qwen3-embedding-8b sur nom + label + codes\nCosinus entre toutes les paires (102 vecteurs → 102×102)\nFiltrage : ≥ 0.90\nJuge LLM : gemma4-26b-moe sur les meilleures candidates\n\n\nTroncature _TRUNCATE_CL (8000 caractères) : le texte concaténé (nom + label + codes) est tronqué avant l’appel d’embedding, pour rester sous la limite de contexte du modèle (qwen3-embedding-8b : 40 960 tokens). Sans cette troncature, une CodeList volumineuse (ex. la nomenclature des communes, ~35 000 codes) fait planter l’appel API. La troncature garde nom et label en entier (partie la plus discriminante) et un échantillon des premiers codes — la capacité de détection n’est donc pas perdue, contrairement à une exclusion complète comme pour le seuil MAX_CODES_FOR_FUZZY de la phase floue (§ précédent).\n\n{\n  \"meme_concept\": true,\n  \"confiance\": 0.95,\n  \"raison\": \"Mêmes codes départementaux français ; seule la casse et les accents diffèrent.\"\n}\n\nPas de barème : il n’existe pas de grille de notation ou de critères pondérés en aval. confiance est une valeur continue entre 0 et 1 auto-évaluée par le LLM lui-même (température 0, un seul appel par paire), accompagnée d’une justification en texte libre. Seules les 20 meilleures paires (triées par score cosinus) sont soumises au juge.\n\n\n\n2.5.2 Embeddings de Variables (usage)\nApproche inversée : on compare les variables qui référencent les CodeLists.\n\n\n\n\n\n\n\n\nListe\nVariables\nvar_sig\n\n\n\n\nN_domempl_23\ndomempl, domempl_empl\n(\"domempl\", \"domempl_empl\")\n\n\nDOMEMPL\ndomempl, domempl_empl, DOMEMPL, DOMEMPL_EMPL\n(\"DOMEMPL\", \"DOMEMPL_EMPL\", \"domempl\", \"domempl_empl\")\n\n\n\nMême sémantique des 2 premières variables → mêmes concept métier. Particulièrement efficace quand toutes les CodeLists sont référencées (BTS.xml : 156/156).\n\n\n2.5.3 Caractéristiques\n\n\n\n\n\n\n\nAspect\nDétail\n\n\n\n\nComplexité\n\\(O(U^2 \\cdot D)\\) pour embeddings, \\(D\\) = 8192\n\n\nCoût\nAppels réseau ; dépend de OPENAI_BASE_URL + OPENAI_API_KEY\n\n\nPrécision\nLa plus élevée (validation LLM)\n\n\nLimite\nCoût calcul, dépendance réseau"
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#types-de-recoupement",
+    "href": "note_methodologique_dedoublonnage.html#types-de-recoupement",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "3.1 Types de recoupement",
+    "text": "3.1 Types de recoupement\n\n\n\n\n\n\n\nSignal\nSignification\n\n\n\n\n✓ même usage\nEnsembles de variables identiques → fort indicateur de redondance\n\n\n~ usage partiel\nIntersection significative → variation contextuelle possible\n\n\n✗ usages disjoints\nAucune variable commune → probablement distinctes ou besoin de consolidation"
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#exemples-bts.xml-1",
+    "href": "note_methodologique_dedoublonnage.html#exemples-bts.xml-1",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "3.2 Exemples BTS.xml",
+    "text": "3.2 Exemples BTS.xml\n\n3.2.1 Groupe A : var_sig identique + contenu identique → doublon exact confirmé\n\n\n\nCodeList\nvar_sig\n\n\n\n\nN_saison_23\n(\"saison\",)\n\n\nN_SAISON_Validité 2022\n(\"saison\",)\n\n\n\n\n\n3.2.2 Groupe B : var_sig identique + contenu différent → à vérifier\n\n\n\nCodeList\nvar_sig\n\n\n\n\nN_champ_23\n(\"champ\",)\n\n\nN_CHAMP_2022\n(\"champ\",)\n\n\n\n\n\n3.2.3 Groupe B bis : var_sig identique + contenu différent → cas à rejeter\n\n\n\nCodeList\nvar_sig\nCodes\n\n\n\n\nN_annee_23\n(\"annee\",)\n2019, 2020, 2021, 2022, 2023\n\n\nN_annee_24\n(\"annee\",)\n2019, 2020, 2021, 2022, 2023, 2024\n\n\n\nCas fréquent avec les nomenclatures d’années d’enquête : chaque millésime ajoute le code de l’année écoulée à la liste précédente, sous la même variable référente. Le var_sig identique ne signale ici aucune redondance — les deux listes sont des versions légitimement distinctes du même référentiel. Ce contre-exemple confirme que var_sig identique + contenu différent (Groupe B) reste structurellement ambigu : ni un rapprochement automatique, ni un rejet automatique ne seraient corrects dans tous les cas — l’arbitrage humain reste nécessaire.\n\n\n3.2.4 Groupe C : var_sig disjoints + contenu identique → à consolider\n\n\n\nCodeList\nvar_sig\nCodes\n\n\n\n\nSOURCE\n(\"source\",)\n6 codes identiques\n\n\nSOURCE_1\n(\"source_1\",)\n6 codes identiques"
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#pourquoi---registry",
+    "href": "note_methodologique_dedoublonnage.html#pourquoi---registry",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "4.1 Pourquoi --registry ?",
+    "text": "4.1 Pourquoi --registry ?\nUn seul run du pipeline identifie les redondances au sein d’un unique fichier traité. Mais les mêmes CodeLists peuvent apparaître dans plusieurs opérations (BTS, BPE, RP…). Sans registre partagé, chaque nouvel run redécouvre les paires déjà validées dans les opérations précédentes.\nLe registre cleaned_codelists.json est un catalogue transversal de vérité : il s’alimente au fil des opérations et alimente la détection du run suivant, y compris les appariements cross-opération."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#flux-transversal",
+    "href": "note_methodologique_dedoublonnage.html#flux-transversal",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "4.2 Flux transversal",
+    "text": "4.2 Flux transversal\nOpération 1 : BTS_demo.xml (sans --registry)\n  → codelist_duplicates.json → 4 paires détectées (exact + flou + sémantique)\n  → Interface web : examiner / approuver / rejeter\n  → /api/registry/save → cleaned_codelists.json (mères BTS)\n\nOpération 2 : BPE_demo.xml avec --registry cleaned_codelists.json\n  → masters BTS injectés dans la détection\n  → CodeLists BTS doublons exclues (déjà validées)\n  → codelist_duplicates.json → paires BPE intra + BPE↔BTS (cross-fichier)\n  → /api/registry/save → cleaned_codelists.json mis à jour (BTS + BPE)\n\nOpération N : fichier suivant avec --registry cleaned_codelists.json\n  → registry = tous les masters validés précédemment\n  → détection = intra-fichier + cross-opération sur les masters cumulés\n  → registre s'enrichit, les paires résiduelles diminuent à chaque étape\n\nPlus le registre grossit, plus la détection évite les réitérations\net capture les appariements inter-opérations."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#ce-que-fait---registry-dans-le-pipeline-main.py-2-bis",
+    "href": "note_methodologique_dedoublonnage.html#ce-que-fait---registry-dans-le-pipeline-main.py-2-bis",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "4.3 Ce que fait --registry dans le pipeline (main.py, §2 bis)",
+    "text": "4.3 Ce que fait --registry dans le pipeline (main.py, §2 bis)\nLors du lancement avec --registry cleaned_codelists.json :\n\nLecture du registre nettoyé (schéma v2, migration automatique v1 → v2)\nInjection des entrées comme masters prioritaires (prépended à la liste des CodeLists)\nExclusion des CodeLists dont l’ID figure dans replaces[].id (déjà traitées)\nContinuation : la détection exacte/floue/sémantique ne voit plus que les nouveautés\n\n# Simplifié depuis main.py (lignes 141-155) :\nregistry_cls, replaced_ids = load_cleaned_codelists(registry_path)\ncodelists = [\n    cl for cl in codelists\n    if cl.id not in registry_ids and cl.id not in replaced_ids\n]\ncodelists = registry_cls + codelists  # masters d'abord\n\nÀ discuter — versioning : replaced_ids est aujourd’hui un simple ensemble d’IDs bruts, sans notion de version. Si une nouvelle version d’un objet déjà remplacé apparaît dans un fichier ultérieur, elle est silencieusement exclue de la détection (même comportement qu’un doublon déjà traité). Reste à trancher en équipe : faut-il ré-examiner un ID lors d’un changement de version (au risque de redétecter des paires déjà validées), ou continuer à l’exclure systématiquement (au risque de manquer un contenu qui a changé) ? Une piste : n’ajouter un couple (id, version) à replaces[] que si le modèle DDI expose une version exploitable sur le Fragment source."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#schéma-du-registre-nettoyé-v3",
+    "href": "note_methodologique_dedoublonnage.html#schéma-du-registre-nettoyé-v3",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "4.4 Schéma du registre nettoyé (v3)",
+    "text": "4.4 Schéma du registre nettoyé (v3)\n{\n  \"version\": 3,\n  \"generated_at\": \"2025-xx-xxTxx:xx:xx+00:00\",\n  \"source_registry\": \"s3://…/codelist_duplicates.json\",\n  \"codelists\": {\n    \"uuid-master\": {\n      \"id\": \"uuid-master\",\n      \"name\": \"Nom_master\",\n      \"label\": \"Libellé master\",\n      \"codes\": [[\"1\",\"Valeur 1\"],[\"2\",\"Valeur 2\"]],\n      \"codes_count\": 2,\n      \"vars\": [\"var1\", \"var2\"],\n      \"replaces\": [\n        {\n          \"id\": \"uuid-dup\",\n          \"name\": \"Nom_dup\",\n          \"detection_types\": [\"exact\", \"usage\"],\n          \"confidence\": 1.0\n        }\n      ],\n      \"level\": \"commune\",\n      \"level_suggested\": \"commune\",\n      \"source\": \"validation\",\n      \"agency\": \"fr.insee\",\n      \"version\": \"2\",\n      \"urn\": \"urn:ddi:fr.insee:uuid-master:2\",\n      \"operations\": [\"s2219\", \"s2297\"],\n      \"series\": [\"s1998\", \"s1223\"],\n      \"first_added_at\": \"2025-xx-xx...\",\n      \"updated_at\": \"2025-xx-xx...\"\n    }\n  }\n}\nLe schéma v3 ajoute le niveau (validé par l’expert : officielle, commune, specifique, ou vide ; level_suggested rappelle la suggestion faite à la création), la source de l’entrée (validation, manuel, api-geo, api-structures), la référence DDI de l’objet d’origine et sa provenance. Un registre v1 ou v2 est migré à la lecture (champs vides)."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#sync-incrémental-sync_cleaned_registry",
+    "href": "note_methodologique_dedoublonnage.html#sync-incrémental-sync_cleaned_registry",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "4.5 Sync incrémental (sync_cleaned_registry)",
+    "text": "4.5 Sync incrémental (sync_cleaned_registry)\nLors de /api/registry/save :\n\nDécision approuvée → ajout au replaces du parent (création de l’entrée parente si inexistante)\nDécision dé-approuvée → retrait du replaces (uniquement si l’ID existe toujours dans les duplicates du parent courant)\nreplaces vide → entrée supprimée uniquement si c’est le sync qui l’a vidée (les entrées ajoutées à la main survivent)\nName/label/codes/vars ne sont JAMAIS modifiés par le sync (éditions manuelles préservées)"
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#décisions-conservées-entre-les-runs-decisions.json",
+    "href": "note_methodologique_dedoublonnage.html#décisions-conservées-entre-les-runs-decisions.json",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "4.6 Décisions conservées entre les runs (decisions.json)",
+    "text": "4.6 Décisions conservées entre les runs (decisions.json)\nL’interface écrit decisions.json à chaque décision (sauvegarde automatique), à la racine des sorties, à côté de cleaned_codelists.json ; à l’ouverture d’un registre, ces décisions lui sont réappliquées (reapply_decisions) :\n{\n  \"version\": 1,\n  \"pairs\": {\"&lt;id_a&gt;|&lt;id_b&gt;\": {\"decision\": \"reject\", \"updated_at\": \"...\"}},\n  \"dismissed\": {\"&lt;cl_id&gt;\": {\"updated_at\": \"...\"}},\n  \"masters\": {\"&lt;cl_id&gt;\": {\"updated_at\": \"...\"}}\n}\n\nClé de paire : les deux ids triés, la décision vaut dans les deux sens.\nSeules approuvé et rejeté sont conservées ; une paire remise en attente est retirée. Les paires absentes du registre sauvegardé (autres fichiers sources) sont gardées.\ndismissed : CodeLists sans doublon écartées du registre nettoyé.\nmasters : CodeLists choisies comme maîtres (voir Choix de la CodeList maître).\n\nÀ l’étape 9, le pipeline réapplique ces décisions (apply_decisions) : le doublon reçoit decision_carried: true, la liste écartée dismissed: true, et run_summary.json compte decisions_carried. Les paires approuvées dont le doublon figure déjà dans les replaces du registre nettoyé n’apparaissent pas, puisque --registry exclut ces listes de la détection : la reprise sert donc surtout aux rejets."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#lire-les-opérations-depuis-lapi",
+    "href": "note_methodologique_dedoublonnage.html#lire-les-opérations-depuis-lapi",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "5.1 Lire les opérations depuis l’API",
+    "text": "5.1 Lire les opérations depuis l’API\nLe pipeline peut lire ses CodeLists dans l’API Métadonnées de l’Insee (https://api.insee.fr/metadonnees/V2, publique) au lieu d’un fichier exporté (--operation, --serie, --all-operations). Le module insee_api suit la chaîne :\n/operations/serie/{s}                   → opérations de la série\n/structures/operation/{op}/fichiers     → StudyUnit : PhysicalInstanceReference\n/structures/fichier/{agency}/{id}/{v}   → Variables : CodeListReference (agence, id, version)\n/structures/codelist/{agency}/{id}/{v}  → CodeList + Codes + Catégories\nLes fragments renvoyés sont lus par extractor, sans adaptation. corpus garde la provenance de chaque CodeList (opérations et séries qui l’utilisent). Les objets DDI versionnés sont immuables : ils sont mis en cache (api_cache/&lt;type&gt;/&lt;agence&gt;/&lt;id&gt;/&lt;version&gt;.xml), si bien qu’un nouveau run ne retélécharge que les nouvelles versions (série BTS : 116 appels au premier run, 10 ensuite).\nLimites : l’API ne décrit que les opérations publiées (BTS : 2 opérations sur 9 ont des fichiers DDI) ; certains fichiers d’une opération publiée ne sont pas diffusés (HTTP 401) : ils sont ignorés et signalés dans run_summary.json."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#lignée-basedonobject",
+    "href": "note_methodologique_dedoublonnage.html#lignée-basedonobject",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "5.2 Lignée (BasedOnObject)",
+    "text": "5.2 Lignée (BasedOnObject)\nChaque millésime d’une enquête recrée ses listes à partir de celles du millésime précédent, en gardant le lien BasedOnReference. Sur la série BTS, BTS 2023 et BTS 2024 n’ont aucune CodeList en commun par identifiant, mais 40 des 47 listes 2024 sont « basées sur » une liste 2023, dont 27 au contenu strictement identique.\nfunnel.detect_lineage produit une paire lineage pour chaque liste dérivée d’une liste présente, avec la similarité des codes comme confiance. Les paires déjà trouvées par une autre détection gardent leur type ; sur BTS, la lignée ajoute 6 paires que rien d’autre ne trouvait (copies modifiées, par exemple N_origine_23 → N_origine_24, un code retiré)."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#niveaux",
+    "href": "note_methodologique_dedoublonnage.html#niveaux",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "5.3 Niveaux",
+    "text": "5.3 Niveaux\n\n\n\n\n\n\n\n\nNiveau\nContenu\nOrigine\n\n\n\n\nofficielle\nNomenclatures officielles\nscrubber seed-officielles : listes du COG (/geo/*) et CodeLists Colectica désignées\n\n\ncommune\nListes standard gérées par la division métadonnées\nvalidées par l’expert ; suggérées pour une liste utilisée par au moins deux séries\n\n\nspecifique\nListes propres à une enquête\nsuggérées pour une liste d’une seule série\n\n\n\nLe niveau validé vit dans le registre nettoyé ; il pèse dans le choix de la maître (voir Choix de la CodeList maître). Une liste « Voir dictionnaire des nomenclatures » (indicateur placeholder) est rapprochée, par les mots de son nom, de la nomenclature officielle qu’elle désigne (levels.suggest_official) : sur BTS, N-region, N_Départements et N-pays_naissance sont rattachées aux régions, départements et pays du COG."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#contrôle-dun-fichier-contre-les-listes-publiées-scrubber-check",
+    "href": "note_methodologique_dedoublonnage.html#contrôle-dun-fichier-contre-les-listes-publiées-scrubber-check",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "5.4 Contrôle d’un fichier contre les listes publiées (scrubber-check)",
+    "text": "5.4 Contrôle d’un fichier contre les listes publiées (scrubber-check)\nLe service de contrôle compare les CodeLists d’un fichier aux CodeLists publiées, réunies dans un index de référence construit depuis l’API (toute la base, plus les listes du COG). Pour chaque liste fournie, dans l’ordre :\n\nréutilisée : même identifiant dans l’index ;\ndoublon : signature exacte, hors codes d’échappement, ou mêmes libellés métier, par recherche directe dans des index inversés ;\ninclusion : au moins 95 % de ses codes métier sont dans une liste plus grande (sous-ensemble), ou elle contient une liste plus petite (extension, « codes en plus ») ;\nlignée : BasedOnObject vers une liste de l’index ;\nproche : score flou du pipeline (funnel.fuzzy_score), calculé seulement avec les listes de l’index qui partagent au moins une valeur ou un libellé de code — quelques dizaines de comparaisons au lieu de toute la base.\n\nLes correspondances sont triées par force (doublon, inclusion, proche), puis par niveau (officielle d’abord), puis par confiance. Pas de LLM : le contrôle est déterministe et rapide. Contrôler BTS 2024 contre la série BTS (en ignorant les listes propres à BTS 2024) donne 35 doublons, 2 inclusions, 8 listes proches et 2 nouvelles."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#demobts_demo.xml-run-1-sans-registry",
+    "href": "note_methodologique_dedoublonnage.html#demobts_demo.xml-run-1-sans-registry",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "6.1 demo/BTS_demo.xml — Run 1 (sans registry)",
+    "text": "6.1 demo/BTS_demo.xml — Run 1 (sans registry)\nContexte : 10 CodeLists issues de BTS.xml : 4 paires connues + 2 listes uniques.\n\n6.1.1 Paire 1 — Exact : N_NAF_6 ↔︎ N-ACTIVITE-FRANCAISE-6-POSTES\n\n\n\n\n\n\n\n\nValeur\nN_NAF_6\nN-ACTIVITE-FRANCAISE-6-POSTES\n\n\n\n\nAZ\nAgriculture, sylviculture et pêche\nAgriculture, sylviculture et pêche\n\n\nBE\nIndustrie manufacturière, ind. extractives et autres\nIndustrie manufacturière, ind. extractives et autres\n\n\nFZ\nConstruction\nConstruction\n\n\nGI\nCommerce de gros et de détail, transports, hébergement et restauration\nCommerce de gros et de détail, transports, hébergement et restauration\n\n\nJU\nServices divers\nServices divers\n\n\nOQ\nAdministration publique, enseignement, santé et action sociale\nAdministration publique, enseignement, santé et action sociale\n\n\nVide\nNon renseigné\nNon renseigné\n\n\n\nDétection : exact (signature (valeur, libellé) identique sur les 7 codes). Signal d’usage : mêmes variables référentes dans les deux listes. Décision expert : N_NAF_6 retenue comme maître → N-ACTIVITE-FRANCAISE-6-POSTES placée dans replaces[] de N_NAF_6.\n\n\n6.1.2 Paire 2 — Fuzzy : N_nat_etab_23 ↔︎ NAT_ETAB\n3 codes partagés (CCP, COM, STD) — libellés identiques mais noms de CodeList différents et description légèrement différente.\nDétection : SequenceMatcher ≥ 0.90.\n\n\n6.1.3 Paire 3 — Fuzzy : N_champ_23 ↔︎ N_CHAMP_2022\n5 codes partagés (DADS, DADS-PUBLIC, DSN, DSN-PUBLIC, PE).\n\n\n6.1.4 Paire 4 — Sémantique (LLM) : N_etat_23 ↔︎ Etat_2020\nPas de chevauchement direct de codes — détectée uniquement par embeddings + juge LLM.\nRésultat run 1 : codelist_duplicates.json contient 4 paires. Sauvegarde dans cleaned_codelists.json (v1) : 4 entrées de maître avec leurs replaces[]."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#demobpe_demo.xml-run-2-avec---registry-cleaned_codelists.json",
+    "href": "note_methodologique_dedoublonnage.html#demobpe_demo.xml-run-2-avec---registry-cleaned_codelists.json",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "6.2 demo/BPE_demo.xml — Run 2 (avec --registry cleaned_codelists.json)",
+    "text": "6.2 demo/BPE_demo.xml — Run 2 (avec --registry cleaned_codelists.json)\nContexte : 9 CodeLists issues de BPE.xml — 6 listes BPE natives, 2 copies de BTS avec IDs neufs, 1 unique à ajouter manuellement.\n\n6.2.1 Paires intra-BPE (indépendantes du registre)\nPaire 5 — L_VAR_SPECIF_2023 ↔︎ L_VAR_SPECIF_2021\nMême concept, variantes annuelles différentes (codes 0/1/_U/_Z pour 2023 vs OUI/NON/IND/NC pour 2021).\nPaire 6 — L_AN_BPE_EVOL_2023 ↔︎ L_AN_BPE_EVOL_2022\nCodes : 2013/2017/2018/2023 pour 2023 vs 2017/2022 pour 2022 — même concept, années différentes.\n\n\n6.2.2 Paires cross-fichier (détectées GRÂCE AU REGISTRY)\nPaire 7 — NAF_6_POSTES_BPE ↔︎ registre N_NAF_6 (exact, cross-fichier)\nNAF_6_POSTES_BPE est une copie exacte de N_NAF_6 avec des UUIDs entièrement neufs. Sans le registre, le pipeline ne détecterait qu’une similarité de contenu brute. Avec le registre, N_NAF_6 est injectée comme master prioritaire et servira de candidat à la comparaison — la détection exacte la reconnaît immédiatement.\nPaire 8 — ETAT_UNITE_BPE ↔︎ registre N_etat_23 (fuzzy, cross-fichier)\nETAT_UNITE_BPE est une copie de N_etat_23 avec des tweaks sur les libellés (ex. Unité active → Unité en activité, Non renseigné → Non renseignée). La détection par signature exacte ne la capturera pas, mais la signature floue (SequenceMatcher ≥ 0.90) plus le registre qui place N_etat_23 comme master prioritaire permettent sa détection."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#registre-après-opération-2-bpe",
+    "href": "note_methodologique_dedoublonnage.html#registre-après-opération-2-bpe",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "6.3 Registre après opération 2 (BPE)",
+    "text": "6.3 Registre après opération 2 (BPE)\ncleaned_codelists.json (v2) contient maintenant 6 entrées de maître :\n\n\n\n\n\n\n\n\nMaître\nOrigine\nreplaces[] contient\n\n\n\n\nN_NAF_6\nBTS_demo\nN-ACTIVITE-FRANCAISE-6-POSTES (run 1) + NAF_6_POSTES_BPE (run 2)\n\n\nN_nat_etab_23\nBTS_demo\nNAT_ETAB (run 1)\n\n\nN_champ_23\nBTS_demo\nN_CHAMP_2022 (run 1)\n\n\nN_etat_23\nBTS_demo\nEtat_2020 (run 1) + ETAT_UNITE_BPE (run 2)\n\n\nL_VAR_SPECIF_2023\nBPE_demo\nL_VAR_SPECIF_2021 (run 2)\n\n\nL_AN_BPE_EVOL_2023\nBPE_demo\nL_AN_BPE_EVOL_2022 (run 2)"
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#ajout-manuel-l_qualite_zonage_2023",
+    "href": "note_methodologique_dedoublonnage.html#ajout-manuel-l_qualite_zonage_2023",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "6.4 Ajout manuel : L_QUALITE_ZONAGE_2023",
+    "text": "6.4 Ajout manuel : L_QUALITE_ZONAGE_2023\nCette CodeList est unique (aucun doublon intra ou cross-fichier détecté). L’expert peut l’ajouter manuellement au registre (bouton “Ajouter au registre” dans l’interface), sans validation de paire. Elle sera présente comme master dans le registre pour les opérations futures.\n\nÀ discuter — paquet partagé vs local au domaine producteur (RMéS) : l’ajout manuel ne distingue pas aujourd’hui une CodeList à verser dans le paquet de ressources partagées commun d’une CodeList qui doit rester locale au domaine du producteur. Critères candidats à trancher en équipe : réutilisation avérée par ≥ 2 domaines/opérations, correspondance à une nomenclature officiellement référencée, validation explicite d’un référent qualité. Il faudra aussi un mécanisme pour reverser a posteriori une CodeList locale dans le paquet partagé (ex. marquage « candidate à la promotion » + revue périodique), plutôt que de tout verser automatiquement — l’objectif étant d’éviter l’effet « premier-arrivé-premier-servi » qui imposerait les choix de nommage d’un seul producteur à tous les autres.\n\n\n6.4.1 Amorçage du registre avec les nomenclatures officielles partagées\nLe mécanisme --registry (§ ci-dessus) fait déjà gagner la priorité « maître » aux entrées du registre même sans aucune variable référente : main.py préfixe les entrées du registre nettoyé à la liste des CodeLists avant tout regroupement, et detect_exact_duplicates / find_usage_groups retiennent toujours le premier élément du groupe comme maître — donc les entrées du registre l’emportent structurellement dès qu’un doublon apparaît, indépendamment du nombre de variables qui les référencent au moment de l’injection.\nA étudier : amorcer cleaned_codelists.json avec un export du paquet de ressources dédié aux nomenclatures officielles (codes renseignés, vars: [] au départ), en dehors du cycle de sync normal des décisions. Une entrée ajoutée ainsi « à la main » survit aux syncs suivants même avec un replaces vide (sync_cleaned_registry ne supprime que les entrées vidées par le sync lui-même). Aucune modification de code n’est donc nécessaire pour que ces nomenclatures soient toujours reconnues comme maîtres — seule une procédure d’amorçage (export + import initial) reste à mettre en place."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#performance-à-grande-échelle",
+    "href": "note_methodologique_dedoublonnage.html#performance-à-grande-échelle",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "8.1 Performance à Grande Échelle",
+    "text": "8.1 Performance à Grande Échelle\n\nMSA / MinHash pour remplacer la comparaison par paires \\(O(n^2)\\)\nParallélisation du pipeline sur Kubernetes via Argo Workflows"
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#robustesse",
+    "href": "note_methodologique_dedoublonnage.html#robustesse",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "8.2 Robustesse",
+    "text": "8.2 Robustesse\n\nDétection de sous-ensembles dans le pipeline : elle existe dans scrubber-check (inclusion, extension) mais pas encore dans l’entonnoir de validation\nEmbeddings spécialisés sur le vocabulaire statistique Insee\nInclusion par référence : le modèle DDI la permet, mais ni l’outil ni Colectica ne l’implémentent (crainte de références circulaires côté Colectica). Les listes plates issues d’un seul niveau d’une nomenclature hiérarchique officielle (ex. NAF) restent donc des CodeLists à part entière, correctement traitées comme distinctes par la détection de contenu.\nLimite connue (déjà documentée dans le code, semantic.py, docstring de detect_semantic_userid) : l’heuristique de préfixe commun (même projet Colectica) peut signaler à tort deux niveaux différents d’une même nomenclature (ex. NAF 6 postes vs 17 postes) comme candidats — aucun garde-fou automatique aujourd’hui, surveillance manuelle nécessaire."
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#pipeline-reproductible",
+    "href": "note_methodologique_dedoublonnage.html#pipeline-reproductible",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "8.3 Pipeline Reproductible",
+    "text": "8.3 Pipeline Reproductible\n\nTransformation vers pipeline targets (R) ou Python équivalent\nIntégration CI/CD : déclencher le dédoublonnage à chaque commit"
+  },
+  {
+    "objectID": "note_methodologique_dedoublonnage.html#analyse-fine-de-lusage",
+    "href": "note_methodologique_dedoublonnage.html#analyse-fine-de-lusage",
+    "title": "Note Méthodologique : Stratégie de Dédoublonnage des Listes de Codes (DDI 3.3/6.0)",
+    "section": "8.4 Analyse Fine de l’Usage",
+    "text": "8.4 Analyse Fine de l’Usage\n\nHiérarchie des variables (groupes, familles d’enquêtes)\nPondération par importance (métrique de centralité)\nContextes d’enquête : une CodeList valide dans un contexte mais pas un autre"
+  },
+  {
+    "objectID": "modifications_recentes.html",
+    "href": "modifications_recentes.html",
+    "title": "Changements récents",
+    "section": "",
+    "text": "Ce document décrit les changements récents en quatre parties :"
+  },
+  {
+    "objectID": "modifications_recentes.html#vue-densemble",
+    "href": "modifications_recentes.html#vue-densemble",
+    "title": "Changements récents",
+    "section": "2.1 Vue d’ensemble",
+    "text": "2.1 Vue d’ensemble\n\n\n\n\n\n\n\nThème\nEffet principal\n\n\n\n\nSource API\n--serie, --operation, --all-operations (et onglet Pipeline) : plus d’export XML manuel ; provenance (opérations, séries) de chaque CodeList\n\n\nLignée\nNouvelle détection lineage (BasedOnObject) : copies modifiées d’un millésime à l’autre\n\n\nNiveaux\nRegistre nettoyé v3 : niveau officielle / commune / spécifique, source, URN, provenance\n\n\nNomenclatures officielles\nscrubber seed-officielles : listes du COG au niveau officielle ; renvois « Voir dictionnaire » rattachés à la nomenclature\n\n\nListe maître\nChoisie par registre, niveau validé, choix de l’expert, niveau suggéré, réutilisation\n\n\nPré-contrôle\nService scrubber-check (CLI + API HTTP, image à part) et onglet 🔎 Pré-contrôle\n\n\nValidation\nDécisions enregistrées à chaque clic, liste des runs, raccourcis clavier, actions de masse limitées au filtre et annulables"
+  },
+  {
+    "objectID": "modifications_recentes.html#mesures-sur-la-série-bts-s1998",
+    "href": "modifications_recentes.html#mesures-sur-la-série-bts-s1998",
+    "title": "Changements récents",
+    "section": "2.2 Mesures sur la série BTS (s1998)",
+    "text": "2.2 Mesures sur la série BTS (s1998)\n\nBTS 2023 et BTS 2024 n’ont aucune CodeList commune par identifiant : chaque millésime recrée ses listes. 40 des 47 listes 2024 sont « basées sur » une liste 2023, dont 27 identiques.\nLe run API de la série trouve 47 candidats (27 exacts, 6 en lignée seule — copies modifiées que rien d’autre ne trouvait). 116 appels à l’API au premier run (28 s), 10 au suivant grâce au cache (7 s).\n7 opérations BTS sur 9 n’ont pas de fichiers DDI dans l’API ; certains fichiers d’autres opérations ne sont pas diffusés (HTTP 401) : ils sont ignorés et signalés.\nAvec les nomenclatures du COG amorcées, N-region, N_Départements et N-pays_naissance (« Voir dictionnaire ») sont rattachées aux régions, départements et pays officiels.\nscrubber-check sur BTS 2024 contre la série (listes propres à BTS 2024 ignorées) : 35 doublons, 2 inclusions, 8 proches, 2 nouvelles ; même résultat contre la base complète, en 8 s.\nBase complète : 617 opérations, dont 33 seulement ont des fichiers DDI dans l’API ; 7 083 CodeLists publiées, dont 11 utilisées par au moins deux séries (candidates « commune »). Index de 3,3 Mo, construit en 27 min la première fois."
+  },
+  {
+    "objectID": "modifications_recentes.html#onglet-validation",
+    "href": "modifications_recentes.html#onglet-validation",
+    "title": "Changements récents",
+    "section": "2.3 Onglet Validation",
+    "text": "2.3 Onglet Validation\n\nDécisions enregistrées à chaque clic dans decisions.json (indicateur « ✓ Enregistré à … », bouton Réessayer en cas d’échec) et réappliquées à l’ouverture d’un registre. Le serveur garde un registre par chemin : deux personnes sur deux runs ne s’écrasent plus.\nRuns choisis dans une liste (dossier de sortie commun aux onglets) ; historique des runs dans l’onglet Pipeline ; « Valider ce run » en fin de pipeline.\nDécider : trois boutons, résumé des différences de codes sur chaque carte, comparaison ouverte d’office pour le premier doublon en attente, raccourcis j/k/n/a/r/p/c/?, enchaînement optionnel des listes.\nActions de masse limitées aux doublons affichés par le filtre, avec le nombre concerné, confirmation et Annuler. Les approbations de masse ne touchent pas aux doublons rejetés.\nFiltre par défaut À traiter, tri, filtre par niveau, une seule pastille par liste, état (run, filtres, liste) conservé dans l’adresse.\nNoms et libellés échappés partout (un nom contenant &lt; ou & s’affiche tel quel) ; confirmations dans des fenêtres de l’application."
+  },
+  {
+    "objectID": "modifications_recentes.html#sécurité",
+    "href": "modifications_recentes.html#sécurité",
+    "title": "Changements récents",
+    "section": "2.4 Sécurité",
+    "text": "2.4 Sécurité\nLe XML (fichiers déposés, réponses de l’API) est lu sans résolution d’entités ni accès réseau."
+  },
+  {
+    "objectID": "modifications_recentes.html#ce-qui-nest-pas-fait",
+    "href": "modifications_recentes.html#ce-qui-nest-pas-fait",
+    "title": "Changements récents",
+    "section": "2.5 Ce qui n’est pas fait",
+    "text": "2.5 Ce qui n’est pas fait\n\nLa détection d’inclusion n’existe que dans scrubber-check, pas dans l’entonnoir du pipeline.\nLa reconnaissance d’une nomenclature non géographique (NAF, PCS, CJ) par sondage de /codes/{nomenclature}/{niveau}/{code} n’est pas faite.\nLes CodeLists jamais référencées ne sont exportées que pour une source XML (unreferenced_codelists.json) : l’API ne donne accès qu’aux listes référencées par des variables."
+  },
+  {
+    "objectID": "modifications_recentes.html#vue-densemble-1",
+    "href": "modifications_recentes.html#vue-densemble-1",
+    "title": "Changements récents",
+    "section": "3.1 Vue d’ensemble",
+    "text": "3.1 Vue d’ensemble\n\n\n\n\n\n\n\nThème\nEffet principal\n\n\n\n\nVariables\nLes variables DDI 3.3 (VariableRepresentation) sont rattachées : EAR passe de 0 à 656/656 CodeLists liées\n\n\nPhase floue\nAppariement par valeur : limite portée de 100 à 5 000 codes, EAR 515 s → 83 s\n\n\nDécisions\nConservées d’un run à l’autre (decisions.json) ; listes sans doublon « écartées »\n\n\nListe maître\nUn doublon peut devenir maître ; liens entre doublons affichés\n\n\nCodes d’échappement\nDétections « exact hors échappement » et « libellés »\n\n\nListes suspectes\nRenvoi vers une nomenclature, représentation numérique, code unique (⚠)\n\n\nVersions DDI\nAgence, version, BasedOnObject lus ; dernière version gardée\n\n\n\n\n\n\n\n\n\nWarningImpact sur les résultats\n\n\n\nLe nombre et la composition des groupes changent : les listes de 101 à 5 000 codes sont de nouveau comparées, de nouvelles paires apparaissent (hors échappement, libellés) et les listes « placeholder » ne sont plus regroupées sur leurs codes. Sur BTS, le groupe « Voir dictionnaire des nomenclatures » (catégorie juridique + 16 listes) se réduit aux vrais doublons de nom. Les registres produits avant ces changements se chargent toujours, mais ne permettent pas de changer de maître (pas de liens) : relancer le pipeline."
+  },
+  {
+    "objectID": "modifications_recentes.html#rattachement-des-variables",
+    "href": "modifications_recentes.html#rattachement-des-variables",
+    "title": "Changements récents",
+    "section": "3.2 Rattachement des variables",
+    "text": "3.2 Rattachement des variables\nL’étape 3 de main.py ne lisait que les références posées directement sous la variable. En DDI 3.3, elles sont sous VariableRepresentation : sur EAR, aucune CodeList n’avait de variable. _link_variables s’appuie maintenant sur extract_variables.\n\n\n\nFichier\nAvant\nAprès\n\n\n\n\nEAR.xml\n0 / 656\n656 / 656\n\n\nBPE.xml\n120 / 126\n126 / 126\n\n\n\nCela répare le signal d’usage, la phase sémantique « via variables » et le compteur de variables, désormais affiché aussi dans la colonne de gauche.\nLa règle de choix de la liste maître est documentée (note méthodologique) : première liste du groupe dans l’ordre du XML, registre nettoyé en tête."
+  },
+  {
+    "objectID": "modifications_recentes.html#phase-floue-appariement-par-valeur",
+    "href": "modifications_recentes.html#phase-floue-appariement-par-valeur",
+    "title": "Changements récents",
+    "section": "3.3 Phase floue : appariement par valeur",
+    "text": "3.3 Phase floue : appariement par valeur\n_code_similarity apparie d’abord les codes de même valeur (index, coût linéaire), puis cherche le meilleur appariement des codes restants seulement si chaque reste compte au plus 100 codes. Une paire dont le rapport des tailles est sous 0,75 est écartée sans calcul.\n\n\n\n\n\n\n\n\n\nAvant\nAprès\n\n\n\n\nLimite de taille\n100 codes\n5 000 codes (communes et IRIS restent exclus)\n\n\nPhase floue sur EAR\n515 s\n83 s, mêmes 205 paires\n\n\nTypes d’équipements BPE (150 à 232 codes)\nexclus\ncomparés : L_TYPEQU_2024_DIFF ~ L_TYPEQU_2024 (0,93)"
+  },
+  {
+    "objectID": "modifications_recentes.html#décisions-conservées-et-listes-écartées",
+    "href": "modifications_recentes.html#décisions-conservées-et-listes-écartées",
+    "title": "Changements récents",
+    "section": "3.4 Décisions conservées et listes écartées",
+    "text": "3.4 Décisions conservées et listes écartées\nLa sauvegarde écrit decisions.json à la racine des sorties, à côté de cleaned_codelists.json : décisions approuvé / rejeté par paire (valables dans les deux sens), listes écartées et maîtres choisies. Au run suivant, le pipeline les réapplique.\n\nUne décision reprise est marquée ↻ reprise sur la carte ; la changer efface la marque.\nUne paire remise en attente est retirée du fichier ; les décisions des autres fichiers sources sont conservées.\n🚫 Écarter / ↩︎ Annuler l’écart sur une CodeList sans doublon : elle n’a plus de case à cocher et n’est pas prise par « Ajouter toutes les CodeLists sans doublon ». Filtre décision Écartées.\nrun_summary.json compte decisions_carried."
+  },
+  {
+    "objectID": "modifications_recentes.html#changer-la-liste-maître",
+    "href": "modifications_recentes.html#changer-la-liste-maître",
+    "title": "Changements récents",
+    "section": "3.5 Changer la liste maître",
+    "text": "3.5 Changer la liste maître\n\nChaque membre d’un groupe porte ses links : toutes ses paires avec les autres membres.\n⇅ Définir comme maître sur une carte : le doublon devient maître, l’ancienne maître devient doublon en attente ; badges, confiance et « via » sont recalculés depuis les liens ; les autres décisions sont conservées.\nLe choix est conservé (decisions.json, masters). Priorité au run suivant : registre nettoyé, maître choisie, ordre du XML.\nRegistre nettoyé : l’entrée de l’ancienne maître perd les listes du groupe (supprimée si elle devient vide).\nUne maître issue du registre nettoyé ne peut pas être remplacée ici (409).\nLes cartes indiquent 🔗 lié aussi à … (paires avec d’autres doublons) et, pour un doublon rejeté encore lié, suggèrent de le définir comme maître."
+  },
+  {
+    "objectID": "modifications_recentes.html#codes-déchappement",
+    "href": "modifications_recentes.html#codes-déchappement",
+    "title": "Changements récents",
+    "section": "3.6 Codes d’échappement",
+    "text": "3.6 Codes d’échappement\nquality.split_codes sépare codes métier et codes d’échappement : libellé commençant par « sans objet », « non concerné », « non renseigné », « non réponse », « indéterminé », « hors champ »…, ou valeur _Z, _U, /. Deux détections s’ajoutent après la phase floue :\n\n\n\n\n\n\n\n\nType (badge)\nRègle\nConfiance\n\n\n\n\nexact_business (« exact hors échappement »)\nMêmes codes métier, codes d’échappement différents\n0,98\n\n\nlabels (« libellés »)\nMêmes libellés métier, valeurs différentes\n0,95\n\n\n\nAu moins 2 codes métier sont exigés. Sur BPE : L_QUALITE_ZONAGE / _2023, L_VAR_SPECIF_2023 / L_PRESENCE_ABSENCE, L_VAR_SPECIF_2023 / _2021 (1/0 contre oui/non), L_QUALITE_XY (A contre Acceptable). La carte rappelle les codes d’échappement de la maître et du doublon."
+  },
+  {
+    "objectID": "modifications_recentes.html#listes-suspectes",
+    "href": "modifications_recentes.html#listes-suspectes",
+    "title": "Changements récents",
+    "section": "3.7 Listes suspectes",
+    "text": "3.7 Listes suspectes\n\n\n\n\n\n\n\nIndicateur (badge ⚠)\nExemples\n\n\n\n\nplaceholder (« renvoi »)\n« Voir dictionnaire des nomenclatures », « Code quartier du QVA », « Code sur 6 positions »\n\n\nnumeric_range (« numérique »)\n« 0 à 7 », « 00 à 23 », « de 0 à N » (au plus 2 codes métier)\n\n\nsingle_code (« code unique »)\nUn seul code métier\n\n\n\nUne liste placeholder est comparée sur son nom normalisé, plus sur ses codes. Filtre origine Listes suspectes ⚠ ; confirmation avant d’ajouter une liste suspecte au registre nettoyé. run_summary.json compte placeholder."
+  },
+  {
+    "objectID": "modifications_recentes.html#versions-ddi-et-filiation",
+    "href": "modifications_recentes.html#versions-ddi-et-filiation",
+    "title": "Changements récents",
+    "section": "3.8 Versions DDI et filiation",
+    "text": "3.8 Versions DDI et filiation\n\nL’extraction lit r:Agency, r:Version et BasedOnObject.\nUne seule version par identifiant, la plus récente (BPE : version 6 de 3ca0b23e gardée, version 5 ignorée) ; compteur older_versions_ignored.\nL’en-tête affiche agence:id:version ; une carte indique « basé sur … » entre listes d’un même groupe (43 cas sur BPE). Indicateur seulement : pas de rejet automatique."
+  },
+  {
+    "objectID": "modifications_recentes.html#api",
+    "href": "modifications_recentes.html#api",
+    "title": "Changements récents",
+    "section": "3.9 API",
+    "text": "3.9 API\n\n\n\n\n\n\n\n\nMéthode\nRoute\nRôle\n\n\n\n\nPOST\n/api/registry/dismiss\nÉcarte ou réintègre des CodeLists sans doublon. Corps : {\"cl_ids\": [...], \"dismissed\": true}. Réponse : updated, not_found, skipped_with_duplicates.\n\n\nPOST\n/api/registry/swap-parent\nFait d’un doublon la maître. Corps : {\"parent_id\", \"new_parent_id\"}. Réponse : old_parent_id, entry. 404 si introuvable, 409 si maître du registre nettoyé ou registre sans liens.\n\n\nPOST\n/api/registry/save\nÉcrit aussi decisions.json ; réponse enrichie de decisions_path et decisions_count.\n\n\n\nNouveaux champs du registre des doublons : links, escape_codes, quality_flags, agency, version, based_on (toutes les listes), decision_carried (doublon), dismissed, master_chosen, previous_parent (entrée)."
+  },
+  {
+    "objectID": "modifications_recentes.html#tests-ajoutés",
+    "href": "modifications_recentes.html#tests-ajoutés",
+    "title": "Changements récents",
+    "section": "3.10 Tests ajoutés",
+    "text": "3.10 Tests ajoutés\n\n\n\n\n\n\n\nFichier\nCouvre\n\n\n\n\ntests/test_scrubber.py\nRattachement des variables sous VariableRepresentation\n\n\ntests/test_detection_fixes.py\nGrandes listes, appariement par valeur, pré-filtre de taille\n\n\ntests/test_decisions.py\ndecisions.json, reprise au run suivant, route d’écart\n\n\ntests/test_swap_parent.py\nLiens, changement de maître, persistance, sync du registre nettoyé\n\n\ntests/test_escape_codes.py\nCodes d’échappement, détections hors échappement et libellés\n\n\ntests/test_quality_flags.py\nListes suspectes, groupement des placeholders par nom\n\n\ntests/test_versions.py\nAgence, version, BasedOnObject, dernière version"
+  },
+  {
+    "objectID": "modifications_recentes.html#reste-à-traiter",
+    "href": "modifications_recentes.html#reste-à-traiter",
+    "title": "Changements récents",
+    "section": "3.11 Reste à traiter",
+    "text": "3.11 Reste à traiter\n\nCodeLists non référencées : export des listes sans variable référente (nécessite le XML complet du repository).\nMise à jour des objets via l’API Colectica (RegisterOrReplace, DELETE).\nVariables OPENAI_BASE_URL / OPENAI_API_KEY à fournir au déploiement pour l’étape sémantique.\nRègle métier à décider pour BasedOnObject (rejet d’une liste dérivée d’une liste rejetée)."
+  },
+  {
+    "objectID": "modifications_recentes.html#deux-colonnes",
+    "href": "modifications_recentes.html#deux-colonnes",
+    "title": "Changements récents",
+    "section": "5.1 Deux colonnes",
+    "text": "5.1 Deux colonnes\n\nColonne de gauche : une ligne par CodeList de référence (nom, identifiant, pastilles approuvés / rejetés / en attente / total). La première ligne est sélectionnée à l’ouverture.\nColonne de droite : l’en-tête de la CodeList sélectionnée, le tableau de ses modalités (valeur et étiquette de chaque code, repliable), puis une carte par doublon. Chaque carte garde sa décision, sa confiance, ses badges de détection et un bouton « Détails » qui ouvre la comparaison avec la CodeList principale.\nChaque colonne défile séparément ; sous 768 px elles s’empilent.\nStats, actions en masse, filtres et pagination restent au-dessus, sur toute la largeur, et s’appliquent à la colonne de gauche."
+  },
+  {
+    "objectID": "modifications_recentes.html#filtres",
+    "href": "modifications_recentes.html#filtres",
+    "title": "Changements récents",
+    "section": "5.2 Filtres",
+    "text": "5.2 Filtres\n\nLes filtres décision et origine s’appliquent dès qu’on les change ; la recherche s’applique après 300 ms sans frappe. Le bouton « Filtrer » reste disponible.\nLe panneau de droite ne montre que les doublons correspondant au filtre de décision (par exemple « en attente »), avec la mention « X sur Y, filtre actif ».\nLa recherche porte aussi sur le nom et l’identifiant des doublons et renvoie leur CodeList de référence."
+  },
+  {
+    "objectID": "modifications_recentes.html#lisibilité-des-badges",
+    "href": "modifications_recentes.html#lisibilité-des-badges",
+    "title": "Changements récents",
+    "section": "5.3 Lisibilité des badges",
+    "text": "5.3 Lisibilité des badges\n\nInfobulles sur les pastilles de décision et sur les badges de détection.\nUne légende d’une ligne sous les filtres.\nUn doublon relié à la CodeList principale seulement via un autre doublon affiche « lien indirect, via … » (voir Détection)."
+  },
+  {
+    "objectID": "modifications_recentes.html#ajout-en-lot",
+    "href": "modifications_recentes.html#ajout-en-lot",
+    "title": "Changements récents",
+    "section": "6.1 Ajout en lot",
+    "text": "6.1 Ajout en lot\nLes CodeLists sans doublon peuvent être ajoutées au registre nettoyé sans décision, avec replaces vide.\n\nUne case à cocher par ligne éligible ; les CodeLists avec doublons n’en ont pas.\nTout sélectionner : coche les CodeLists sans doublon de la page affichée. La sélection est conservée quand on change de page ou de filtre.\n➕ Ajouter la sélection : ajoute les CodeLists cochées, après confirmation.\n➕ Ajouter toutes les CodeLists sans doublon (N) : porte sur tout le registre chargé, quels que soient les filtres ; N est affiché sur le bouton.\nUne seule lecture et une seule écriture du fichier par action (un seul aller-retour S3), au lieu d’une écriture par CodeList."
+  },
+  {
+    "objectID": "modifications_recentes.html#retrait-dune-liste-ajoutée-par-erreur",
+    "href": "modifications_recentes.html#retrait-dune-liste-ajoutée-par-erreur",
+    "title": "Changements récents",
+    "section": "6.2 Retrait d’une liste ajoutée par erreur",
+    "text": "6.2 Retrait d’une liste ajoutée par erreur\nLe bouton « ↩︎ Retirer du registre nettoyé » apparaît dans le panneau de droite pour une CodeList sans doublon déjà présente dans le registre. Seules les entrées sans replaces sont retirables : les autres résultent de décisions approuvées et se corrigent en changeant la décision puis en sauvegardant.\nAu chargement d’un registre, l’interface lit le registre nettoyé existant : le ✅ d’une CodeList déjà ajoutée est donc correct d’une session à l’autre."
+  },
+  {
+    "objectID": "modifications_recentes.html#score-flou-symétrique",
+    "href": "modifications_recentes.html#score-flou-symétrique",
+    "title": "Changements récents",
+    "section": "7.1 Score flou symétrique",
+    "text": "7.1 Score flou symétrique\n_code_similarity (funnel.py) divisait le nombre de codes appariés par la taille de la première liste de la paire. Une liste incluse dans une plus grande obtenait 100 % si elle passait en premier, et la paire était écartée dans l’ordre inverse. Le score dépendait donc de l’ordre des listes.\nLe score est maintenant rapporté à la taille de la plus grande liste :\n\n\n\n\n\n\n\n\nCas\nAvant\nAprès\n\n\n\n\n13 codes inclus dans une liste de 22\n1,00 ou écartée selon l’ordre\n0,59, écartée\n\n\n85 codes identiques, 3 codes en plus\n1,00 ou 0,97 selon l’ordre\n0,97\n\n\nListes identiques\n1,00\n1,00"
+  },
+  {
+    "objectID": "modifications_recentes.html#confiance-100-réservé-à-lexact",
+    "href": "modifications_recentes.html#confiance-100-réservé-à-lexact",
+    "title": "Changements récents",
+    "section": "7.2 Confiance : 100 % réservé à l’exact",
+    "text": "7.2 Confiance : 100 % réservé à l’exact\nLa confiance des détections floues et sémantiques est plafonnée à 0,99. Un score de 100 % signifie désormais « signature exacte »."
+  },
+  {
+    "objectID": "modifications_recentes.html#double-signalement-entre-phases",
+    "href": "modifications_recentes.html#double-signalement-entre-phases",
+    "title": "Changements récents",
+    "section": "7.3 Double signalement entre phases",
+    "text": "7.3 Double signalement entre phases\nused.update(master.id, slave.id) ajoutait les caractères des identifiants au lieu des identifiants. Le filtre in used ne fonctionnait donc plus après la phase floue et une même paire pouvait ressortir aussi en « usage » ou « sémantique ». Les esclaves flous sont désormais marqués après la boucle floue : toutes les paires floues restent détectées (chaînes a→b→c comprises), mais les phases suivantes ne les re-signalent plus."
+  },
+  {
+    "objectID": "modifications_recentes.html#badges-propres-à-la-liste-principale",
+    "href": "modifications_recentes.html#badges-propres-à-la-liste-principale",
+    "title": "Changements récents",
+    "section": "7.4 Badges propres à la liste principale",
+    "text": "7.4 Badges propres à la liste principale\nLe registre est présenté « doublon par rapport à la CodeList principale », mais les types de détection et la confiance d’un doublon étaient fusionnés avec toutes les paires l’impliquant, y compris avec d’autres doublons. Un doublon pouvait ainsi afficher « exact » et 100 % alors que ses codes différaient de ceux de la liste principale.\n\nLes types et la confiance viennent d’abord de la paire directe avec la liste principale.\nSans paire directe (lien transitif), on garde les paires qui impliquent le doublon et on ajoute un champ optionnel via (ids des CodeLists réellement liées). La carte affiche « lien indirect, via … ».\nLes registres existants restent valides : via est absent quand il ne sert pas.\n\n\n\n\n\n\n\nWarningImpact sur les résultats\n\n\n\nLes scores et le nombre de paires détectées changent : les sous-ensembles ne ressortent plus en flou et certains scores baissent. Il est conseillé de relancer le pipeline sur BTS ou EAR et de comparer le nombre de candidats avant et après.\n\n\nLa note méthodologique a aussi été corrigée : la phase floue compare les codes un à un (pas une chaîne concaténée) avec un score hybride 0,6 × codes + 0,4 × noms."
+  },
+  {
+    "objectID": "guide_utilisateur.html",
+    "href": "guide_utilisateur.html",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "",
+    "text": "Le Metadata Scrubber est un outil qui identifie les listes de codes (CodeList) redondantes au sein d’un fichier de métadonnées au format DDI (Data Documentation Initiative). Il propose deux modes d’utilisation complémentaires :\n\nExécution automatique — analyse le fichier XML DDI et génère un registre de paires de CodeLists détectées comme potentiellement redondantes.\nInterface de validation interactive — permet d’examiner chaque paire, prendre des décisions (consolider ou rejeter), et produire en sortie un registre épuré ne conservant qu’une CodeList maîtresse par groupe de redondances.\n\nCe document s’adresse à l’expert métier qui utilise l’interface web pour examiner les résultats et valider les rapprochements. La logique algorithmique du pipeline (entonnoir exact → flou → sémantique) est décrite en détail dans la note méthodologique (§ 8)."
+  },
+  {
+    "objectID": "guide_utilisateur.html#configurer-le-pipeline",
+    "href": "guide_utilisateur.html#configurer-le-pipeline",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "3.1 Configurer le pipeline",
+    "text": "3.1 Configurer le pipeline\n\n\n\n\n\n\n\nChamp\nRôle\n\n\n\n\nSource\nFichier DDI : URL S3 ou chemin local. API Métadonnées : une ou plusieurs séries, choisies dans une liste « identifiant – nom » (tapez s1998 ou tous salariés), puis, si besoin, certaines de leurs opérations (sans choix, toute la série est chargée ; l’écran signale une série sans opération ou à opération unique), ou toute la base. Les objets téléchargés sont mis en cache dans api_cache/ sous le dossier de sortie : un nouveau run ne retélécharge que les nouvelles versions.\n\n\nSortie\nRappel du dossier de sortie (par défaut s3://projet-metadonnees-rmes/scrubber_output, modifiable dans la barre du haut). Chaque run crée son propre sous-dossier daté AAAAMMJJ-HHMMSS contenant codelist_duplicates.json, run_summary.json et pipeline.log. Le référentiel (cleaned_codelists.json) et decisions.json restent à la racine, partagés entre les runs. Référentiel injecté : par défaut celui du dossier de sortie ; ses listes sont prioritaires, les listes déjà remplacées sont exclues de la détection.\n\n\nOptions\nDétection sémantique (embeddings et LLM) : décocher pour un run rapide. Journal détaillé : mode verbeux.\n\n\n\nAvec la source API, chaque CodeList connaît les opérations et séries qui l’utilisent (affichées à l’étape Valider) ; les opérations sans description DDI et les objets non diffusés par l’API (accès refusé) sont signalés en avertissement.\n\n\n\nFormulaire de configuration du pipeline"
+  },
+  {
+    "objectID": "guide_utilisateur.html#exécuter-le-pipeline",
+    "href": "guide_utilisateur.html#exécuter-le-pipeline",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "3.2 Exécuter le pipeline",
+    "text": "3.2 Exécuter le pipeline\nAprès avoir complété les champs, cliquez sur Lancer l’analyse (en haut à droite).\nUn bandeau de suivi apparaît et avance en temps réel :\n\nÉtape en cours et pourcentage global ;\nfrise des étapes : lecture, extraction, signatures et exact, flou et usage, sémantique, registre (en vert les étapes terminées) ;\nJournal : la sortie détaillée du pipeline (horodatage, messages de chaque phase, résultats des comparaisons), ouvert pendant l’exécution.\n\n\n\n\nProgression du pipeline et logs d’exécution\n\n\n\nTemps d’exécution estimé : quelques secondes pour un petit fichier (&lt; 500 Ko), 1–3 minutes pour un fichier standard. La phase LLM (embeddings + juge) peut ajouter plusieurs minutes supplémentaires."
+  },
+  {
+    "objectID": "guide_utilisateur.html#résultat",
+    "href": "guide_utilisateur.html#résultat",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "3.3 Résultat",
+    "text": "3.3 Résultat\nEn fin d’exécution, un bandeau vert affiche la durée, les fichiers produits (repliés) et les avertissements éventuels, avec un bouton Valider ce run qui ouvre directement le registre du run à l’étape Valider.\nLe tableau Derniers runs, sous le formulaire, liste les runs du dossier de sortie (date, source, statut, nombre de candidats) avec un bouton Valider. Un run terminé avec avertissements a un statut ambre (détail en infobulle).\nLes avertissements les plus courants n’empêchent pas de valider le run :\n\nSource API Insee partielle : certaines opérations de la série n’ont pas de description DDI publiée dans l’API (variables, listes de codes), souvent les plus anciennes. Elles sont ignorées et n’apportent aucune CodeList ; le message indique combien d’opérations ont bien été analysées.\nDétection floue partielle : les CodeLists de plus de 5 000 codes (par exemple les communes) ne sont pas comparées en détection floue, trop coûteuse ; le message les nomme. Elles restent comparées en détection exacte."
+  },
+  {
+    "objectID": "guide_utilisateur.html#charger-registre",
+    "href": "guide_utilisateur.html#charger-registre",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.1 Charger le registre",
+    "text": "4.1 Charger le registre\n\nVérifiez le dossier de sortie dans la barre du haut.\nChoisissez le run dans la liste en haut de page (le plus récent est présélectionné) et cliquez sur Ouvrir.\n\nOuvrir un registre par son chemin permet encore de saisir le chemin d’un codelist_duplicates.json quelconque.\nLe run ouvert, les filtres et la CodeList affichée sont conservés dans l’adresse de la page : un rechargement ou un lien partagé rouvre la même vue."
+  },
+  {
+    "objectID": "guide_utilisateur.html#vue-densemble",
+    "href": "guide_utilisateur.html#vue-densemble",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.2 Vue d’ensemble",
+    "text": "4.2 Vue d’ensemble\nUn bandeau en haut de page résume l’avancement : une barre approuvés (vert) / rejetés (rouge) sur l’ensemble des doublons, le nombre de décisions prises, de CodeLists, d’approuvés, de rejetés et d’en attente. Juste dessous, les filtres (voir Filtres).\nLa page est ensuite découpée en deux colonnes :\n\nColonne de gauche : la liste des CodeLists de référence du fichier examiné, avec leur nom, leur identifiant, le nombre de variables (et de séries, source API). Un rond indique l’état (ambre : doublons en attente, vert : tout est décidé, pointillé : sans doublon, bleu : dans le référentiel) et la pastille de droite le nombre de doublons en attente (le détail est en infobulle). La liste reste visible quand on fait défiler la page ; elle est paginée par 50.\nColonne de droite : la CodeList maître sélectionnée (nom, référence DDI, niveau, provenance, modalités repliées), puis ses doublons.\n\n\n4.2.1 Ajouter des CodeLists sans doublon au référentiel\nLes CodeLists pour lesquelles aucun doublon n’a été détecté peuvent être ajoutées au référentiel sans passer par une décision. Elles portent une case à cocher dans la colonne de gauche (les CodeLists avec doublons n’en ont pas), et la barre en bas de colonne permet de les ajouter :\n\nCase à cocher sur chaque ligne, et Sans doublon de la page pour cocher toutes celles de la page affichée. La sélection est conservée quand on change de page ou de filtre.\nAjouter la sélection ajoute les CodeLists cochées, après confirmation.\nToutes (n) ajoute d’un coup toutes les CodeLists sans doublon du registre chargé, quels que soient les filtres actifs.\n\nLes CodeLists déjà présentes dans le référentiel sont ignorées. Une fois ajoutée, une CodeList a un rond bleu et la mention référentiel.\n\n\n4.2.2 Listes suspectes\nCertaines listes ne devraient probablement pas être des listes de codes. Elles portent un triangle d’alerte, détaillé dans l’en-tête de la maître :\n\nrenvoi : les codes renvoient ailleurs (« Voir dictionnaire des nomenclatures », « Code quartier du QVA ») ; la liste est alors comparée aux autres sur son nom, pas sur ses codes ;\nnumérique : représentation numérique mise en liste (« 0 à 7 », « de 0 à N ») ;\ncode unique : un seul code métier.\n\nLe filtre origine Listes suspectes les regroupe. Ajouter une liste suspecte au référentiel demande une confirmation.\n\n\n4.2.3 Écarter une CodeList sans doublon\nUne CodeList sans doublon qu’on ne veut pas ajouter au référentiel (par exemple une liste des départements qui n’est pas la liste officielle) peut être écartée avec le bouton Écarter du panneau de droite. Son nom est alors barré, elle n’a plus de case à cocher et n’est pas prise par Toutes (n). Annuler l’écart la réintègre.\nL’écart est enregistré aussitôt et repris aux runs suivants (voir Enregistrer les décisions). Le filtre Écartées les affiche.\nChaque doublon est présenté sous forme de carte comportant :\n\nson nom, son identifiant (copiable), ses opérations et variables ;\nles signaux de détection : exact, fuzzy, usage, lignée, sémantique… (ces étiquettes reflètent la phase du pipeline qui a produit la correspondance — synonyme n’est pas un signal séparé mais une manifestation du signal semantic (juge LLM) ; le détail des définitions est dans la note méthodologique, §2-3)\nles étiquettes exact hors échappement (mêmes codes métier, seuls les codes sans objet, non réponse… diffèrent) et libellés (mêmes libellés, valeurs différentes, par exemple 1/0 et oui/non). La carte rappelle alors les codes d’échappement de la maître et du doublon ;\nle score de confiance (0–100 %) ;\nles trois boutons de décision, à droite ;\nun résumé des différences de codes et la comparaison côte à côte.\n\n\n\n\nÉtape Valider : liste des CodeLists, maître et doublon"
+  },
+  {
+    "objectID": "guide_utilisateur.html#comparer",
+    "href": "guide_utilisateur.html#comparer",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.3 Comparer côte à côte",
+    "text": "4.3 Comparer côte à côte\nChaque carte de doublon résume les différences sans rien ouvrir : « 9 code(s) identique(s) · 1 libellé(s) différent(s) · 2 seulement dans la maître · 1 seulement dans le doublon ». La comparaison du doublon actif est ouverte d’office ; Comparer les codes (touche c) ouvre ou ferme celle des autres. Elle présente une ligne par code :\n\ncolonne code, puis le libellé de la maître et celui du doublon ;\nlignes ≠ (fond ambre) : même code, libellé différent ; − (fond bleu) : seulement dans la maître ; + (fond rouge) : seulement dans le doublon ;\npour un code identique, la colonne du doublon indique simplement identique.\n\nLa maître d’un groupe est choisie dans cet ordre : entrée du registre nettoyé, niveau validé (officielle d’abord), maître choisie par l’expert lors d’un run précédent, niveau suggéré, nombre de séries puis de variables utilisatrices.\n\n\n\nComparaison côte à côte de deux CodeLists\n\n\nCette vue permet de juger rapidement si la différence entre les deux listes est un simple artefact (casse, accent, ordre des codes) ou un changement réel de contenu."
+  },
+  {
+    "objectID": "guide_utilisateur.html#décisions-par-paire",
+    "href": "guide_utilisateur.html#décisions-par-paire",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.4 Décisions par paire",
+    "text": "4.4 Décisions par paire\nChaque carte de doublon porte trois boutons ; la décision courante est en couleur pleine :\n\nApprouver (a) — les listes sont redondantes, la candidate doit être remplacée\nRejeter (r) — les listes sont distinctes, le rapprochement est incorrect\nAttente (p) — la décision est remise à plus tard (état par défaut)\n\nChaque décision est enregistrée immédiatement (dans decisions.json) : la barre du haut affiche « Enregistré 14:32 », ou « Échec de l’enregistrement » avec un bouton Réessayer. Après une décision, le doublon en attente suivant devient actif ; l’option Passer à la CodeList suivante quand tous ses doublons sont décidés enchaîne les listes.\n\n4.4.1 Raccourcis clavier\n\n\n\n\n\n\n\nTouche\nAction\n\n\n\n\nj / k\nCodeList suivante / précédente\n\n\nn\nProchaine CodeList avec des doublons en attente\n\n\n↓ / ↑\nDoublon suivant / précédent (le doublon actif est encadré en bleu)\n\n\na / r / p\nApprouver / rejeter / remettre en attente le doublon actif\n\n\nc\nAfficher / masquer la comparaison des codes\n\n\n/\nAller à la recherche\n\n\n?\nAide des raccourcis (aussi via le bouton Raccourcis)\n\n\n\nLes raccourcis sont inactifs pendant la saisie dans un champ."
+  },
+  {
+    "objectID": "guide_utilisateur.html#changer-maitre",
+    "href": "guide_utilisateur.html#changer-maitre",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.5 Changer la liste maître",
+    "text": "4.5 Changer la liste maître\nUn doublon peut devenir la maître de son groupe, par exemple quand il corrige la forme de la maître proposée. Le bouton Définir comme maître de sa carte, après confirmation :\n\nen fait la maître (étiquette maître choisie) ; l’ancienne maître devient un doublon en attente ;\nrecalcule les badges et le score de chaque doublon par rapport à la nouvelle maître (« lien indirect, via … » s’il n’y a pas de paire directe) ;\nconserve les décisions déjà prises sur les autres doublons.\n\nLe choix est enregistré immédiatement et repris aux runs suivants (decisions.json). Si l’ancienne maître avait une entrée dans le référentiel, elle perd les listes du groupe ; les listes approuvées sont rattachées à la nouvelle maître. Une maître issue du référentiel (étiquette référentiel) ne peut pas être remplacée depuis cet écran.\n\n4.5.1 Versions et filiation DDI\nL’en-tête de la CodeList affiche sa référence DDI agence:id:version. Une carte de doublon indique Copié de … quand le doublon a été créé à partir d’une autre liste (BasedOnObject), et La maître est copiée de ce doublon dans le sens inverse. Si un fichier contient plusieurs versions d’une même CodeList, seule la plus récente est examinée.\nL’étiquette lignée signale un doublon trouvé seulement grâce à cette filiation : liste copiée de la maître (souvent d’un millésime au suivant) puis modifiée.\n\n\n4.5.2 Liens entre doublons\nUne carte indique aussi Lié aussi à … quand le doublon a été détecté avec d’autres doublons du groupe. Si on le rejette par rapport à la maître alors qu’il reste lié à un autre doublon, le définir comme maître permet d’examiner ces liens."
+  },
+  {
+    "objectID": "guide_utilisateur.html#actions-masse",
+    "href": "guide_utilisateur.html#actions-masse",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.6 Actions de masse",
+    "text": "4.6 Actions de masse\nLes actions de masse ne portent que sur les doublons affichés par les filtres courants (toutes pages confondues). Elles sont réunies dans le menu Actions sur l’affichage, avec le nombre concerné :\n\n\n\n\n\n\n\nBouton\nEffet\n\n\n\n\nApprouver les exacts en attente\nApprouve les doublons exacts encore en attente\n\n\nApprouver ceux à 95 % ou plus\nApprouve les doublons en attente de confiance ≥ 95 %\n\n\nRejeter les doublons affichés\nRejette tous les doublons affichés\n\n\nRemettre en attente les doublons affichés\nRemet en attente tous les doublons affichés\n\n\n\nUne fenêtre de confirmation rappelle le nombre de doublons et de CodeLists concernés ; une fois l’action faite, le bouton Annuler de la notification rétablit les décisions précédentes. Les approbations de masse ne touchent pas aux doublons déjà rejetés."
+  },
+  {
+    "objectID": "guide_utilisateur.html#filtres",
+    "href": "guide_utilisateur.html#filtres",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.7 Filtres",
+    "text": "4.7 Filtres\nPour se concentrer sur un sous-ensemble de CodeLists :\n\nPastilles de décision, avec le nombre de CodeLists de chacune : À traiter (par défaut : doublons en attente, et listes sans doublon ni ajoutées au référentiel ni écartées) / En attente / Approuvés / Rejetés / Sans doublon / Écartées / Toutes. Une liste décidée reste visible jusqu’au prochain changement de filtre.\nOrigine : Toutes origines / Référentiel / Listes suspectes / Niveau officielle, commune ou spécifique (validé ou suggéré)\nRecherche (touche /) : nom ou identifiant d’une CodeList ou d’un de ses doublons\nTri : en attente d’abord / confiance max / nom / nombre de variables / nombre de séries (source API)\n\nLe niveau d’une liste est affiché en étiquette colorée (violet : officielle, bleu-vert : commune, brun : spécifique) : pleine quand il est validé dans le référentiel, en pointillé avec « ? » quand il est seulement suggéré (au moins deux séries utilisatrices → commune, une seule → spécifique). Une liste « Voir dictionnaire des nomenclatures » indique la nomenclature officielle qu’elle désigne : « Renvoi vers une nomenclature : remplacer par Régions (COG) »."
+  },
+  {
+    "objectID": "guide_utilisateur.html#sauvegarder",
+    "href": "guide_utilisateur.html#sauvegarder",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.8 Enregistrer les décisions et mettre à jour le référentiel",
+    "text": "4.8 Enregistrer les décisions et mettre à jour le référentiel\nLes décisions, les listes écartées et les changements de maître sont enregistrés automatiquement dans decisions.json, à la racine des sorties, à chaque clic : rien n’est perdu si la page est fermée ou le serveur redémarré, et un registre rouvert retrouve son dernier état.\nLe bouton Mettre à jour le référentiel, en haut à droite de la page :\n\nécrit les décisions dans le registre codelist_duplicates.json du run ;\ngénère ou met à jour le référentiel (registre nettoyé) cleaned_codelists.json (doublons approuvés rattachés à leur maître) ;\nmet à jour decisions.json.\n\nAu run suivant, le pipeline relit decisions.json : une paire déjà tranchée qui est de nouveau détectée reprend sa décision, marquée reprise d’un run précédent sur la carte, et une liste écartée reste écartée. Seules les paires nouvelles ou laissées en attente sont donc à examiner. Une paire est reconnue quel que soit le sens (maître / doublon). Changer une décision reprise efface la marque.\n\nCe que la sauvegarde produit : cleaned_codelists.json ne contient que les CodeLists maîtres — celles qui ont été approuvées et celles marquées “sans doublon”. Chaque maître possède un champ replaces[] listant les CodeLists redondantes qu’il remplace. Ce fichier est un input pour les runs suivants (workflow itératif, § 6.2)."
+  },
+  {
+    "objectID": "guide_utilisateur.html#ajouter-une-codelist-au-référentiel",
+    "href": "guide_utilisateur.html#ajouter-une-codelist-au-référentiel",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "4.9 Ajouter une CodeList au référentiel",
+    "text": "4.9 Ajouter une CodeList au référentiel\nLorsqu’une CodeList n’a aucun doublon détecté, l’expert peut décider tout de même de l’ajouter au référentiel :\n\nSélectionnez-la dans la colonne de gauche (filtre Sans doublon).\nCliquez sur Ajouter au référentiel dans le panneau de droite : la CodeList est écrite aussitôt comme maître dans cleaned_codelists.json.\n\n\nÀ utiliser pour les CodeLists uniques mais importantes qu’on souhaite conserver comme référence dans le registre propre.\n\n\n4.9.1 Faux doublon : garder les deux listes\nDeux listes peuvent être rapprochées à raison (codes très proches) sans être des doublons : par exemple L_DENS7 et L_DENS3, deux grilles de densité différentes. Pour les garder toutes les deux :\n\nRejetez le doublon (r).\nSur sa carte, cliquez sur Ajouter au référentiel (« Pas un doublon ? Gardez aussi cette liste. »).\nQuand tous les doublons d’une maître sont rejetés, une barre « Aucun doublon retenu » apparaît sous la maître : cliquez sur Ajouter au référentiel pour l’y ajouter aussi.\n\nLes deux listes sont écrites aussitôt dans cleaned_codelists.json comme ajouts manuels ; Retirer les enlève. Si vous approuvez ensuite ce doublon, la mise à jour du référentiel supprime son entrée propre : il est alors remplacé par la maître."
+  },
+  {
+    "objectID": "guide_utilisateur.html#ouvrir-le-référentiel",
+    "href": "guide_utilisateur.html#ouvrir-le-référentiel",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "5.1 Ouvrir le référentiel",
+    "text": "5.1 Ouvrir le référentiel\nLe référentiel du dossier de sortie (&lt;dossier&gt;/cleaned_codelists.json) est chargé à l’ouverture de l’étape. Fichier du référentiel permet d’en choisir un autre ; Recharger relit le fichier (utile après une mise à jour depuis Valider ou pour reprendre une session).\nUn tableau liste les CodeLists maîtres, avec des onglets par niveau (Toutes, Officielles, Communes, Spécifiques, À classer, avec leur nombre) et une recherche par nom, libellé ou identifiant.\n\n\n\nRéférentiel : tableau par niveau"
+  },
+  {
+    "objectID": "guide_utilisateur.html#contenu-dune-entrée",
+    "href": "guide_utilisateur.html#contenu-dune-entrée",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "5.2 Contenu d’une entrée",
+    "text": "5.2 Contenu d’une entrée\nChaque ligne indique le nom et l’identifiant, le niveau (validé, ou suggéré en pointillé), la source (validation, ajout manuel, API · COG, API · Colectica), le nombre de codes, le nombre de listes remplacées et les séries utilisatrices."
+  },
+  {
+    "objectID": "guide_utilisateur.html#classer-les-listes",
+    "href": "guide_utilisateur.html#classer-les-listes",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "5.3 Classer les listes",
+    "text": "5.3 Classer les listes\n\nDepuis la ligne : la colonne Niveau porte trois pastilles, Off., Com. et Spé. Un clic classe la liste ; un nouveau clic sur la pastille active la renvoie À classer. Une pastille en pointillés montre le niveau suggéré d’après les séries : un clic suffit pour l’accepter. Dans l’onglet À classer, la liste classée disparaît : il ne reste que ce qui est à faire.\nPar lot : cochez des lignes (Maj+clic coche toute une plage, la case de l’en-tête coche les lignes affichées). Une barre apparaît en haut du tableau : Classer en Officielle, Commune, Spécifique ou À classer, ou Appliquer le niveau suggéré à chaque liste cochée. Le message de confirmation propose Annuler.\n\nComme les autres modifications, le classement est enregistré par le bouton Enregistrer de la barre du bas."
+  },
+  {
+    "objectID": "guide_utilisateur.html#édition",
+    "href": "guide_utilisateur.html#édition",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "5.4 Édition",
+    "text": "5.4 Édition\nModifier ouvre l’entrée dans un panneau latéral :\n\nNom et libellé, modifiables ;\nNiveau : Officielle, Commune, Spécifique ou À classer, avec le niveau suggéré d’après les séries ;\nidentifiant (copiable), URN de l’objet DDI d’origine, source, séries et opérations ;\nRemplace : les CodeLists redondantes rattachées (nom, confiance), dont on peut déplier et copier les codes quand leur run est ouvert dans Valider ;\nCodes : valeurs et libellés modifiables, ajout et suppression de codes ;\nSupprimer l’entrée.\n\nLes modifications restent locales : une barre Modifications non enregistrées apparaît en bas de page, avec le bouton Enregistrer. Le navigateur avertit avant de quitter la page.\n\n5.4.1 Amorcer les nomenclatures officielles\nLes nomenclatures géographiques du COG (régions, départements, pays, zones d’emploi, unités urbaines, aires d’attraction, bassins de vie, QPV…) s’ajoutent au référentiel, au niveau officielle, par la commande :\nuv run scrubber seed-officielles --registry s3://projet-metadonnees-rmes/scrubber_output/cleaned_codelists.json\n# --geo communes,regions  : choisir les listes du COG (les communes ne sont pas incluses par défaut)\n# --codelist fr.insee/&lt;uuid&gt; : ajouter une CodeList officielle déjà dans Colectica\nRelancée, la commande met à jour les codes des nomenclatures existantes (nouveau millésime du COG) sans toucher aux noms édités."
+  },
+  {
+    "objectID": "guide_utilisateur.html#enregistrer-et-télécharger",
+    "href": "guide_utilisateur.html#enregistrer-et-télécharger",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "5.5 Enregistrer et télécharger",
+    "text": "5.5 Enregistrer et télécharger\n\n\n\n\n\n\n\nBouton\nEffet\n\n\n\n\nEnregistrer (barre du bas)\nÉcrit le référentiel modifié vers son fichier, S3 ou local\n\n\nTélécharger\nTélécharge le référentiel en fichier JSON\n\n\nRecharger\nRelit le fichier ; demande confirmation s’il reste des modifications non enregistrées"
+  },
+  {
+    "objectID": "guide_utilisateur.html#un-run-complet",
+    "href": "guide_utilisateur.html#un-run-complet",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "7.1 Un run complet",
+    "text": "7.1 Un run complet\nLe circuit se décompose en 5 étapes :\n\nExécuter le pipeline (§ 3) — configurez le chemin source et lancez le pipeline. Le résultat est un fichier de doublons.\nExaminer les doublons (§ 4.1–4.2) — Valider ce run ouvre l’étape Valider sur le run ; parcourez les CodeLists (en attente d’abord) et filtrez-les par décision, origine ou recherche textuelle.\nComparer par paire (§ 4.3) — pour chaque paire douteuse, cliquez sur Comparer les codes pour comparer les deux CodeLists côte à côte ; le résumé de la carte indique déjà les codes en plus, en moins et les libellés différents.\nPrendre des décisions — pour chaque paire, Approuver (les listes sont redondantes) ou Rejeter (les listes sont distinctes), à la souris ou au clavier (a, r, n pour la liste suivante à traiter). Chaque décision est enregistrée aussitôt. Les actions de masse accélèrent le traitement des paires à fort score de confiance, et s’annulent.\nMettre à jour le référentiel — en fin de session, Mettre à jour le référentiel reporte les doublons approuvés dans cleaned_codelists.json."
+  },
+  {
+    "objectID": "guide_utilisateur.html#workflow-iteratif",
+    "href": "guide_utilisateur.html#workflow-iteratif",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "7.2 Workflow itératif",
+    "text": "7.2 Workflow itératif\nLes runs successifs s’enrichissent mutuellement grâce au registre propre :\nStep 1 — Analyser BTS\n  Pipeline → examiner → décider → mettre à jour le registre nettoyé\n  ↓\n  cleaned_codelists.json = maîtres BTS + leurs replaces\n\nStep 2 — Analyser BPE\n  Chemin source → BPE.xml\n  Registre nettoyé → cleaned_codelists.json (issu de BTS)\n  Pipeline → examiner → décider → mettre à jour le registre nettoyé\n  ↓\n  cleaned_codelists.json = maîtres BTS + maîtres BPE + leurs replaces\nPourquoi c’est utile :\n\nLes doublons déjà validés (ex. N_NAF_6) sont exclus de la détection : on ne les redécouvre pas dans des runs ultérieurs.\nLes nouveaux doublons sont détectés par rapport aux maîtres cumulés : une CodeList BPE peut être reconnue comme doublon d’une CodeList BTS, même si aucune des deux ne figure dans le même fichier.\nLe registre propre croît à chaque run et constitue une référence transversale sur tout le projet.\n\nDans l’interface : rien à saisir, le référentiel du dossier de sortie est injecté par défaut (champ Référentiel injecté pour en choisir un autre).\nAvec la source API, un seul run peut couvrir plusieurs opérations, une série ou toute la base : les doublons entre millésimes et entre enquêtes sont alors détectés directement, sans passer par le registre."
+  },
+  {
+    "objectID": "guide_utilisateur.html#ajouter-des-listes-sans-doublon",
+    "href": "guide_utilisateur.html#ajouter-des-listes-sans-doublon",
+    "title": "Guide d’Utilisation — Metadata Scrubber",
+    "section": "7.3 Ajouter des listes sans doublon",
+    "text": "7.3 Ajouter des listes sans doublon\nLorsqu’une CodeList n’est détectée comme doublon de personne par le pipeline (ex. L_QUALITE_ZONAGE_2023 dans l’exemple BPE_demo), vous pouvez la ajouter manuellement au registre propre :\n\nSélectionnez la CodeList à l’étape Valider (filtre Sans doublon).\nCliquez sur Ajouter au référentiel — la liste est écrite aussitôt dans cleaned_codelists.json comme maître sans remplaçant.\n\n\nCette fonctionnalité est particulièrement utile pour les CodeLists uniques mais essentielles, ou lorsque vous souhaitez créer une référence maître pour un nouveau concept métier avant d’identifier ses variantes."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Accueil — Metadata Scrubber",
+    "section": "",
+    "text": "Pipeline de dédoublonnage des CodeLists DDI 3.3 / 6.0.\nIl analyse un fichier de métadonnées au format DDI, identifie les listes de codes redondantes via un entonnoir en trois niveaux (exact, flou, sémantique) complété par un signal d’usage transversal (var_sig), et propose une interface de validation interactive pour que l’expert métier puisse examiner, approuver ou rejeter chaque paire détectée.\nLe résultat est un registre épuré (cleaned_codelists.json) qui ne conserve qu’une CodeList maître par groupe de redondances — injectable de manière itérative via l’option --registry pour traiter les fichiers suivants.\nPremière utilisation ? Commencez par la prise en main : une première session de validation, pas à pas, en un quart d’heure.\n\n\n\n\n\n\nDocument\nDescription\n\n\n\n\nPrise en main\nPremière session de validation pas à pas : se connecter, lancer l’analyse, décider, mettre à jour le registre nettoyé.\n\n\nGuide Utilisateur\nComment utiliser l’interface web : lancer le pipeline (fichier ou API Insee), examiner les paires, prendre des décisions, gérer le registre nettoyé et ses niveaux, pré-contrôler une opération.\n\n\nService de contrôle\nscrubber-check : contrôler un fichier DDI contre les CodeLists publiées, en ligne de commande ou par API HTTP.\n\n\nNote Méthodologique\nAlgorithme de détection en trois niveaux, walkthrough avec les datasets démo, schéma du registre v2.\n\n\nChangements récents\nCe qui a changé depuis le dernier push : onglet Validation en deux colonnes, ajout en lot, correctifs de détection, sorties datées par run."
+  },
+  {
+    "objectID": "index.html#metadata-scrubber",
+    "href": "index.html#metadata-scrubber",
+    "title": "Accueil — Metadata Scrubber",
+    "section": "",
+    "text": "Pipeline de dédoublonnage des CodeLists DDI 3.3 / 6.0.\nIl analyse un fichier de métadonnées au format DDI, identifie les listes de codes redondantes via un entonnoir en trois niveaux (exact, flou, sémantique) complété par un signal d’usage transversal (var_sig), et propose une interface de validation interactive pour que l’expert métier puisse examiner, approuver ou rejeter chaque paire détectée.\nLe résultat est un registre épuré (cleaned_codelists.json) qui ne conserve qu’une CodeList maître par groupe de redondances — injectable de manière itérative via l’option --registry pour traiter les fichiers suivants.\nPremière utilisation ? Commencez par la prise en main : une première session de validation, pas à pas, en un quart d’heure.\n\n\n\n\n\n\nDocument\nDescription\n\n\n\n\nPrise en main\nPremière session de validation pas à pas : se connecter, lancer l’analyse, décider, mettre à jour le registre nettoyé.\n\n\nGuide Utilisateur\nComment utiliser l’interface web : lancer le pipeline (fichier ou API Insee), examiner les paires, prendre des décisions, gérer le registre nettoyé et ses niveaux, pré-contrôler une opération.\n\n\nService de contrôle\nscrubber-check : contrôler un fichier DDI contre les CodeLists publiées, en ligne de commande ou par API HTTP.\n\n\nNote Méthodologique\nAlgorithme de détection en trois niveaux, walkthrough avec les datasets démo, schéma du registre v2.\n\n\nChangements récents\nCe qui a changé depuis le dernier push : onglet Validation en deux colonnes, ajout en lot, correctifs de détection, sorties datées par run."
+  },
+  {
+    "objectID": "scrubber_check.html",
+    "href": "scrubber_check.html",
+    "title": "Service de contrôle scrubber-check",
+    "section": "",
+    "text": "scrubber-check répond à une question : les CodeLists de ce fichier DDI existent-elles déjà parmi les CodeLists publiées ? On l’utilise avant d’ajouter une opération, en ligne de commande, en intégration continue ou par une API HTTP. Il est publié à part de l’appli de validation (image et déploiement propres), sans interface et sans LLM : le contrôle est déterministe et prend quelques secondes."
+  },
+  {
+    "objectID": "scrubber_check.html#volumes-sur-la-base-complète-mesurés-le-26102026",
+    "href": "scrubber_check.html#volumes-sur-la-base-complète-mesurés-le-26102026",
+    "title": "Service de contrôle scrubber-check",
+    "section": "1.1 Volumes sur la base complète (mesurés le 26/10/2026)",
+    "text": "1.1 Volumes sur la base complète (mesurés le 26/10/2026)\n\n\n\n\n\n\n\nMesure\nValeur\n\n\n\n\nOpérations parcourues\n617 (33 avec fichiers DDI, 584 sans)\n\n\nCodeLists dans l’index\n7 083 publiées + 13 listes du COG (11 suggérées « commune »)\n\n\nObjets non diffusés (HTTP 401)\n6, ignorés\n\n\nConstruction de l’index\n~27 min au premier passage (7 881 appels), puis rapide grâce au cache\n\n\nTaille de l’index\n3,3 Mo (JSON compressé)\n\n\nChargement de l’index\n~9 s (une fois, au démarrage de l’API)\n\n\nContrôle de BTS 2024 (47 listes)\n~8 s contre la base complète, &lt; 1 s contre une série\n\n\n\nLe temps de contrôle est surtout celui du score flou (comparaison des libellés avec difflib), calculé seulement pour les listes qui partagent au moins la moitié de leurs codes (valeur ou libellé) avec la liste contrôlée."
+  },
+  {
+    "objectID": "demarrage.html",
+    "href": "demarrage.html",
+    "title": "Prise en main",
+    "section": "",
+    "text": "Cette page accompagne une première session de validation dans l’application, sans installation. En un quart d’heure environ, vous lancez l’analyse d’un fichier DDI, prenez vos premières décisions et mettez à jour le registre nettoyé.\nLe principe : l’outil repère des listes de codes probablement redondantes et les regroupe autour d’une liste maître. C’est vous qui tranchez, doublon par doublon : les listes approuvées seront remplacées par la maître dans le registre nettoyé (cleaned_codelists.json).\n\n1 Avant de commencer\n\nUn navigateur.\nL’adresse de l’application : https://metadata-scrubber.lab.sspcloud.fr.\nLe mot de passe partagé de l’application, à demander à l’équipe RMéS.\nLe chemin S3 du fichier DDI à analyser, par exemple s3://projet-metadonnees-rmes/BPE.xml.\n\n\n\n2 Étape 1 — Se connecter\nOuvrez l’adresse de l’application. Le navigateur affiche une boîte d’authentification : l’identifiant est libre (votre nom, par exemple), le mot de passe est le mot de passe partagé.\n\n\n3 Étape 2 — Lancer l’analyse\nL’interface suit les étapes du travail, dans la barre du haut : 1 Analyser, 2 Valider, 3 Référentiel. À l’étape 1 Analyser, vérifiez les champs :\n\n\n\n\n\n\n\nChamp\nValeur conseillée\n\n\n\n\nSource\nFichier DDI avec son chemin, par exemple s3://projet-metadonnees-rmes/BPE.xml ; ou API Métadonnées : une série choisie dans la liste (ex. s1998 – Base Tous salariés), puis éventuellement certaines de ses opérations (ex. s2297)\n\n\nSortie\nLe dossier de sortie s’affiche dans la barre du haut : laisser la valeur proposée, s3://projet-metadonnees-rmes/scrubber_output. Le référentiel de ce dossier est utilisé automatiquement : les listes déjà validées restent maîtres.\n\n\nDétection sémantique\nLaisser coché. Décocher pour un résultat plus rapide.\n\n\n\nCliquez sur Lancer l’analyse. La progression s’affiche ; comptez de quelques secondes à quelques minutes selon la taille du fichier. À la fin, cliquez sur Valider ce run.\n\n\n\n\n\n\nNote\n\n\n\nUn bandeau ambre peut signaler que l’étape sémantique a été sautée (clés d’accès au modèle de langage absentes). Les résultats restent utilisables : les détections exactes, floues, hors échappement et par libellés ont bien tourné.\n\n\n\n\n4 Étape 3 — Charger et lire les résultats\nL’étape 2 Valider s’ouvre sur le run. Pour un autre run, choisissez-le dans la liste en haut de page puis cliquez sur Ouvrir.\nEn haut, une barre montre l’avancement (approuvés en vert, rejetés en rouge). L’écran est ensuite en deux colonnes :\n\nà gauche, une ligne par liste maître, avec le nombre de doublons en attente (pastille ambre) ou une coche verte quand tout est décidé ;\nà droite, la liste sélectionnée (maître), puis une carte par doublon détecté, avec la comparaison des codes côte à côte.\n\nCe que signifient les marques :\n\n\n\n\n\n\n\nMarque\nSignification\n\n\n\n\nPastille ambre 3 / verte ✓ 3\nDoublons en attente / tous décidés\n\n\nlignée\nListe copiée de la maître (BasedOnObject) puis modifiée\n\n\nniveau (officielle, commune ?…)\nNiveau validé (étiquette pleine), ou suggéré (pointillé, « ? »)\n\n\nexact\nMêmes codes, valeurs et libellés\n\n\nexact hors échappement\nMêmes codes métier ; seuls les codes sans objet, non réponse… diffèrent (la carte les liste)\n\n\nlibellés\nMêmes libellés, valeurs différentes (par exemple 1/0 et oui/non)\n\n\nfuzzy\nCodes et noms proches, avec un score de confiance\n\n\nusage / sémantique\nMêmes variables référentes / proximité de sens\n\n\nTriangle d’alerte\nListe suspecte : renvoi vers une nomenclature, représentation numérique, code unique\n\n\nreprise d’un run précédent\nDécision prise lors d’une session précédente\n\n\nNom barré, écartée\nListe écartée\n\n\nRond bleu, référentiel\nListe du référentiel (registre nettoyé)\n\n\n\n\n\n5 Étape 4 — Décider\nSur chaque carte de doublon :\n\nLisez le résumé des différences ; Comparer les codes affiche la comparaison (ouverte d’office pour le doublon actif).\nChoisissez Approuver (même liste, la maître la remplace), Rejeter (listes différentes) ou laissez Attente (à revoir, par exemple après avoir consulté le producteur). Au clavier : a, r, p, puis n pour la liste suivante à traiter (? affiche tous les raccourcis). Chaque décision est enregistrée aussitôt.\nSi le doublon est la meilleure version (par exemple une correction de forme de la maître), cliquez sur Définir comme maître : il prend la place de la maître, qui devient un doublon en attente.\n\nQuelques repères :\n\nSeuls les codes d’échappement diffèrent : vérifiez auprès du producteur si ces codes sont des valeurs d’échappement ou des codes métier avant d’approuver.\nCorrection manifeste (casse, accents, libellé recopié dans la valeur) : approuvez.\nVariation volontaire d’une année sur l’autre : rejetez, le producteur a fait un choix.\nLes actions de masse (menu Actions sur l’affichage) ne portent que sur les doublons affichés par les filtres, et s’annulent juste après ; passez d’abord en revue les listes suspectes.\n\nLa pastille de filtre À traiter (par défaut) montre ce qui reste à traiter.\n\n\n6 Étape 5 — Les listes sans doublon\nAvec la pastille Sans doublon, vous voyez les listes pour lesquelles aucun doublon n’a été trouvé :\n\nAjouter au référentiel pour une liste de référence à conserver ;\nÉcarter pour une liste à ne pas conserver (par exemple une liste des départements qui n’est pas la liste officielle).\n\nAvant d’ajouter, jetez un œil au filtre Origine → Listes suspectes : une liste qui renvoie vers un dictionnaire ou qui décrit une plage de nombres n’a sans doute pas sa place dans le référentiel.\n\n\n7 Étape 6 — Mettre à jour le référentiel\nVos décisions, listes écartées et maîtres choisies sont enregistrées à chaque clic dans decisions.json (« Enregistré 14:32 » dans la barre du haut) et reprises lors des prochains runs.\nEn fin de session, cliquez sur Mettre à jour le référentiel : les doublons approuvés sont reportés dans cleaned_codelists.json (les maîtres et les listes qu’elles remplacent), et le résultat du run est mis à jour. L’étape 3 Référentiel les présente par niveau ; Modifier ouvre une entrée pour choisir son niveau ou corriger ses codes.\n\n\n8 Reprendre plus tard\n\nMême run : rechargez la page, ou choisissez le run dans la liste en haut de l’étape Valider et cliquez sur Ouvrir ; vos décisions sont là.\nNouveau run sur le même fichier : les décisions déjà prises réapparaissent, marquées reprise d’un run précédent ; il ne reste que les nouveautés et ce que vous aviez laissé en attente.\nFichier suivant (une autre opération) : lancez l’analyse avec le référentiel renseigné (valeur proposée par défaut). Les doublons entre opérations sont alors détectés.\n\n\n\n9 Pour aller plus loin\n\nGuide utilisateur : le détail de chaque écran, notamment les filtres, la comparaison côte à côte, le changement de liste maître, les listes suspectes, l’écart d’une liste, l’enregistrement des décisions, le pré-contrôle d’une opération et le travail sur plusieurs fichiers.\nNote méthodologique : comment les doublons sont détectés.\nChangements récents : ce qui a changé dans l’outil."
+  }
+]
