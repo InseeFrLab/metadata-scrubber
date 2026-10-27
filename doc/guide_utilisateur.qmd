@@ -47,7 +47,14 @@ Au premier chargement, un formulaire de navigateur demande :
 
 # Lancer le pipeline {#lancer-pipeline}
 
-Le premier onglet de l'interface (**🚀 Pipeline**) sert à configurer et lancer
+L'interface suit les étapes du travail, dans la barre du haut : **1 Analyser**,
+**2 Valider**, **3 Référentiel**, et à part **Pré-contrôle**. La même barre
+rappelle le **dossier de sortie** (cliquer dessus pour le changer : réglage
+commun à tous les écrans, mémorisé par le navigateur), le run ouvert,
+l'état d'enregistrement des décisions et l'état du serveur. L'interface suit le
+thème clair ou sombre du système.
+
+La première étape (**1 Analyser**) sert à configurer et lancer
 l'exécution automatique du dédoublonnage, sur un fichier DDI ou directement sur
 des opérations publiées dans l'API Métadonnées de l'Insee.
 
@@ -55,13 +62,12 @@ des opérations publiées dans l'API Métadonnées de l'Insee.
 
 | Champ | Rôle |
 |---|---|
-| **Source des CodeLists** | **Fichier DDI (XML)** : URL S3 ou chemin local. **API Métadonnées de l'Insee** : une ou plusieurs **séries** (ex. `s1998`, avec suggestions) et/ou **opérations** (ex. `s2219`), ou **toute la base**. Les objets téléchargés sont mis en cache dans `api_cache/` sous le dossier de sortie : un nouveau run ne retélécharge que les nouvelles versions. |
-| **Dossier de sortie** | Racine des sorties (par défaut `s3://projet-metadonnees-rmes/scrubber_output`). Chaque run crée son propre sous-dossier daté `AAAAMMJJ-HHMMSS` contenant `codelist_duplicates.json`, `run_summary.json` et `pipeline.log`. Le registre nettoyé et `decisions.json` restent à la racine, partagés entre les runs. Ce réglage est commun à tous les onglets et mémorisé par le navigateur. |
-| **Exécuter les phases LLM / embeddings** | Décocher pour un run rapide (sans embeddings ni juge LLM). |
-| **Options avancées** | **Registre nettoyé injecté** (par défaut celui du dossier de sortie : ses listes sont prioritaires, les listes déjà remplacées sont exclues de la détection) et **mode verbeux**. |
+| **Source** | **Fichier DDI** : URL S3 ou chemin local. **API Métadonnées** : une ou plusieurs **séries**, choisies dans une liste « identifiant – nom » (tapez `s1998` ou `tous salariés`), puis, si besoin, certaines de leurs **opérations** (sans choix, toute la série est chargée ; l'écran signale une série sans opération ou à opération unique), ou **toute la base**. Les objets téléchargés sont mis en cache dans `api_cache/` sous le dossier de sortie : un nouveau run ne retélécharge que les nouvelles versions. |
+| **Sortie** | Rappel du dossier de sortie (par défaut `s3://projet-metadonnees-rmes/scrubber_output`, modifiable dans la barre du haut). Chaque run crée son propre sous-dossier daté `AAAAMMJJ-HHMMSS` contenant `codelist_duplicates.json`, `run_summary.json` et `pipeline.log`. Le référentiel (`cleaned_codelists.json`) et `decisions.json` restent à la racine, partagés entre les runs. **Référentiel injecté** : par défaut celui du dossier de sortie ; ses listes sont prioritaires, les listes déjà remplacées sont exclues de la détection. |
+| **Options** | **Détection sémantique (embeddings et LLM)** : décocher pour un run rapide. **Journal détaillé** : mode verbeux. |
 
 Avec la source API, chaque CodeList connaît les **opérations et séries** qui
-l'utilisent (affichées dans l'onglet Validation) ; les opérations sans
+l'utilisent (affichées à l'étape Valider) ; les opérations sans
 description DDI et les objets non diffusés par l'API (accès refusé) sont
 signalés en avertissement.
 
@@ -69,15 +75,15 @@ signalés en avertissement.
 
 ## Exécuter le pipeline
 
-Après avoir complété les champs, cliquez sur **🚀 Lancer le pipeline**.
+Après avoir complété les champs, cliquez sur **Lancer l'analyse** (en haut à droite).
 
-La barre de progression apparaît et avance en temps réel :
+Un bandeau de suivi apparaît et avance en temps réel :
 
-- **Pourcentage** : progression globale (0 % → 100 %)
-- **Texte de phase** : indique l'étape en cours, par exemple `Phase 5/9 — Détection exacte`
-- **Logs d'exécution** : panneau rétractable affichant la sortie détaillée du pipeline
-
-Cliquez sur le bouton **📋 Logs d'exécution** pour déplier le texte brut de l'exécution : timestamps, messages de chaque phase, noms des CodeLists traitées, résultats des comparaisons.
+- **Étape en cours** et **pourcentage** global ;
+- **frise des étapes** : lecture, extraction, signatures et exact, flou et
+  usage, sémantique, registre (en vert les étapes terminées) ;
+- **Journal** : la sortie détaillée du pipeline (horodatage, messages de chaque
+  phase, résultats des comparaisons), ouvert pendant l'exécution.
 
 ![Progression du pipeline et logs d'exécution](img/app_logs_pipeline.png){width="700px"}
 
@@ -87,18 +93,30 @@ Cliquez sur le bouton **📋 Logs d'exécution** pour déplier le texte brut de 
 
 ## Résultat
 
-En fin d'exécution, une alerte verte affiche la durée, les fichiers produits et
-les avertissements éventuels, avec un bouton **🔍 Valider ce run** qui ouvre
-directement le registre du run dans l'onglet **Validation des doublons**.
+En fin d'exécution, un bandeau vert affiche la durée, les fichiers produits
+(repliés) et les avertissements éventuels, avec un bouton **Valider ce run** qui
+ouvre directement le registre du run à l'étape **Valider**.
 
 Le tableau **Derniers runs**, sous le formulaire, liste les runs du dossier de
-sortie (date, source, statut, nombre de candidats) avec un bouton **Ouvrir**.
+sortie (date, source, statut, nombre de candidats) avec un bouton **Valider**.
+Un run terminé avec avertissements a un statut ambre (détail en infobulle).
+
+Les avertissements les plus courants n'empêchent pas de valider le run :
+
+- **Source API Insee partielle** : certaines opérations de la série n'ont pas
+  de description DDI publiée dans l'API (variables, listes de codes), souvent
+  les plus anciennes. Elles sont ignorées et n'apportent aucune CodeList ; le
+  message indique combien d'opérations ont bien été analysées.
+- **Détection floue partielle** : les CodeLists de plus de 5 000 codes (par
+  exemple les communes) ne sont pas comparées en détection floue, trop
+  coûteuse ; le message les nomme. Elles restent comparées en détection
+  exacte.
 
 ---
 
 # Examiner et valider les doublons
 
-Le deuxième onglet (**🔍 Validation des doublons**) est au cœur du travail de
+La deuxième étape (**2 Valider**) est au cœur du travail de
 l'expert. Il présente le registre des paires de CodeLists détectées comme
 potentiellement redondantes (liste des CodeLists à gauche, doublons de la
 CodeList sélectionnée à droite), avec des filtres, des
@@ -106,11 +124,11 @@ actions par paire et des actions de masse.
 
 ## Charger le registre {#charger-registre}
 
-1. Vérifiez le **Dossier de sortie** (commun aux onglets).
-2. Choisissez le **Run** dans la liste (le plus récent est présélectionné) et
-   cliquez sur **📂 Ouvrir**.
+1. Vérifiez le **dossier de sortie** dans la barre du haut.
+2. Choisissez le **run** dans la liste en haut de page (le plus récent est
+   présélectionné) et cliquez sur **Ouvrir**.
 
-*Avancé : ouvrir un registre par son chemin* permet encore de saisir le chemin
+*Ouvrir un registre par son chemin* permet encore de saisir le chemin
 d'un `codelist_duplicates.json` quelconque.
 
 Le run ouvert, les filtres et la CodeList affichée sont conservés dans l'adresse
@@ -118,52 +136,43 @@ de la page : un rechargement ou un lien partagé rouvre la même vue.
 
 ## Vue d'ensemble
 
-Quatre indicateurs en haut de page résument l'état du registre :
+Un bandeau en haut de page résume l'avancement : une barre approuvés (vert) /
+rejetés (rouge) sur l'ensemble des doublons, le nombre de décisions prises, de
+CodeLists, d'approuvés, de rejetés et d'en attente. Juste dessous, les filtres
+(voir [Filtres](#filtres)).
 
-| Indicateur | Signification |
-|---|---|
-| **CodeLists** | Nombre total de CodeLists dans le fichier analysé |
-| **Doublons** | Nombre de CodeLists marquées comme potentiellement redondantes |
-| **Approuvés / rejetés** | Paires déjà décidées |
-| **En attente** | Paires n'ayant pas encore été examinées |
-
-Une barre de progression indique la part des décisions prises.
-
-Sous les indicateurs, la page est découpée en deux colonnes :
+La page est ensuite découpée en deux colonnes :
 
 - **Colonne de gauche** : la liste des CodeLists de référence du fichier examiné,
   avec leur nom, leur identifiant, le nombre de variables (et de séries, source
-  API) et une seule pastille : le nombre de doublons **en attente** (jaune), ou
-  **✓** quand tout est décidé (le détail est en infobulle). La première ligne
-  est sélectionnée à l'ouverture.
-- **Colonne de droite** : la CodeList sélectionnée, avec ses modalités
-  (valeur et étiquette de chaque code), puis en dessous les doublons détectés
-  pour cette liste.
+  API). Un rond indique l'état (ambre : doublons en attente, vert : tout est
+  décidé, pointillé : sans doublon, bleu : dans le référentiel) et la pastille de
+  droite le nombre de doublons **en attente** (le détail est en infobulle). La
+  liste reste visible quand on fait défiler la page ; elle est paginée par 50.
+- **Colonne de droite** : la CodeList **maître** sélectionnée (nom, référence
+  DDI, niveau, provenance, modalités repliées), puis ses doublons.
 
-Les filtres, la recherche (qui porte aussi sur le nom et l'identifiant des
-doublons) et la pagination s'appliquent à la colonne de gauche.
-
-### Ajouter des CodeLists sans doublon au registre nettoyé
+### Ajouter des CodeLists sans doublon au référentiel
 
 Les CodeLists pour lesquelles aucun doublon n'a été détecté peuvent être ajoutées
-au registre nettoyé sans passer par une décision. Elles portent une case à
-cocher dans la colonne de gauche (les CodeLists avec doublons n'en ont pas) :
+au référentiel sans passer par une décision. Elles portent une case à
+cocher dans la colonne de gauche (les CodeLists avec doublons n'en ont pas), et
+la barre en bas de colonne permet de les ajouter :
 
-- **Case à cocher** sur chaque ligne, et **Tout sélectionner** pour cocher toutes
-  les CodeLists sans doublon de la page affichée. La sélection est conservée
-  quand on change de page ou de filtre.
-- **➕ Ajouter la sélection** ajoute les CodeLists cochées, après confirmation.
-- **➕ Ajouter toutes les CodeLists sans doublon** ajoute d'un coup toutes celles
-  du registre chargé, sans sélection préalable et quels que soient les filtres
-  actifs. Le nombre de CodeLists concernées est indiqué sur le bouton.
+- **Case à cocher** sur chaque ligne, et **Sans doublon de la page** pour cocher
+  toutes celles de la page affichée. La sélection est conservée quand on change
+  de page ou de filtre.
+- **Ajouter la sélection** ajoute les CodeLists cochées, après confirmation.
+- **Toutes (n)** ajoute d'un coup toutes les CodeLists sans doublon du registre
+  chargé, quels que soient les filtres actifs.
 
-Les CodeLists déjà présentes dans le registre nettoyé sont ignorées. Une fois
-ajoutée, une CodeList est marquée ✅ dans la liste.
+Les CodeLists déjà présentes dans le référentiel sont ignorées. Une fois
+ajoutée, une CodeList a un rond bleu et la mention *référentiel*.
 
-### Listes suspectes ⚠ {#listes-suspectes}
+### Listes suspectes {#listes-suspectes}
 
 Certaines listes ne devraient probablement pas être des listes de codes. Elles
-portent un badge ⚠, détaillé dans l'en-tête :
+portent un triangle d'alerte, détaillé dans l'en-tête de la maître :
 
 - **renvoi** : les codes renvoient ailleurs (« Voir dictionnaire des
   nomenclatures », « Code quartier du QVA ») ; la liste est alors comparée aux
@@ -171,52 +180,50 @@ portent un badge ⚠, détaillé dans l'en-tête :
 - **numérique** : représentation numérique mise en liste (« 0 à 7 », « de 0 à N ») ;
 - **code unique** : un seul code métier.
 
-Le filtre origine *Listes suspectes ⚠* les regroupe. Ajouter une liste suspecte
-au registre nettoyé demande une confirmation.
+Le filtre origine *Listes suspectes* les regroupe. Ajouter une liste suspecte
+au référentiel demande une confirmation.
 
 ### Écarter une CodeList sans doublon {#ecarter}
 
-Une CodeList sans doublon qu'on ne veut pas ajouter au registre nettoyé (par
+Une CodeList sans doublon qu'on ne veut pas ajouter au référentiel (par
 exemple une liste des départements qui n'est pas la liste officielle) peut être
-**écartée** avec le bouton **🚫 Écarter** du panneau de droite. Elle est alors
-marquée 🚫, n'a plus de case à cocher et n'est pas prise par **Ajouter toutes
-les CodeLists sans doublon**. **↩ Annuler l'écart** la réintègre.
+**écartée** avec le bouton **Écarter** du panneau de droite. Son nom est alors
+barré, elle n'a plus de case à cocher et n'est pas prise par **Toutes (n)**.
+**Annuler l'écart** la réintègre.
 
 L'écart est enregistré aussitôt et repris aux runs suivants (voir
 *Enregistrer les décisions*). Le filtre *Écartées* les affiche.
 
 Chaque doublon est présenté sous forme de **carte** comportant :
 
-- Le **nom** de la CodeList et un bouton **Voir** à côté (pour la comparaison)
-- Le **nombre de codes**
-- Le **score de confiance** (0–100 %)
-- Le **badge de décision** : 🟡 en attente, 🟢 approuvé, 🔴 rejeté
-- Les **signaux de détection** : *exact*, *flou*, *usage*, *synonyme*, *semantic*
-  (ces badges reflètent la phase du pipeline qui a produit la correspondance —
+- son **nom**, son identifiant (copiable), ses opérations et variables ;
+- les **signaux de détection** : *exact*, *fuzzy*, *usage*, *lignée*, *sémantique*…
+  (ces étiquettes reflètent la phase du pipeline qui a produit la correspondance —
   *synonyme* n'est pas un signal séparé mais une manifestation du signal
   *semantic* (juge LLM) ; le détail des définitions est dans la
   [note méthodologique](note_methodologique_dedoublonnage.qmd), §2-3)
-- Les badges **exact hors échappement** (mêmes codes métier, seuls les codes
+- les étiquettes **exact hors échappement** (mêmes codes métier, seuls les codes
   *sans objet*, *non réponse*… diffèrent) et **libellés** (mêmes libellés,
   valeurs différentes, par exemple `1`/`0` et `oui`/`non`). La carte rappelle
-  alors les **codes d'échappement** de la maître et du doublon.
-- Un bouton **📋 Détails** affichant une liste `(valeur → libellé)` pour chaque
-  CodeList du groupe
+  alors les **codes d'échappement** de la maître et du doublon ;
+- le **score de confiance** (0–100 %) ;
+- les trois boutons de **décision**, à droite ;
+- un **résumé des différences** de codes et la **comparaison côte à côte**.
 
-![Vue en cartes du registre avec indicateurs](img/app_view_duplicates.png){width="700px"}
+![Étape Valider : liste des CodeLists, maître et doublon](img/app_view_duplicates.png){width="700px"}
 
 ## Comparer côte à côte {#comparer}
 
-Chaque carte de doublon résume les différences sans rien ouvrir : « 12 code(s)
-en commun · 1 libellé(s) différent(s) · 2 seulement dans la maître · 1 seulement
-dans le doublon ». Le tableau comparatif du premier doublon en attente est
-ouvert d'office ; **▸ Comparer les codes** (touche `c`) ouvre ou ferme celui
-des autres :
+Chaque carte de doublon résume les différences sans rien ouvrir : « 9 code(s)
+identique(s) · 1 libellé(s) différent(s) · 2 seulement dans la maître · 1
+seulement dans le doublon ». La comparaison du doublon actif est ouverte
+d'office ; **Comparer les codes** (touche `c`) ouvre ou ferme celle des autres.
+Elle présente une ligne par code :
 
-- colonnes **maître** (à gauche) et **doublon** (à droite) ;
-- lignes **jaunes** : même valeur, libellé différent ; **bleues** : seulement
-  dans la maître ; **rouges** : seulement dans le doublon ;
-- les codes identiques ne sont pas colorés.
+- colonne **code**, puis le libellé de la **maître** et celui du **doublon** ;
+- lignes **≠** (fond ambre) : même code, libellé différent ; **−** (fond bleu) :
+  seulement dans la maître ; **+** (fond rouge) : seulement dans le doublon ;
+- pour un code identique, la colonne du doublon indique simplement *identique*.
 
 La maître d'un groupe est choisie dans cet ordre : entrée du registre nettoyé,
 niveau validé (officielle d'abord), maître choisie par l'expert lors d'un run
@@ -233,12 +240,12 @@ contenu.
 Chaque carte de doublon porte trois boutons ; la décision courante est en
 couleur pleine :
 
-- **✓ Approuver** — les listes sont redondantes, la candidate doit être remplacée
-- **✗ Rejeter** — les listes sont distinctes, le rapprochement est incorrect
-- **⏳ En attente** — la décision est remise à plus tard (état par défaut)
+- **Approuver** (`a`) — les listes sont redondantes, la candidate doit être remplacée
+- **Rejeter** (`r`) — les listes sont distinctes, le rapprochement est incorrect
+- **Attente** (`p`) — la décision est remise à plus tard (état par défaut)
 
-**Chaque décision est enregistrée immédiatement** (dans `decisions.json`) :
-l'en-tête affiche « ✓ Enregistré à 14:32 », ou « ⚠ Échec de l'enregistrement »
+**Chaque décision est enregistrée immédiatement** (dans `decisions.json`) : la
+barre du haut affiche « Enregistré 14:32 », ou « Échec de l'enregistrement »
 avec un bouton **Réessayer**. Après une décision, le doublon en attente suivant
 devient actif ; l'option **Passer à la CodeList suivante quand tous ses doublons
 sont décidés** enchaîne les listes.
@@ -253,42 +260,42 @@ sont décidés** enchaîne les listes.
 | `a` / `r` / `p` | Approuver / rejeter / remettre en attente le doublon actif |
 | `c` | Afficher / masquer la comparaison des codes |
 | `/` | Aller à la recherche |
-| `?` | Aide des raccourcis (aussi via le bouton **⌨ ?**) |
+| `?` | Aide des raccourcis (aussi via le bouton **Raccourcis**) |
 
 Les raccourcis sont inactifs pendant la saisie dans un champ.
 
 ## Changer la liste maître {#changer-maitre}
 
 Un doublon peut devenir la maître de son groupe, par exemple quand il corrige
-la forme de la maître proposée. Le bouton **⇅ Définir comme maître** de sa
+la forme de la maître proposée. Le bouton **Définir comme maître** de sa
 carte, après confirmation :
 
-- en fait la maître (badge **⇅ maître choisie**) ; l'ancienne maître devient un
+- en fait la maître (étiquette **maître choisie**) ; l'ancienne maître devient un
   doublon **en attente** ;
 - recalcule les badges et le score de chaque doublon par rapport à la nouvelle
   maître (« lien indirect, via … » s'il n'y a pas de paire directe) ;
 - conserve les décisions déjà prises sur les autres doublons.
 
 Le choix est enregistré immédiatement et repris aux runs suivants
-(`decisions.json`). Si l'ancienne maître avait une entrée dans le registre
-nettoyé, elle perd les listes du groupe ; les listes approuvées sont rattachées
-à la nouvelle maître. Une maître issue du registre nettoyé (📘) ne peut pas être
-remplacée depuis cet onglet.
+(`decisions.json`). Si l'ancienne maître avait une entrée dans le
+référentiel, elle perd les listes du groupe ; les listes approuvées sont
+rattachées à la nouvelle maître. Une maître issue du référentiel (étiquette
+*référentiel*) ne peut pas être remplacée depuis cet écran.
 
 ### Versions et filiation DDI
 
 L'en-tête de la CodeList affiche sa référence DDI `agence:id:version`. Une carte
-de doublon indique **↳ basé sur …** quand le doublon a été créé à partir d'une
-autre liste (`BasedOnObject`), et **↰ la maître est basée sur ce doublon** dans
+de doublon indique **Copié de …** quand le doublon a été créé à partir d'une
+autre liste (`BasedOnObject`), et **La maître est copiée de ce doublon** dans
 le sens inverse. Si un fichier contient plusieurs versions d'une même CodeList,
 seule la plus récente est examinée.
 
-Le badge **lignée** signale un doublon trouvé seulement grâce à cette filiation :
+L'étiquette **lignée** signale un doublon trouvé seulement grâce à cette filiation :
 liste copiée de la maître (souvent d'un millésime au suivant) puis modifiée.
 
 ### Liens entre doublons
 
-Une carte indique aussi **🔗 lié aussi à …** quand le doublon a été détecté
+Une carte indique aussi **Lié aussi à …** quand le doublon a été détecté
 avec d'autres doublons du groupe. Si on le rejette par rapport à la maître
 alors qu'il reste lié à un autre doublon, le définir comme maître permet
 d'examiner ces liens.
@@ -296,14 +303,15 @@ d'examiner ces liens.
 ## Actions de masse {#actions-masse}
 
 Les actions de masse ne portent que sur les **doublons affichés par les filtres
-courants** (toutes pages confondues) ; le nombre concerné figure sur le bouton :
+courants** (toutes pages confondues). Elles sont réunies dans le menu
+**Actions sur l'affichage**, avec le nombre concerné :
 
 | Bouton | Effet |
 |---|---|
-| **✅ Approuver les exacts en attente (n)** | Approuve les doublons **exacts** encore en attente |
-| **✅ Approuver ≥ 95 % en attente (n)** | Approuve les doublons en attente de confiance ≥ 95 % |
-| **Plus d'actions → Rejeter les doublons affichés** | Rejette tous les doublons affichés |
-| **Plus d'actions → Remettre en attente les doublons affichés** | Remet en attente tous les doublons affichés |
+| **Approuver les exacts en attente** | Approuve les doublons **exacts** encore en attente |
+| **Approuver ceux à 95 % ou plus** | Approuve les doublons en attente de confiance ≥ 95 % |
+| **Rejeter les doublons affichés** | Rejette tous les doublons affichés |
+| **Remettre en attente les doublons affichés** | Remet en attente tous les doublons affichés |
 
 Une fenêtre de confirmation rappelle le nombre de doublons et de CodeLists
 concernés ; une fois l'action faite, le bouton **Annuler** de la notification
@@ -314,42 +322,44 @@ aux doublons déjà rejetés.
 
 Pour se concentrer sur un sous-ensemble de CodeLists :
 
-- **Afficher** : *À traiter* (par défaut : doublons en attente, et listes sans
-  doublon ni ajoutées au registre nettoyé ni écartées) / *Toutes les CodeLists* /
-  *Doublons en attente* / *approuvés* / *rejetés* / *Sans doublon* / *Écartées*.
-  Une liste décidée reste visible jusqu'au prochain changement de filtre.
-- **Origine** : *Toutes* / *Registre nettoyé 📘* / *Listes suspectes ⚠* /
+- **Pastilles de décision**, avec le nombre de CodeLists de chacune : *À traiter*
+  (par défaut : doublons en attente, et listes sans doublon ni ajoutées au
+  référentiel ni écartées) / *En attente* / *Approuvés* / *Rejetés* /
+  *Sans doublon* / *Écartées* / *Toutes*. Une liste décidée reste visible
+  jusqu'au prochain changement de filtre.
+- **Origine** : *Toutes origines* / *Référentiel* / *Listes suspectes* /
   *Niveau officielle, commune ou spécifique* (validé ou suggéré)
-- **Recherche** : nom ou identifiant d'une CodeList ou d'un de ses doublons
-- **Trier par** : en attente d'abord / confiance max / nom / nombre de variables
+- **Recherche** (touche `/`) : nom ou identifiant d'une CodeList ou d'un de ses doublons
+- **Tri** : en attente d'abord / confiance max / nom / nombre de variables
   / nombre de séries (source API)
-- **Par page** : 20 / 50 / 100 ; la pagination est répétée en bas de liste
 
-Le **niveau** d'une liste est affiché en badge : plein quand il est validé dans
-le registre nettoyé, encadré avec « ? » quand il est seulement suggéré (au moins
+Le **niveau** d'une liste est affiché en étiquette colorée (violet : officielle,
+bleu-vert : commune, brun : spécifique) : pleine quand il est validé dans le
+référentiel, en pointillé avec « ? » quand il est seulement suggéré (au moins
 deux séries utilisatrices → commune, une seule → spécifique). Une liste « Voir
 dictionnaire des nomenclatures » indique la nomenclature officielle qu'elle
-désigne : « → remplacer par la nomenclature officielle « Régions (COG) » ».
+désigne : « Renvoi vers une nomenclature : remplacer par Régions (COG) ».
 
-## Enregistrer les décisions et mettre à jour le registre nettoyé {#sauvegarder}
+## Enregistrer les décisions et mettre à jour le référentiel {#sauvegarder}
 
 Les décisions, les listes écartées et les changements de maître sont
 **enregistrés automatiquement** dans `decisions.json`, à la racine des sorties,
 à chaque clic : rien n'est perdu si la page est fermée ou le serveur redémarré,
 et un registre rouvert retrouve son dernier état.
 
-Le bouton **🧹 Mettre à jour le registre nettoyé**, en bas de page :
+Le bouton **Mettre à jour le référentiel**, en haut à droite de la page :
 
 1. écrit les décisions dans le registre `codelist_duplicates.json` du run ;
-2. génère ou met à jour le **registre nettoyé** `cleaned_codelists.json`
+2. génère ou met à jour le **référentiel** (registre nettoyé) `cleaned_codelists.json`
    (doublons approuvés rattachés à leur maître) ;
 3. met à jour `decisions.json`.
 
 Au run suivant, le pipeline relit `decisions.json` : une paire déjà tranchée qui
-est de nouveau détectée reprend sa décision, marquée **↻ reprise** sur la carte,
+est de nouveau détectée reprend sa décision, marquée **reprise d'un run précédent**
+sur la carte,
 et une liste écartée reste écartée. Seules les paires nouvelles ou laissées en
 attente sont donc à examiner. Une paire est reconnue quel que soit le sens
-(maître / doublon). Changer une décision reprise efface la marque ↻.
+(maître / doublon). Changer une décision reprise efface la marque.
 
 
 > **Ce que la sauvegarde produit** : `cleaned_codelists.json` ne contient que
@@ -358,69 +368,104 @@ attente sont donc à examiner. Une paire est reconnue quel que soit le sens
 > CodeLists redondantes qu'il remplace. Ce fichier est un input pour les runs
 > suivants (workflow itératif, § 6.2).
 
-## Ajouter une CodeList au registre
+## Ajouter une CodeList au référentiel
 
 Lorsqu'une CodeList n'a aucun doublon détecté, l'expert peut décider tout de
-même de l'ajouter au registre épuré :
+même de l'ajouter au référentiel :
 
-1. Cliquez sur le bouton **➕ Ajouter au registre** (en haut de la carte de la
-   CodeList concernée, accessible via le bouton **📋 Détails** ou dans la
-   vue comparée)
-2. La CodeList est écrite aussitôt comme maître dans `cleaned_codelists.json`
+1. Sélectionnez-la dans la colonne de gauche (filtre *Sans doublon*).
+2. Cliquez sur **Ajouter au référentiel** dans le panneau de droite : la
+   CodeList est écrite aussitôt comme maître dans `cleaned_codelists.json`.
 
 > À utiliser pour les CodeLists uniques mais importantes qu'on souhaite
 > conserver comme référence dans le registre propre.
 
+### Faux doublon : garder les deux listes {#faux-doublon}
+
+Deux listes peuvent être rapprochées à raison (codes très proches) sans être
+des doublons : par exemple `L_DENS7` et `L_DENS3`, deux grilles de densité
+différentes. Pour les garder toutes les deux :
+
+1. **Rejetez** le doublon (`r`).
+2. Sur sa carte, cliquez sur **Ajouter au référentiel** (« Pas un doublon ?
+   Gardez aussi cette liste. »).
+3. Quand tous les doublons d'une maître sont rejetés, une barre « Aucun
+   doublon retenu » apparaît sous la maître : cliquez sur **Ajouter au
+   référentiel** pour l'y ajouter aussi.
+
+Les deux listes sont écrites aussitôt dans `cleaned_codelists.json` comme
+ajouts manuels ; **Retirer** les enlève. Si vous approuvez ensuite ce doublon,
+la mise à jour du référentiel supprime son entrée propre : il est alors
+remplacé par la maître.
+
 ---
 
-# Registre nettoyé
+# Référentiel
 
-Le troisième onglet (**🧹 Registre nettoyé**) permet de consulter, éditer et
-sauvegarder le registre épuré — la base de connaissances cumulée des
-CodeLists validées.
+La troisième étape (**3 Référentiel**) permet de consulter, éditer et
+enregistrer le référentiel (registre nettoyé, `cleaned_codelists.json`) — la
+base de connaissances cumulée des CodeLists validées.
 
-## Charger le registre
+## Ouvrir le référentiel
 
-1. Le chemin est déduit du dossier de sortie (`<dossier>/cleaned_codelists.json`) ;
-   il reste modifiable.
-2. Cliquez sur **📂 Charger**
+Le référentiel du dossier de sortie (`<dossier>/cleaned_codelists.json`) est
+chargé à l'ouverture de l'étape. *Fichier du référentiel* permet d'en choisir un
+autre ; **Recharger** relit le fichier (utile après une mise à jour depuis
+Valider ou pour reprendre une session).
 
-L'interface affiche alors la liste des CodeLists maîtres avec leurs remplaçants.
+Un tableau liste les CodeLists maîtres, avec des onglets par niveau
+(**Toutes**, **Officielles**, **Communes**, **Spécifiques**, **À classer**, avec
+leur nombre) et une recherche par nom, libellé ou identifiant.
 
-![Registre nettoyé chargé](img/app_manage_registry.png){width="700px"}
+![Référentiel : tableau par niveau](img/app_manage_registry.png){width="700px"}
 
 ## Contenu d'une entrée
 
-Chaque carte de CodeList maître contient :
+Chaque ligne indique le **nom** et l'identifiant, le **niveau** (validé, ou
+suggéré en pointillé), la **source** (validation, ajout manuel, API · COG,
+API · Colectica), le nombre de **codes**, le nombre de listes **remplacées** et
+les **séries** utilisatrices.
 
-- **Nom**, **label** (libellé) et **niveau** : *à classer* (avec le niveau
-  suggéré entre parenthèses), *officielle*, *commune* ou *spécifique*
-- **Source** (validation des doublons, ajout manuel, API Insee), **URN** de
-  l'objet DDI d'origine et **séries** utilisatrices quand elles sont connues
-- **Nombre de codes**
-- **Codes** : liste de paires `(valeur → libellé)` dans un bloc copiable
-- **Variables référentes** : noms des variables DDI qui référencent cette CodeList
-- **Replace** : badge indiquant le nombre de CodeLists redondantes remplacées
-  (cliquable, affiche la liste détaillée des remplaçants — nom, type de
-  détection, score de confiance)
+## Classer les listes
+
+- **Depuis la ligne** : la colonne *Niveau* porte trois pastilles, **Off.**,
+  **Com.** et **Spé.** Un clic classe la liste ; un nouveau clic sur la
+  pastille active la renvoie *À classer*. Une pastille en **pointillés**
+  montre le niveau suggéré d'après les séries : un clic suffit pour l'accepter.
+  Dans l'onglet *À classer*, la liste classée disparaît : il ne reste que ce
+  qui est à faire.
+- **Par lot** : cochez des lignes (Maj+clic coche toute une plage, la case de
+  l'en-tête coche les lignes affichées). Une barre apparaît en haut du
+  tableau : **Classer en** *Officielle*, *Commune*, *Spécifique* ou *À
+  classer*, ou **Appliquer le niveau suggéré** à chaque liste cochée. Le
+  message de confirmation propose **Annuler**.
+
+Comme les autres modifications, le classement est enregistré par le bouton
+**Enregistrer** de la barre du bas.
 
 ## Édition
 
-Les champs **Nom** et **Label** de chaque entrée sont modifiables directement
-dans le navigateur. Les champs **Codes** et **Variables** sont en lecture seule.
+**Modifier** ouvre l'entrée dans un panneau latéral :
 
-Le **niveau** se choisit dans la liste déroulante de l'entrée ; le filtre de la
-barre d'outils affiche les officielles, communes, spécifiques ou listes à classer.
+- **Nom** et **libellé**, modifiables ;
+- **Niveau** : *Officielle*, *Commune*, *Spécifique* ou *À classer*, avec le
+  niveau suggéré d'après les séries ;
+- identifiant (copiable), **URN** de l'objet DDI d'origine, source, séries et
+  opérations ;
+- **Remplace** : les CodeLists redondantes rattachées (nom, confiance), dont on
+  peut déplier et copier les codes quand leur run est ouvert dans Valider ;
+- **Codes** : valeurs et libellés modifiables, ajout et suppression de codes ;
+- **Supprimer l'entrée**.
 
-Les modifications sont signalées par un **badge orange** en haut de la page :
-*modifications non sauvegardées*. Elles restent locales jusqu'au clic sur
-**💾 Sauvegarder** ; le navigateur avertit avant de quitter la page.
+Les modifications restent locales : une barre **Modifications non
+enregistrées** apparaît en bas de page, avec le bouton **Enregistrer**. Le
+navigateur avertit avant de quitter la page.
 
 ### Amorcer les nomenclatures officielles
 
 Les nomenclatures géographiques du COG (régions, départements, pays, zones
 d'emploi, unités urbaines, aires d'attraction, bassins de vie, QPV…) s'ajoutent
-au registre nettoyé, au niveau *officielle*, par la commande :
+au référentiel, au niveau *officielle*, par la commande :
 
 ```bash
 uv run scrubber seed-officielles --registry s3://projet-metadonnees-rmes/scrubber_output/cleaned_codelists.json
@@ -431,29 +476,31 @@ uv run scrubber seed-officielles --registry s3://projet-metadonnees-rmes/scrubbe
 Relancée, la commande met à jour les codes des nomenclatures existantes (nouveau
 millésime du COG) sans toucher aux noms édités.
 
-## Sauvegarder et télécharger
+## Enregistrer et télécharger
 
 | Bouton | Effet |
 |---|---|
-| **💾 Sauvegarder** | Écrit l'état actuel du registre vers le chemin S3 ou local spécifié |
-| **⬇️ Télécharger** | Télécharge le registre en tant que fichier JSON dans le navigateur |
-
-Le bouton **📂 Charger** permet de recharger le registre à tout moment (utile pour
-reprendre une session ou charger une version mise à jour).
+| **Enregistrer** (barre du bas) | Écrit le référentiel modifié vers son fichier, S3 ou local |
+| **Télécharger** | Télécharge le référentiel en fichier JSON |
+| **Recharger** | Relit le fichier ; demande confirmation s'il reste des modifications non enregistrées |
 
 ---
 
 # Pré-contrôle d'une opération {#precontrole}
 
-Le quatrième onglet (**🔎 Pré-contrôle**) répond à la question : *les CodeLists
+L'écran **Pré-contrôle** répond à la question : *les CodeLists
 de cette nouvelle opération existent-elles déjà ?* Il utilise le même moteur que
 le service `scrubber-check` (voir la page dédiée) et n'enregistre rien.
 
-1. Déposez le fichier DDI de l'opération.
+1. Déposez le fichier DDI de l'opération dans la zone prévue (ou choisissez-le
+   sur votre poste).
 2. Pour re-contrôler une opération déjà publiée, indiquez son identifiant dans
-   **Ignorer les listes de l'opération** (sinon toutes ses listes sont
-   « réutilisées »).
-3. Cliquez sur **🔎 Contrôler**.
+   **Ignorer l'opération** (sinon toutes ses listes sont « réutilisées »).
+3. Cliquez sur **Contrôler**.
+
+Le résultat s'ouvre sur une **barre de répartition** des statuts (doublons en
+rouge, inclusions en orange, proches en ambre, nouvelles en vert), puis un
+tableau groupé par statut, doublons d'abord.
 
 Chaque CodeList du fichier reçoit un statut, avec sa meilleure correspondance
 parmi les CodeLists publiées et une action conseillée :
@@ -468,7 +515,7 @@ parmi les CodeLists publiées et une action conseillée :
 
 Cliquer sur une ligne affiche toutes les correspondances avec leurs différences
 de codes (en plus, absents, libellés différents). Les doublons à l'intérieur du
-fichier sont listés en dessous ; **⬇️ Télécharger le rapport (CSV)** exporte le
+fichier sont listés en dessous ; **Rapport CSV** (en haut à droite) exporte le
 tableau.
 
 ---
@@ -486,25 +533,23 @@ Le circuit se décompose en 5 étapes :
 1. **Exécuter le pipeline** (§ 3) — configurez le chemin source et lancez le
    pipeline. Le résultat est un fichier de doublons.
 
-2. **Examiner les cartes** (§ 4.1–4.2) — passez à l'onglet **Validation**,
-   chargez le registre si nécessaire, et parcourez les cartes. Les cartes
-   sont triées par nombre de codes par défaut, mais vous pouvez les filtrer
-   par décision, origine ou recherche textuelle.
+2. **Examiner les doublons** (§ 4.1–4.2) — **Valider ce run** ouvre l'étape
+   **Valider** sur le run ; parcourez les CodeLists (en attente d'abord) et
+   filtrez-les par décision, origine ou recherche textuelle.
 
 3. **Comparer par paire** (§ 4.3) — pour chaque paire douteuse, cliquez sur
-   **▸ Comparer les codes** pour comparer les deux CodeLists côte à côte ; le
+   **Comparer les codes** pour comparer les deux CodeLists côte à côte ; le
    résumé de la carte indique déjà les codes en plus, en moins et les libellés
    différents.
 
-4. **Prendre des décisions** — pour chaque paire, **✓ Approuver** (les listes
-   sont redondantes) ou **✗ Rejeter** (les listes sont distinctes), à la souris
+4. **Prendre des décisions** — pour chaque paire, **Approuver** (les listes
+   sont redondantes) ou **Rejeter** (les listes sont distinctes), à la souris
    ou au clavier (`a`, `r`, `n` pour la liste suivante à traiter). Chaque
    décision est enregistrée aussitôt. Les actions de masse accélèrent le
    traitement des paires à fort score de confiance, et s'annulent.
 
-5. **Mettre à jour le registre nettoyé** — en fin de session, **🧹 Mettre à jour
-   le registre nettoyé** reporte les doublons approuvés dans
-   `cleaned_codelists.json`.
+5. **Mettre à jour le référentiel** — en fin de session, **Mettre à jour le
+   référentiel** reporte les doublons approuvés dans `cleaned_codelists.json`.
 
 ## Workflow itératif {#workflow-iteratif}
 
@@ -534,8 +579,8 @@ Step 2 — Analyser BPE
 - Le registre propre **croît** à chaque run et constitue une référence
   transversale sur tout le projet.
 
-**Dans l'interface** : rien à saisir, le registre nettoyé du dossier de sortie
-est injecté par défaut (*Options avancées* pour en choisir un autre).
+**Dans l'interface** : rien à saisir, le référentiel du dossier de sortie
+est injecté par défaut (champ *Référentiel injecté* pour en choisir un autre).
 
 **Avec la source API**, un seul run peut couvrir plusieurs opérations, une série
 ou toute la base : les doublons entre millésimes et entre enquêtes sont alors
@@ -547,8 +592,8 @@ Lorsqu'une CodeList n'est détectée comme doublon de personne par le pipeline
 (ex. `L_QUALITE_ZONAGE_2023` dans l'exemple BPE_demo), vous pouvez la
 **ajouter manuellement** au registre propre :
 
-1. Consultez la CodeList dans l'onglet **Validation** (ou via son détail)
-2. Cliquez sur **➕ Ajouter au registre nettoyé** — la liste est écrite aussitôt
+1. Sélectionnez la CodeList à l'étape **Valider** (filtre *Sans doublon*).
+2. Cliquez sur **Ajouter au référentiel** — la liste est écrite aussitôt
    dans `cleaned_codelists.json` comme maître sans remplaçant.
 
 > Cette fonctionnalité est particulièrement utile pour les CodeLists uniques
@@ -559,19 +604,19 @@ Lorsqu'une CodeList n'est détectée comme doublon de personne par le pipeline
 
 # Astuces pratiques
 
-**Run rapide (prototype)** — décochez **Exécuter les phases LLM / embeddings**
+**Run rapide (prototype)** — décochez **Détection sémantique (embeddings et LLM)**
 pour un run 5 à 10 × plus rapide. Le pipeline se contente des phases exacte
 et floue ; la phase sémantique (embeddings + juge LLM) est omise.
 
 **Rien à sauvegarder pour les décisions** — elles sont enregistrées à chaque
 clic dans `decisions.json`. Seul le registre nettoyé demande une action
-(**🧹 Mettre à jour le registre nettoyé**, ou **💾 Sauvegarder** après une
-édition dans l'onglet Registre nettoyé).
+(**Mettre à jour le référentiel** à l'étape Valider, ou **Enregistrer** après une
+édition à l'étape Référentiel).
 
 **Reprendre une session** — rechargez la page (l'adresse garde le run, les
 filtres et la CodeList affichée) ou rouvrez le run depuis la liste : les
 décisions sont réappliquées depuis `decisions.json`. Un nouveau run les reprend
-aussi (marque **↻ reprise**).
+aussi (marque **reprise d'un run précédent**).
 
 **Documentation API automatique** — la documentation OpenAPI complète de l'API
 REST est disponible à l'URL `/docs` (Swagger UI) et `/redoc`. Elle liste

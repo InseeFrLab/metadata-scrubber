@@ -28,66 +28,68 @@ d'authentification : l'**identifiant** est libre (votre nom, par exemple), le
 
 # Étape 2 — Lancer l'analyse
 
-Dans l'onglet **🚀 Pipeline**, vérifiez les champs :
+L'interface suit les étapes du travail, dans la barre du haut : **1 Analyser**,
+**2 Valider**, **3 Référentiel**. À l'étape **1 Analyser**, vérifiez les champs :
 
 | Champ | Valeur conseillée |
 |---|---|
-| **Source des CodeLists** | **Fichier DDI (XML)** avec son chemin, par exemple `s3://projet-metadonnees-rmes/BPE.xml` ; ou **API Métadonnées de l'Insee** avec une série (ex. `s1998`) ou des opérations (ex. `s2219, s2297`) |
-| **Dossier de sortie** | Laisser la valeur proposée : `s3://projet-metadonnees-rmes/scrubber_output`. Le registre nettoyé de ce dossier est utilisé automatiquement : les listes déjà validées restent maîtres. |
-| **Exécuter les phases LLM / embeddings** | Laisser coché. Décocher pour un résultat plus rapide, sans la détection sémantique. |
+| **Source** | **Fichier DDI** avec son chemin, par exemple `s3://projet-metadonnees-rmes/BPE.xml` ; ou **API Métadonnées** : une série choisie dans la liste (ex. `s1998` – Base Tous salariés), puis éventuellement certaines de ses opérations (ex. `s2297`) |
+| **Sortie** | Le dossier de sortie s'affiche dans la barre du haut : laisser la valeur proposée, `s3://projet-metadonnees-rmes/scrubber_output`. Le référentiel de ce dossier est utilisé automatiquement : les listes déjà validées restent maîtres. |
+| **Détection sémantique** | Laisser coché. Décocher pour un résultat plus rapide. |
 
-Cliquez sur **🚀 Lancer le pipeline**. La progression s'affiche ; comptez de
+Cliquez sur **Lancer l'analyse**. La progression s'affiche ; comptez de
 quelques secondes à quelques minutes selon la taille du fichier. À la fin, cliquez
-sur **🔍 Valider ce run**.
+sur **Valider ce run**.
 
 ::: {.callout-note}
-Un **bandeau jaune** peut signaler que l'étape sémantique a été sautée (clés
+Un **bandeau ambre** peut signaler que l'étape sémantique a été sautée (clés
 d'accès au modèle de langage absentes). Les résultats restent utilisables : les
 détections exactes, floues, hors échappement et par libellés ont bien tourné.
 :::
 
 # Étape 3 — Charger et lire les résultats
 
-L'onglet **🔍 Validation des doublons** s'ouvre sur le run. Pour un autre run,
-choisissez-le dans la liste **Run** puis cliquez sur **📂 Ouvrir**.
+L'étape **2 Valider** s'ouvre sur le run. Pour un autre run, choisissez-le dans
+la liste en haut de page puis cliquez sur **Ouvrir**.
 
-L'écran est en deux colonnes :
+En haut, une barre montre l'avancement (approuvés en vert, rejetés en rouge).
+L'écran est ensuite en deux colonnes :
 
 - **à gauche**, une ligne par liste maître, avec le nombre de doublons en attente
-  (pastille jaune) ou ✓ quand tout est décidé ;
-- **à droite**, la liste sélectionnée : ses modalités, puis une **carte par
-  doublon** détecté.
+  (pastille ambre) ou une coche verte quand tout est décidé ;
+- **à droite**, la liste sélectionnée (maître), puis une **carte par doublon**
+  détecté, avec la comparaison des codes côte à côte.
 
 Ce que signifient les marques :
 
 | Marque | Signification |
 |---|---|
-| Pastille <span class="badge bg-warning text-dark">3</span> / <span class="badge bg-success">✓ 3</span> | Doublons en attente / tous décidés |
+| Pastille ambre **3** / verte **✓ 3** | Doublons en attente / tous décidés |
 | **lignée** | Liste copiée de la maître (`BasedOnObject`) puis modifiée |
-| niveau (*officielle*, *commune ?*…) | Niveau validé, ou suggéré avec « ? » |
+| niveau (*officielle*, *commune ?*…) | Niveau validé (étiquette pleine), ou suggéré (pointillé, « ? ») |
 | **exact** | Mêmes codes, valeurs et libellés |
 | **exact hors échappement** | Mêmes codes métier ; seuls les codes *sans objet*, *non réponse*… diffèrent (la carte les liste) |
 | **libellés** | Mêmes libellés, valeurs différentes (par exemple `1`/`0` et `oui`/`non`) |
 | **fuzzy** | Codes et noms proches, avec un score de confiance |
 | **usage** / **sémantique** | Mêmes variables référentes / proximité de sens |
-| ⚠ | Liste suspecte : renvoi vers une nomenclature, représentation numérique, code unique |
-| ↻ reprise | Décision prise lors d'une session précédente |
-| 🚫 | Liste écartée |
-| 📘 | Liste du registre nettoyé |
+| Triangle d'alerte | Liste suspecte : renvoi vers une nomenclature, représentation numérique, code unique |
+| *reprise d'un run précédent* | Décision prise lors d'une session précédente |
+| Nom barré, *écartée* | Liste écartée |
+| Rond bleu, *référentiel* | Liste du référentiel (registre nettoyé) |
 
 # Étape 4 — Décider
 
 Sur chaque carte de doublon :
 
-1. Lisez le résumé des différences ; **▸ Comparer les codes** affiche le tableau
-   (ouvert d'office pour le premier doublon en attente).
-2. Choisissez **✓ Approuver** (même liste, la maître la remplace), **✗ Rejeter**
-   (listes différentes) ou laissez **⏳ En attente** (à revoir, par exemple après
+1. Lisez le résumé des différences ; **Comparer les codes** affiche la
+   comparaison (ouverte d'office pour le doublon actif).
+2. Choisissez **Approuver** (même liste, la maître la remplace), **Rejeter**
+   (listes différentes) ou laissez **Attente** (à revoir, par exemple après
    avoir consulté le producteur). Au clavier : `a`, `r`, `p`, puis `n` pour la
    liste suivante à traiter (`?` affiche tous les raccourcis). Chaque décision
    est enregistrée aussitôt.
 3. Si le doublon est la meilleure version (par exemple une correction de forme de
-   la maître), cliquez sur **⇅ Définir comme maître** : il prend la place de la
+   la maître), cliquez sur **Définir comme maître** : il prend la place de la
    maître, qui devient un doublon en attente.
 
 Quelques repères :
@@ -98,45 +100,46 @@ Quelques repères :
   approuvez.
 - **Variation volontaire** d'une année sur l'autre : rejetez, le producteur a fait
   un choix.
-- Les actions de masse (**✅ Approuver les exacts en attente**…) ne portent que
-  sur les doublons affichés par les filtres, et s'annulent juste après ; passez
-  d'abord en revue les listes ⚠.
+- Les actions de masse (menu **Actions sur l'affichage**) ne portent que sur
+  les doublons affichés par les filtres, et s'annulent juste après ; passez
+  d'abord en revue les listes suspectes.
 
-Le filtre **Afficher → À traiter** (par défaut) montre ce qui reste à traiter.
+La pastille de filtre **À traiter** (par défaut) montre ce qui reste à traiter.
 
 # Étape 5 — Les listes sans doublon
 
-Avec **Afficher → Sans doublon**, vous voyez les listes pour lesquelles aucun
+Avec la pastille **Sans doublon**, vous voyez les listes pour lesquelles aucun
 doublon n'a été trouvé :
 
-- **➕ Ajouter au registre nettoyé** pour une liste de référence à conserver ;
-- **🚫 Écarter** pour une liste à ne pas conserver (par exemple une liste des
+- **Ajouter au référentiel** pour une liste de référence à conserver ;
+- **Écarter** pour une liste à ne pas conserver (par exemple une liste des
   départements qui n'est pas la liste officielle).
 
-Avant d'ajouter, jetez un œil au filtre **Origine → Listes suspectes ⚠** : une liste
+Avant d'ajouter, jetez un œil au filtre **Origine → Listes suspectes** : une liste
 qui renvoie vers un dictionnaire ou qui décrit une plage de nombres n'a sans doute
-pas sa place dans le registre.
+pas sa place dans le référentiel.
 
-# Étape 6 — Mettre à jour le registre nettoyé
+# Étape 6 — Mettre à jour le référentiel
 
 Vos décisions, listes écartées et maîtres choisies sont **enregistrées à chaque
-clic** dans `decisions.json` (« ✓ Enregistré à … » en haut de l'onglet) et
+clic** dans `decisions.json` (« Enregistré 14:32 » dans la barre du haut) et
 reprises lors des prochains runs.
 
-En fin de session, cliquez sur **🧹 Mettre à jour le registre nettoyé** : les
+En fin de session, cliquez sur **Mettre à jour le référentiel** : les
 doublons approuvés sont reportés dans `cleaned_codelists.json` (les maîtres et
-les listes qu'elles remplacent), et le résultat du run est mis à jour.
+les listes qu'elles remplacent), et le résultat du run est mis à jour. L'étape
+**3 Référentiel** les présente par niveau ; **Modifier** ouvre une entrée pour
+choisir son niveau ou corriger ses codes.
 
 # Reprendre plus tard
 
-- **Même run** : rechargez la page, ou choisissez le run dans la liste **Run** de
-  l'onglet **🔍 Validation des doublons** et cliquez sur **📂 Ouvrir** ; vos
-  décisions sont là.
+- **Même run** : rechargez la page, ou choisissez le run dans la liste en haut de
+  l'étape **Valider** et cliquez sur **Ouvrir** ; vos décisions sont là.
 - **Nouveau run sur le même fichier** : les décisions déjà prises réapparaissent,
-  marquées **↻ reprise** ; il ne reste que les nouveautés et ce que vous aviez
+  marquées **reprise d'un run précédent** ; il ne reste que les nouveautés et ce que vous aviez
   laissé en attente.
-- **Fichier suivant** (une autre opération) : lancez le pipeline avec le registre
-  nettoyé renseigné (valeur proposée par défaut). Les doublons entre opérations
+- **Fichier suivant** (une autre opération) : lancez l'analyse avec le référentiel
+  renseigné (valeur proposée par défaut). Les doublons entre opérations
   sont alors détectés.
 
 # Pour aller plus loin

@@ -48,19 +48,16 @@ async function postJson(url, body, method = 'POST') {
 async function loadRunOptions() {
     const select = document.getElementById('runSelect');
     const root = getOutputRoot();
-    document.getElementById('outputRoot').value = root;
-    select.innerHTML = '<option value="">— chargement des runs… —</option>';
+    select.innerHTML = '<option value="">Chargement des runs…</option>';
     try {
         const runs = await fetchRuns(root);
         if (!runs.length) {
-            select.innerHTML = '<option value="">— aucun run dans ce dossier —</option>';
+            select.innerHTML = '<option value="">Aucun run dans ce dossier</option>';
             return;
         }
         select.innerHTML = runs.map(run => {
-            const source = (run.xml_source || '').startsWith('api:')
-                ? `API ${run.xml_source.slice(4)}`
-                : (run.xml_source || '').split('/').pop();
-            const status = run.status === 'error' ? ' · en erreur' : '';
+            const source = runSourceLabel(run.xml_source);
+            const status = run.status === 'error' ? ' · en échec' : '';
             const n = run.counts?.candidates != null ? ` · ${run.counts.candidates} candidats` : '';
             const label = `${formatRunId(run.run_id)}${source ? ` · ${source}` : ''}${n}${status}`;
             return `<option value="${escapeHtml(run.registry_path)}"${run.status === 'error' ? ' disabled' : ''}>${escapeHtml(label)}</option>`;
@@ -69,7 +66,7 @@ async function loadRunOptions() {
             select.value = registryPath;
         }
     } catch (err) {
-        select.innerHTML = '<option value="">— runs indisponibles —</option>';
+        select.innerHTML = '<option value="">Runs indisponibles</option>';
         showToast(`Liste des runs indisponible : ${err.message}`, 'danger');
     }
 }
@@ -97,6 +94,7 @@ async function openRegistry(path, restore = null) {
         document.getElementById('emptyState').classList.add('d-none');
         document.getElementById('statsSection').classList.remove('d-none');
         document.getElementById('saveStatus').textContent = '';
+        showOpenRun(path);
 
         currentPage = restore?.page || 0;
         selectedClId = restore?.cl || null;
@@ -120,6 +118,16 @@ async function openRegistry(path, restore = null) {
     }
 }
 
+/* Run ouvert, rappelé dans la barre du haut */
+function showOpenRun(path) {
+    const parts = path.split('/');
+    const runId = parts.length > 1 ? parts[parts.length - 2] : '';
+    const label = /^\d{8}-\d{4}/.test(runId) ? `Run du ${formatRunId(runId)}` : parts.pop();
+    document.getElementById('ctxRunLabel').textContent = label;
+    document.getElementById('ctxRun').title = `Run ouvert dans Valider : ${path}`;
+    document.getElementById('ctxRun').classList.remove('d-none');
+}
+
 function loadRegistry() {
     return openRegistry(document.getElementById('registryPath').value);
 }
@@ -138,7 +146,7 @@ async function loadRunSummary() {
     }
 }
 
-/* Ids déjà présents dans le registre nettoyé : le ✅ reste fiable d'une session à l'autre */
+/* Ids déjà présents dans le registre nettoyé : le repère « référentiel » reste fiable d'une session à l'autre */
 async function loadCleanedIds() {
     try {
         const resp = await fetch(regUrl('api/registry/cleaned'));
@@ -159,26 +167,24 @@ async function saveRegistry() {
         return;
     }
     const btn = document.getElementById('saveBtn');
-    const original = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = '⏳ Mise à jour…';
+    setBusy(btn, true, 'Mise à jour…');
 
     try {
         const resp = await fetch(regUrl('api/registry/save'), { method: 'POST' });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
         showToast(
-            `Registre nettoyé mis à jour (${data.cleaned_count ?? 0} entrées)`
+            `Référentiel mis à jour (${data.cleaned_count ?? 0} entrées)`
             + ` · ${data.decisions_count ?? 0} décision(s) conservée(s) pour les prochains runs`,
             'success'
         );
         if (data.cleaned_path) document.getElementById('cleanedPath').value = data.cleaned_path;
         setSaveStatus({ saved: true });
+        invalidateCleaned();
     } catch (err) {
         showToast(`Erreur: ${err.message}`, 'danger');
     } finally {
-        btn.disabled = false;
-        btn.textContent = original;
+        setBusy(btn, false);
     }
 }
 
@@ -208,7 +214,7 @@ async function downloadCleanedRegistry() {
     try {
         const resp = await fetch(regUrl('api/registry/cleaned'));
         if (resp.status === 404) {
-            showToast('Pas encore de registre nettoyé : utilisez « Mettre à jour le registre nettoyé ».', 'warning');
+            showToast('Pas encore de référentiel : utilisez « Mettre à jour le référentiel ».', 'warning');
             return;
         }
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -226,14 +232,14 @@ async function downloadCleanedRegistry() {
 function setSaveStatus(result) {
     const el = document.getElementById('saveStatus');
     if (result.saved === false) {
-        el.innerHTML = '<span class="save-error">⚠ Échec de l\'enregistrement</span> '
-            + '<button type="button" class="btn btn-sm btn-light py-0" id="retrySaveBtn">Réessayer</button>';
+        el.innerHTML = `<span class="save-error">${icon('alert')} Échec de l'enregistrement</span> `
+            + '<button type="button" class="btn btn-quiet btn-sm py-0" id="retrySaveBtn">Réessayer</button>';
         el.title = result.save_error || '';
         document.getElementById('retrySaveBtn').addEventListener('click', retrySave);
         return;
     }
     const at = result.saved_at ? new Date(result.saved_at) : new Date();
-    el.textContent = `✓ Enregistré à ${at.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+    el.innerHTML = `<span class="saved">${icon('check')} Enregistré ${at.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>`;
     el.title = 'Décisions enregistrées automatiquement dans decisions.json';
 }
 
@@ -254,18 +260,19 @@ async function retrySave() {
 function updateStats() {
     if (!registryData) return;
     const stats = computeStats(registryData);
-    document.getElementById('statTotalCL').textContent = stats.total_code_lists;
-    document.getElementById('statTotalDups').textContent = stats.total_duplicates;
-    document.getElementById('statApproved').textContent = stats.approved;
-    document.getElementById('statRejected').textContent = stats.rejected;
-    document.getElementById('statPending').textContent = stats.pending;
-
+    const total = stats.total_duplicates;
+    const pct = (n) => (total ? (100 * n / total) : 0);
+    document.getElementById('decisionSegOk').style.width = `${pct(stats.approved)}%`;
+    document.getElementById('decisionSegKo').style.width = `${pct(stats.rejected)}%`;
     const decided = stats.approved + stats.rejected;
-    const pct = stats.total_duplicates ? Math.round(100 * decided / stats.total_duplicates) : 0;
-    document.getElementById('decisionProgressBar').style.width = `${pct}%`;
-    document.getElementById('decisionProgress').setAttribute('aria-valuenow', pct);
-    document.getElementById('decisionProgressLabel').textContent =
-        `${decided} / ${stats.total_duplicates} décisions (${pct} %)`;
+    document.getElementById('decisionProgress').setAttribute('aria-label',
+        `${decided} décisions sur ${total} doublons`);
+    document.getElementById('decisionLegend').innerHTML =
+        `<span><b class="num">${decided}</b> / <span class="num">${total}</span> décisions`
+        + ` · <span class="num">${stats.total_code_lists}</span> CodeLists</span>`
+        + `<span class="ok"><span class="dot"></span> <span class="num">${stats.approved}</span> approuvés</span>`
+        + `<span class="ko"><span class="dot"></span> <span class="num">${stats.rejected}</span> rejetés</span>`
+        + `<span class="wait"><span class="dot"></span> <span class="num">${stats.pending}</span> en attente</span>`;
 }
 
 function computeStats(registry) {
@@ -293,13 +300,15 @@ const pendingCount = (dups) => dups.filter(d => decisionOf(d) === 'pending').len
 /* Filtering & rendering
 /* ------------------------------------------------------------------ */
 
+const PAGE_SIZE = 50;   // CodeLists par page dans la colonne de gauche
+
 function getFilters() {
     return {
         decisionFilter: document.getElementById('decisionFilter').value,
         originFilter: document.getElementById('originFilter').value,
         search: document.getElementById('searchFilter').value.trim(),
         sortBy: document.getElementById('sortBy').value,
-        pageSize: parseInt(document.getElementById('pageSize').value, 10),
+        pageSize: PAGE_SIZE,
     };
 }
 
@@ -346,14 +355,33 @@ function maxConfidence(cl) {
     return Math.max(0, ...cl.duplicates.map(d => d.confidence || 0));
 }
 
+/* Filtres de décision, en pastilles avec leur nombre de CodeLists */
+const DECISION_CHIPS = [
+    ['todo', 'À traiter'],
+    ['pending', 'En attente'],
+    ['approve', 'Approuvés'],
+    ['reject', 'Rejetés'],
+    ['none', 'Sans doublon'],
+    ['dismissed', 'Écartées'],
+    ['approve,reject,pending', 'Toutes'],
+];
+
+function renderDecisionChips(counts) {
+    const current = document.getElementById('decisionFilter').value;
+    document.getElementById('decisionChips').innerHTML = DECISION_CHIPS.map(([value, label]) =>
+        `<button type="button" class="chip" data-filter="${value}" aria-pressed="${value === current}">`
+        + `${label}<span class="num">${counts[value] ?? 0}</span></button>`
+    ).join('');
+}
+
 function renderCodelistsFiltered() {
     if (!registryData) return;
     const { decisionFilter, originFilter, search, sortBy, pageSize } = getFilters();
     const searchLower = search.toLowerCase();
 
     const items = [];
+    const chipCounts = {};
     for (const [clId, clData] of Object.entries(registryData)) {
-        if (!matchesDecisionFilter(decisionFilter, clId, clData)) continue;
 
         // Origin filter (listes issues du registre nettoyé, ou listes suspectes)
         if (originFilter === 'registry' && clData.origin !== 'registry') continue;
@@ -369,6 +397,12 @@ function renderCodelistsFiltered() {
                 .join(' ').toLowerCase();
             if (!haystack.includes(searchLower)) continue;
         }
+
+        // Compteurs des pastilles : mêmes filtres, hors filtre de décision
+        for (const [value] of DECISION_CHIPS) {
+            if (matchesDecisionFilter(value, clId, clData)) chipCounts[value] = (chipCounts[value] || 0) + 1;
+        }
+        if (!matchesDecisionFilter(decisionFilter, clId, clData)) continue;
 
         items.push({
             id: clId,
@@ -391,6 +425,9 @@ function renderCodelistsFiltered() {
     const paged = items.slice(start, start + pageSize);
     if (!paged.some(cl => cl.id === selectedClId)) selectedClId = paged[0]?.id || null;
 
+    renderDecisionChips(chipCounts);
+    document.getElementById('listCount').textContent =
+        `${items.length} CodeList${items.length > 1 ? 's' : ''}`;
     renderCodelistNav(paged);
     renderCodelistDetail(selectedClId);
     renderPagination(items.length, currentPage, pageSize);
@@ -405,7 +442,7 @@ function renderCodelistNav(items) {
     const nav = document.getElementById('codelistNav');
 
     if (!lastNavItems.length) {
-        nav.innerHTML = '<div class="text-center py-4 text-muted">Aucune CodeList pour ce filtre.</div>';
+        nav.innerHTML = '<div class="empty">Aucune CodeList pour ce filtre.</div>';
         updateBatchBar();
         return;
     }
@@ -416,198 +453,199 @@ function renderCodelistNav(items) {
         const dups = data.duplicates || [];
         const added = inCleaned.has(cl.id);
         const dismissed = !!data.dismissed;
-        html += `<a href="#" class="list-group-item list-group-item-action`;
-        html += `${cl.id === selectedClId ? ' active' : ''}${added ? ' in-cleaned' : ''}" `;
-        html += `data-id="${escapeHtml(cl.id)}"${cl.id === selectedClId ? ' aria-current="true"' : ''}>`;
-        html += `<div class="d-flex justify-content-between align-items-start gap-1">`;
-        html += `<div class="d-flex gap-2">`;
+        const active = cl.id === selectedClId;
+        html += `<div class="cl-item${active ? ' active' : ''}${dismissed ? ' dismissed' : ''}" role="option" tabindex="0" `;
+        html += `data-id="${escapeHtml(cl.id)}" aria-selected="${active}">`;
         // Case d'ajout en lot : uniquement pour les listes sans doublon pas encore ajoutées
+        html += `<span class="lead">`;
         if (!dups.length && !added && !dismissed) {
             html += `<input type="checkbox" class="form-check-input batch-check" `;
             html += `aria-label="Sélectionner ${escapeHtml(cl.name)}" `;
             html += `data-id="${escapeHtml(cl.id)}"${batchSelected.has(cl.id) ? ' checked' : ''}>`;
+        } else {
+            html += navStateHtml(dups, added);
         }
-        html += `<div class="text-break">${escapeHtml(cl.name)}`;
-        if (data.origin === 'registry') html += ` <span class="badge bg-primary" title="Registre nettoyé">📘</span>`;
-        if (added) html += ` <span class="badge bg-success" title="Dans le registre nettoyé">✅</span>`;
-        if (dismissed) html += ` <span class="badge bg-secondary" title="Écartée : ne pas ajouter au registre nettoyé">🚫</span>`;
+        html += `</span>`;
+        html += `<span class="nm"><span>${escapeHtml(cl.name)}</span>`;
+        if (data.origin === 'registry') html += `<span class="text-faint" title="Liste du référentiel">${icon('book')}</span>`;
         html += qualityBadgeHtml(data.quality_flags);
-        html += `<br><code class="dup-id">${escapeHtml(cl.id)}</code>`;
-        html += ` <small class="text-muted" title="Variables qui référencent cette CodeList">· ${cl.varsCount} var.</small>`;
+        html += `</span>`;
+        html += navCountHtml(dups, added, dismissed);
+        html += `<span class="sub"><span class="mono" title="${escapeHtml(cl.id)}">${escapeHtml(cl.id)}</span>`;
+        html += `<span title="Variables qui référencent cette CodeList">${cl.varsCount} var.</span>`;
         if (cl.seriesCount) {
-            html += ` <small class="text-muted" title="Séries d'opérations qui utilisent cette CodeList">· ${cl.seriesCount} série(s)</small>`;
+            html += `<span title="Séries d'opérations qui utilisent cette CodeList">${cl.seriesCount} série(s)</span>`;
         }
-        html += `</div></div>`;
-        html += `<div class="flex-shrink-0">${navStatusBadgeHtml(dups)}</div></div></a>`;
+        html += `</span></div>`;
     }
     nav.innerHTML = html;
     updateBatchBar();
-    nav.querySelector('.list-group-item.active')?.scrollIntoView({ block: 'nearest' });
+    nav.querySelector('.cl-item.active')?.scrollIntoView({ block: 'nearest' });
 }
 
-/* Une seule pastille : doublons en attente, ou ✓ quand tout est décidé */
-function navStatusBadgeHtml(dups) {
-    if (!dups.length) return '';
+/* Rond d'état : en attente (ambre), tout décidé (vert), dans le référentiel (bleu), sans doublon (pointillé) */
+function navStateHtml(dups, added) {
+    if (added) return '<span class="state in-cleaned" title="Dans le référentiel"></span>';
+    if (!dups.length) return '<span class="state none" title="Sans doublon"></span>';
+    return pendingCount(dups)
+        ? '<span class="state" title="Doublons en attente"></span>'
+        : '<span class="state done" title="Tout est décidé"></span>';
+}
+
+/* Pastille de droite : nombre de doublons en attente, ou ✓ quand tout est décidé */
+function navCountHtml(dups, added, dismissed) {
+    if (!dups.length) {
+        const text = added ? 'référentiel' : dismissed ? 'écartée' : 'aucun';
+        return `<span class="count none">${text}</span>`;
+    }
     const approved = dups.filter(d => decisionOf(d) === 'approve').length;
     const rejected = dups.filter(d => decisionOf(d) === 'reject').length;
     const pending = dups.length - approved - rejected;
     const title = `${dups.length} doublon(s) : ${approved} approuvé(s), ${rejected} rejeté(s), ${pending} en attente`;
     return pending
-        ? `<span class="badge bg-warning text-dark" title="${title}">${pending}</span>`
-        : `<span class="badge bg-success" title="${title}">✓ ${dups.length}</span>`;
-}
-
-/* Pastilles détaillées (en-tête de la CodeList affichée) */
-function decisionBadgesHtml(dups) {
-    const count = (dec) => dups.filter(d => decisionOf(d) === dec).length;
-    const approved = count('approve'), rejected = count('reject');
-    const pending = dups.length - approved - rejected;
-    return `<span class="badge bg-success" title="Doublons approuvés">✓ ${approved}</span>`
-        + `<span class="badge bg-danger" title="Doublons rejetés">✗ ${rejected}</span>`
-        + `<span class="badge bg-warning text-dark" title="Doublons en attente">⏳ ${pending}</span>`;
+        ? `<span class="count" title="${title}">${pending}</span>`
+        : `<span class="count done" title="${title}">${icon('check', 'sm')}${dups.length}</span>`;
 }
 
 function selectCodelist(id, { keepActive = false } = {}) {
     if (id !== selectedClId) openComparisons.clear();
     selectedClId = id;
     if (!keepActive) activeDupId = null;
-    document.querySelectorAll('#codelistNav .list-group-item').forEach(el => {
+    document.querySelectorAll('#codelistNav .cl-item').forEach(el => {
         const on = el.dataset.id === id;
         el.classList.toggle('active', on);
-        if (on) {
-            el.setAttribute('aria-current', 'true');
-            el.scrollIntoView({ block: 'nearest' });
-        } else {
-            el.removeAttribute('aria-current');
-        }
+        el.setAttribute('aria-selected', on);
+        if (on) el.scrollIntoView({ block: 'nearest' });
     });
     renderCodelistDetail(id);
     writeHash();
 }
 
-/* En-tête de la CodeList affichée à droite (nom, ID, label, badges, volumétrie) */
+/* En-tête de la CodeList maître affichée à droite (nom, URN, niveau, provenance) */
 function renderDetailHeader(id) {
     const cl = registryData[id];
     if (!cl) return '';
+    const dups = cl.duplicates || [];
 
-    let html = `<div class="card-header d-flex justify-content-between align-items-center gap-2">`;
-    html += `<div><h6 class="mb-0">${escapeHtml(cl.name || id)} `;
-    html += `<button type="button" class="btn btn-sm btn-link p-0 copy-id-btn" data-copy-id="${escapeHtml(id)}" title="Copier l'ID">${escapeHtml(id)}</button></h6>`;
-    if (cl.label) html += `<small class="text-muted">${escapeHtml(cl.label)}</small>`;
-    html += `</div><div class="d-flex flex-wrap gap-1 justify-content-end">`;
-    if (cl.origin === 'registry') html += `<span class="badge bg-primary">📘 registre</span>`;
-    if (cl.master_chosen) html += `<span class="badge bg-info text-dark" title="Maître choisie par l'utilisateur, conservée aux runs suivants">⇅ maître choisie</span>`;
-    html += levelBadgeHtml(cl);
+    let html = `<div class="master-top"><div>`;
+    html += `<div class="eyebrow">${dups.length ? 'CodeList maître' : 'CodeList'}</div>`;
+    html += `<h2>${escapeHtml(cl.name || id)}</h2>`;
+    if (cl.label && cl.label !== cl.name) html += `<div class="text-muted small">${escapeHtml(cl.label)}</div>`;
+    html += `</div><div class="tags">`;
+    if (cl.origin === 'registry') html += `<span class="tag accent">${icon('book', 'sm')}référentiel</span>`;
+    if (cl.master_chosen) html += `<span class="tag" title="Maître choisie par l'utilisateur, conservée aux runs suivants">${icon('swap', 'sm')}maître choisie</span>`;
+    html += levelTagHtml(cl.level, cl.level_suggested);
     for (const flag of cl.quality_flags || []) {
         const [label, help] = QUALITY_FLAGS[flag] || [flag, flag];
-        html += `<span class="badge bg-warning text-dark" title="${escapeHtml(help)}">⚠ ${escapeHtml(label)}</span>`;
+        html += `<span class="tag warn" title="${escapeHtml(help)}">${icon('alert', 'sm')}${escapeHtml(label)}</span>`;
     }
-    if ((cl.duplicates || []).length) html += decisionBadgesHtml(cl.duplicates);
     html += `</div></div>`;
-    html += `<div class="card-body py-1 small">`;
-    if (cl.version) {
-        html += `<code title="Référence DDI agence:id:version">${escapeHtml(`${cl.agency || '?'}:${id}:${cl.version}`)}</code> · `;
-    }
-    html += `${cl.codes_count || 0} codes · ${(cl.vars || []).length} variables`;
-    html += ` · ${(cl.cat_ids || []).length} catégories`;
-    html += provenanceHtml(cl);
-    html += suggestedOfficialHtml(cl);
-    html += `</div>`;
-    return html;
-}
 
-/* Niveau validé (registre nettoyé) ou seulement suggéré (provenance) */
-function levelBadgeHtml(cl) {
-    if (cl.level) {
-        return `<span class="badge bg-dark" title="Niveau validé dans le registre nettoyé">${escapeHtml(LEVEL_LABELS[cl.level] || cl.level)}</span>`;
-    }
-    if (cl.level_suggested) {
-        return `<span class="badge border border-secondary text-secondary" title="Niveau suggéré d'après les séries qui utilisent la liste">${escapeHtml(LEVEL_LABELS[cl.level_suggested] || cl.level_suggested)} ?</span>`;
-    }
-    return '';
+    html += `<div class="meta">`;
+    const ref = cl.version ? `${cl.agency || '?'}:${id}:${cl.version}` : id;
+    html += `<span>${cl.version ? 'Référence' : 'ID'} <span class="mono">${escapeHtml(ref)}</span> `;
+    html += `<button type="button" class="copy-id-btn" data-copy-id="${escapeHtml(id)}" title="Copier l'ID" aria-label="Copier l'ID">${icon('copy', 'sm')}</button></span>`;
+    html += `<span>${cl.codes_count ?? (cl.codes || []).length} codes</span>`;
+    html += `<span>${(cl.vars || []).length} variable(s)</span>`;
+    if ((cl.cat_ids || []).length) html += `<span>${cl.cat_ids.length} catégories</span>`;
+    html += provenanceHtml(cl);
+    html += `</div>`;
+    html += suggestedOfficialHtml(cl);
+    return html;
 }
 
 /* Liste « Voir dictionnaire… » : nomenclature officielle qu'elle désigne */
 function suggestedOfficialHtml(cl) {
     if (!cl.suggested_official) return '';
-    return `<br><span class="text-primary" title="Liste qui renvoie à une nomenclature : la remplacer par la nomenclature officielle">`
-        + `→ remplacer par la nomenclature officielle « ${escapeHtml(cl.suggested_official.name)} »</span>`;
+    return `<div class="hint" title="Liste qui renvoie à une nomenclature : la remplacer par la nomenclature officielle">`
+        + `${icon('link')}Renvoi vers une nomenclature : remplacer par `
+        + `<strong>${escapeHtml(cl.suggested_official.name)}</strong></div>`;
 }
 
 /* Opérations et séries qui utilisent la liste (source API) */
 function provenanceHtml(cl) {
     if (!(cl.operations || []).length) return '';
-    return `<br><span title="Opérations statistiques qui utilisent cette CodeList">Opérations : `
-        + `${cl.operations.map(escapeHtml).join(', ')}</span> · `
-        + `<span title="Séries de ces opérations">Séries : ${(cl.series || []).map(escapeHtml).join(', ')}</span>`;
+    return `<span title="Opérations statistiques qui utilisent cette CodeList">Opérations `
+        + `<span class="mono">${cl.operations.map(escapeHtml).join(', ')}</span></span>`
+        + `<span title="Séries de ces opérations">Séries <span class="mono">${(cl.series || []).map(escapeHtml).join(', ')}</span></span>`;
 }
 
-/* Tableau des modalités (valeur | étiquette) d'une CodeList */
+/* Tableau des modalités (valeur | libellé) d'une CodeList */
 function buildCodesTableHtml(codes) {
     if (!codes || !codes.length) {
-        return '<small class="text-muted">Aucune modalité.</small>';
+        return '<div class="text-muted small">Aucune modalité.</div>';
     }
-    const truncate = (s) => escapeHtml(String(s || '').slice(0, 60));
     let rows = '';
     for (const pair of codes) {
-        rows += `<tr><td>${escapeHtml(pair[0])}</td><td>${truncate(pair.length > 1 ? pair[1] : '')}</td></tr>`;
+        rows += `<tr><td>${escapeHtml(pair[0])}</td><td>${escapeHtml(pair.length > 1 ? pair[1] : '')}</td></tr>`;
     }
-    let html = `<div class="code-compare-wrap">`;
-    html += `<table class="table table-sm table-bordered code-table mb-1">`;
-    html += `<thead><tr><th>Valeur</th><th>Étiquette</th></tr></thead>`;
-    html += `<tbody>${rows}</tbody></table></div>`;
-    return html;
+    return `<div class="code-compare-wrap"><table class="codes">`
+        + `<thead><tr><th>Code</th><th>Libellé</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
-/* Colonne de droite : modalités de la CodeList sélectionnée, puis ses doublons */
+/* Colonne de droite : la maître, puis ses doublons */
 function renderCodelistDetail(id) {
     const detail = document.getElementById('codelistDetail');
     const cl = id && registryData ? registryData[id] : null;
     if (!cl) {
-        detail.innerHTML = '<div class="text-center py-4 text-muted">Sélectionnez une CodeList.</div>';
+        detail.innerHTML = '<div class="panel empty">Sélectionnez une CodeList dans la liste.</div>';
         return;
     }
     const allDups = cl.duplicates || [];
     const dups = visibleDuplicates(cl);
 
-    // Doublon actif par défaut : le premier en attente, sinon le premier ; son
-    // tableau comparatif est ouvert d'office
+    // Doublon actif par défaut : le premier en attente, sinon le premier ; sa
+    // comparaison des codes est ouverte d'office
     if (!dups.some(d => d.id === activeDupId)) {
         activeDupId = (dups.find(d => decisionOf(d) === 'pending') || dups[0])?.id || null;
         if (activeDupId) openComparisons.add(activeDupId);
     }
 
-    let html = `<div class="card"><div id="detailHeader">${renderDetailHeader(id)}</div>`;
-    html += `<div class="card-body">`;
-
-    html += `<details${allDups.length ? '' : ' open'} class="mb-3"><summary class="fw-bold">Modalités (${(cl.codes || []).length})</summary>`;
-    html += `<div class="mt-2">${buildCodesTableHtml(cl.codes)}</div></details>`;
+    let html = `<div class="panel master"><div id="detailHeader">${renderDetailHeader(id)}</div>`;
+    html += `<details class="codes-details"${allDups.length ? '' : ' open'}>`;
+    html += `<summary>Modalités (${(cl.codes || []).length})</summary>`;
+    html += `<div class="mt-2">${buildCodesTableHtml(cl.codes)}</div></details></div>`;
 
     if (allDups.length) {
-        html += `<h6>Doublons détectés (${dups.length}${dups.length !== allDups.length ? ` sur ${allDups.length}, filtre actif` : ''})</h6>`;
+        // Faux doublons : tous rejetés, la maître peut entrer seule au référentiel
+        if (!allDups.some(d => decisionOf(d) !== 'reject')) {
+            html += `<div class="panel nodup">`;
+            if (inCleaned.has(id)) {
+                html += `<span class="tag accent">${icon('book', 'sm')}Dans le référentiel</span>`;
+                html += `<span class="actions"><button type="button" class="btn btn-danger-quiet btn-sm" data-action="remove-clean">`;
+                html += `${icon('undo')}Retirer du référentiel</button></span>`;
+            } else {
+                html += `<span>Aucun doublon retenu : gardez cette liste dans le référentiel.</span>`;
+                html += `<span class="actions"><button type="button" class="btn btn-primary btn-sm" data-action="add-clean">`;
+                html += `${icon('plus')}Ajouter au référentiel</button></span>`;
+            }
+            html += `</div>`;
+        }
+        if (dups.length !== allDups.length) {
+            html += `<div class="text-muted small">${dups.length} doublon(s) sur ${allDups.length} affiché(s) : filtre actif.</div>`;
+        }
         for (const dup of dups) html += renderDuplicateCard({ ...cl, id }, dup);
     } else {
-        // Liste sans doublon détecté → ajout manuel au registre nettoyé
-        html += `<div class="d-flex align-items-center flex-wrap gap-2">`;
-        html += `<span class="text-muted small">Aucun doublon détecté.</span>`;
+        // Liste sans doublon détecté → ajout manuel au référentiel
+        html += `<div class="panel nodup">`;
         if (inCleaned.has(id)) {
-            html += `<span class="badge bg-success">✅ Dans le registre</span>`;
-            html += `<button type="button" class="btn btn-sm btn-outline-danger" data-action="remove-clean">`;
-            html += `↩ Retirer du registre nettoyé</button>`;
+            html += `<span class="tag accent">${icon('book', 'sm')}Dans le référentiel</span>`;
+            html += `<span class="actions"><button type="button" class="btn btn-danger-quiet btn-sm" data-action="remove-clean">`;
+            html += `${icon('undo')}Retirer du référentiel</button></span>`;
         } else if (cl.dismissed) {
-            html += `<span class="badge bg-secondary">🚫 Écartée</span>`;
-            html += `<button type="button" class="btn btn-sm btn-outline-secondary" data-action="undismiss">`;
-            html += `↩ Annuler l'écart</button>`;
+            html += `<span class="tag">${icon('ban', 'sm')}Écartée</span>`;
+            html += `<span>Elle ne sera pas ajoutée au référentiel.</span>`;
+            html += `<span class="actions"><button type="button" class="btn btn-quiet btn-sm" data-action="undismiss">`;
+            html += `${icon('undo')}Annuler l'écart</button></span>`;
         } else {
-            html += `<button type="button" class="btn btn-sm btn-outline-success" data-action="add-clean">`;
-            html += `➕ Ajouter au registre nettoyé</button>`;
-            html += `<button type="button" class="btn btn-sm btn-outline-secondary" data-action="dismiss" `;
-            html += `title="Ne pas ajouter cette liste au registre nettoyé (conservé entre les runs)">`;
-            html += `🚫 Écarter</button>`;
+            html += `<span>Aucun doublon détecté pour cette liste.</span>`;
+            html += `<span class="actions"><button type="button" class="btn btn-ghost btn-sm" data-action="dismiss" `;
+            html += `title="Ne pas ajouter cette liste au référentiel (conservé entre les runs)">${icon('ban')}Écarter</button>`;
+            html += `<button type="button" class="btn btn-primary btn-sm" data-action="add-clean">`;
+            html += `${icon('plus')}Ajouter au référentiel</button></span>`;
         }
         html += `</div>`;
     }
-    html += `</div></div>`;
     detail.innerHTML = html;
 }
 
@@ -617,6 +655,12 @@ function refreshDuplicateCard(clId, dupId) {
     const dup = (cl?.duplicates || []).find(d => d.id === dupId);
     const card = document.querySelector(`#codelistDetail .dup-card[data-dup-id="${CSS.escape(dupId)}"]`);
     if (!dup || !card) return;
+    // Tous rejetés ou plus : la barre d'ajout de la maître apparaît ou disparaît
+    const allRejected = !cl.duplicates.some(d => decisionOf(d) !== 'reject');
+    if (allRejected !== !!document.querySelector('#codelistDetail .nodup')) {
+        renderCodelistDetail(clId);
+        return;
+    }
     card.outerHTML = renderDuplicateCard({ ...cl, id: clId }, dup);
     const header = document.getElementById('detailHeader');
     if (header) header.innerHTML = renderDetailHeader(clId);
@@ -637,10 +681,16 @@ function toggleComparison(dupId) {
     refreshDuplicateCard(selectedClId, dupId);
 }
 
+/* Maître du registre ou doublon de la liste affichée */
+function codelistData(clId) {
+    return registryData[clId]
+        || (registryData[selectedClId]?.duplicates || []).find(d => d.id === clId);
+}
+
 async function addToCleaned(clId) {
-    const flags = registryData[clId]?.quality_flags || [];
+    const flags = codelistData(clId)?.quality_flags || [];
     if (flags.length && !await confirmDialog(
-        `Liste suspecte (${flags.map(f => (QUALITY_FLAGS[f] || [f])[0]).join(', ')}). L'ajouter quand même au registre nettoyé ?`,
+        `Liste suspecte (${flags.map(f => (QUALITY_FLAGS[f] || [f])[0]).join(', ')}). L'ajouter quand même au référentiel ?`,
         { title: 'Liste suspecte', confirmLabel: 'Ajouter quand même' }
     )) return;
     try {
@@ -650,15 +700,21 @@ async function addToCleaned(clId) {
             body: JSON.stringify({ cl_id: clId }),
         });
         if (resp.status === 409) {
-            showToast('Déjà présente dans le registre nettoyé.', 'warning');
-            markInCleaned([clId]);
+            const detail = (await resp.json().catch(() => ({}))).detail || '';
+            if (detail.includes('déjà présente')) {
+                showToast('Déjà présente dans le référentiel.', 'warning');
+                markInCleaned([clId]);
+            } else {
+                showToast(detail || 'Ajout refusé.', 'warning');
+            }
             return;
         }
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
-        showToast(`Ajoutée au registre nettoyé · ${data.count} entrées`, 'success');
+        showToast(`Ajoutée au référentiel · ${data.count} entrées`, 'success');
         if (data.path) document.getElementById('cleanedPath').value = data.path;
         markInCleaned([clId]);
+        invalidateCleaned();
     } catch (err) {
         showToast(`Erreur: ${err.message}`, 'danger');
     }
@@ -678,18 +734,19 @@ function listsWithoutDuplicates() {
 
 /* Retire du registre nettoyé des listes ajoutées à la main (sans `replaces`) */
 async function removeFromCleaned(ids, btn) {
-    if (!await confirmDialog(`Retirer ${ids.length} CodeList(s) du registre nettoyé ?`,
+    if (!await confirmDialog(`Retirer ${ids.length} CodeList(s) du référentiel ?`,
         { confirmLabel: 'Retirer', danger: true })) return;
     btn.disabled = true;
     try {
         const data = await postJson(regUrl('api/registry/remove-from-cleaned'), { cl_ids: ids });
-        let msg = `${data.removed.length} retirée(s) du registre nettoyé · ${data.count} entrées`;
+        let msg = `${data.removed.length} retirée(s) du référentiel · ${data.count} entrées`;
         if (data.protected.length) {
             msg += ` · ${data.protected.length} protégée(s) (issues de décisions approuvées)`;
         }
         showToast(msg, data.protected.length ? 'warning' : 'success');
 
         for (const id of [...data.removed, ...data.not_present]) inCleaned.delete(id);
+        invalidateCleaned();
         renderCodelistNav();
         renderCodelistDetail(selectedClId);
     } catch (err) {
@@ -704,8 +761,9 @@ function markInCleaned(ids) {
         batchSelected.delete(id);
     }
     renderCodelistNav();
-    // Réaffiche le panneau de droite pour griser son bouton d'ajout
-    if (ids.includes(selectedClId)) renderCodelistDetail(selectedClId);
+    // Réaffiche le panneau de droite (maître ou un de ses doublons) pour griser son bouton d'ajout
+    const shown = [selectedClId, ...(registryData[selectedClId]?.duplicates || []).map(d => d.id)];
+    if (ids.some(id => shown.includes(id))) renderCodelistDetail(selectedClId);
 }
 
 /* Fait d'un doublon la maître de son groupe (enregistré automatiquement) */
@@ -799,7 +857,7 @@ async function postBatchToCleaned(body, btn) {
     try {
         const data = await postJson(regUrl('api/registry/add-to-cleaned/batch'), body);
 
-        let msg = `${data.added.length} ajoutée(s) au registre nettoyé · ${data.count} entrées`;
+        let msg = `${data.added.length} ajoutée(s) au référentiel · ${data.count} entrées`;
         if (data.already_present.length) msg += ` · ${data.already_present.length} déjà présente(s)`;
         const ignored = data.not_found.length + data.skipped_with_duplicates.length;
         if (ignored) msg += ` · ${ignored} ignorée(s)`;
@@ -807,6 +865,7 @@ async function postBatchToCleaned(body, btn) {
 
         if (data.path) document.getElementById('cleanedPath').value = data.path;
         markInCleaned([...data.added, ...data.already_present]);
+        invalidateCleaned();
     } catch (err) {
         showToast(`Erreur: ${err.message}`, 'danger');
     } finally {
@@ -818,7 +877,7 @@ async function postBatchToCleaned(body, btn) {
 async function addBatchToCleaned(btn) {
     const ids = [...batchSelected];
     if (!ids.length) return;
-    if (!await confirmDialog(`Ajouter ${ids.length} CodeList(s) au registre nettoyé ?${suspectWarning(ids)}`,
+    if (!await confirmDialog(`Ajouter ${ids.length} CodeList(s) au référentiel ?${suspectWarning(ids)}`,
         { confirmLabel: 'Ajouter' })) return;
     return postBatchToCleaned({ cl_ids: ids }, btn);
 }
@@ -826,7 +885,7 @@ async function addBatchToCleaned(btn) {
 async function addAllWithoutDuplicates(btn) {
     const ids = listsWithoutDuplicates().filter(id => !inCleaned.has(id));
     if (!ids.length) return;
-    if (!await confirmDialog(`Ajouter les ${ids.length} CodeList(s) sans doublon au registre nettoyé ?${suspectWarning(ids)}`,
+    if (!await confirmDialog(`Ajouter les ${ids.length} CodeList(s) sans doublon au référentiel ?${suspectWarning(ids)}`,
         { confirmLabel: 'Ajouter' })) return;
     return postBatchToCleaned({ all_without_duplicates: true }, btn);
 }
@@ -859,44 +918,51 @@ function compareCodes(srcCodes, dstCodes) {
 /* Résumé d'une ligne, visible sans ouvrir le tableau */
 function codeDiffSummaryHtml(srcCodes, dstCodes) {
     const diff = compareCodes(srcCodes, dstCodes);
-    const parts = [`${diff.common.length} code(s) en commun`];
-    if (diff.changed.length) parts.push(`<span class="diff-changed">${diff.changed.length} libellé(s) différent(s)</span>`);
-    if (diff.onlySrc.length) parts.push(`<span class="diff-only-src">${diff.onlySrc.length} seulement dans la maître</span>`);
-    if (diff.onlyDst.length) parts.push(`<span class="diff-only-dst">${diff.onlyDst.length} seulement dans le doublon</span>`);
-    if (!diff.changed.length && !diff.onlySrc.length && !diff.onlyDst.length) parts.push('aucune différence');
-    return parts.join(' · ');
+    const same = diff.common.length - diff.changed.length;
+    const parts = [`<span>${same} code(s) identique(s)</span>`];
+    if (diff.changed.length) parts.push(`<span class="chg">${diff.changed.length} libellé(s) différent(s)</span>`);
+    if (diff.onlySrc.length) parts.push(`<span class="only-src">${diff.onlySrc.length} seulement dans la maître</span>`);
+    if (diff.onlyDst.length) parts.push(`<span class="only-dst">${diff.onlyDst.length} seulement dans le doublon</span>`);
+    return parts.join('');
 }
 
-/* Tableau comparatif de codes : Valeur P | Étiquette P | Valeur D | Étiquette D.
-   3 sections : communs (matching case-insensitive), uniquement parent,
-   uniquement doublon. Lignes surlignées quand les étiquettes divergent. */
-function buildCodeComparisonHtml(srcCodes, dstCodes) {
+/* Comparaison côte à côte : une ligne par code, libellé de la maître | libellé du
+   doublon. Appariement insensible à la casse ; lignes marquées ≠ (libellé ou
+   casse différents), − (seulement maître), + (seulement doublon). */
+function buildCodeComparisonHtml(srcCodes, dstCodes, srcName, dstName) {
     const { src, dst, common, changed, onlySrc, onlyDst } = compareCodes(srcCodes, dstCodes);
     const changedSet = new Set(changed);
-    const truncate = (s) => escapeHtml((s || '').slice(0, 60));
+    const codeCell = (k) => {
+        const a = src[k]?.[0], b = dst[k]?.[0];
+        const shown = a ?? b;
+        return a !== undefined && b !== undefined && a !== b
+            ? `${escapeHtml(a)} / ${escapeHtml(b)}` : escapeHtml(shown);
+    };
     let rows = '';
     for (const k of common) {
-        rows += `<tr class="${changedSet.has(k) ? 'table-warning' : ''}">`;
-        rows += `<td>${escapeHtml(src[k][0])}</td><td>${truncate(src[k][1])}</td>`;
-        rows += `<td>${escapeHtml(dst[k][0])}</td><td>${truncate(dst[k][1])}</td></tr>`;
+        const chg = changedSet.has(k);
+        rows += `<tr class="${chg ? 'chg' : ''}"><td class="mk">${chg ? '≠' : ''}</td><td class="code">${codeCell(k)}</td>`;
+        rows += `<td>${escapeHtml(src[k][1])}</td>`;
+        rows += chg ? `<td>${escapeHtml(dst[k][1])}</td>` : `<td class="same">identique</td>`;
+        rows += `</tr>`;
     }
     for (const k of onlySrc) {
-        rows += `<tr class="table-info">`;
-        rows += `<td>${escapeHtml(src[k][0])}</td><td>${truncate(src[k][1])}</td><td></td><td></td></tr>`;
+        rows += `<tr class="only-src"><td class="mk">−</td><td class="code">${codeCell(k)}</td>`;
+        rows += `<td>${escapeHtml(src[k][1])}</td><td class="absent">absent</td></tr>`;
     }
     for (const k of onlyDst) {
-        rows += `<tr class="table-danger">`;
-        rows += `<td></td><td></td><td>${escapeHtml(dst[k][0])}</td><td>${truncate(dst[k][1])}</td></tr>`;
+        rows += `<tr class="only-dst"><td class="mk">+</td><td class="code">${codeCell(k)}</td>`;
+        rows += `<td class="absent">absent</td><td>${escapeHtml(dst[k][1])}</td></tr>`;
     }
 
-    let html = `<div class="code-compare-wrap">`;
-    html += `<table class="table table-sm table-bordered code-table mb-1">`;
-    html += `<thead><tr><th>Valeur maître</th><th>Étiquette maître</th>`;
-    html += `<th>Valeur doublon</th><th>Étiquette doublon</th></tr></thead>`;
+    let html = `<div class="code-compare-wrap"><table class="cmp">`;
+    html += `<thead><tr><th class="mk"></th><th class="code">Code</th>`;
+    html += `<th title="${escapeHtml(srcName)}">Libellé · ${escapeHtml(srcName)}</th>`;
+    html += `<th title="${escapeHtml(dstName)}">Libellé · ${escapeHtml(dstName)}</th></tr></thead>`;
     html += `<tbody>${rows}</tbody></table></div>`;
-    html += `<small class="text-muted"><span class="legend-swatch table-warning"></span> libellé différent `;
-    html += `<span class="legend-swatch table-info"></span> seulement maître `;
-    html += `<span class="legend-swatch table-danger"></span> seulement doublon</small>`;
+    html += `<div class="cmp-legend"><span><i class="sw chg"></i>≠ libellé différent</span>`;
+    html += `<span><i class="sw only-src"></i>− seulement dans la maître</span>`;
+    html += `<span><i class="sw only-dst"></i>+ seulement dans le doublon</span></div>`;
     return html;
 }
 
@@ -910,13 +976,13 @@ const QUALITY_FLAGS = {
 function qualityBadgeHtml(flags) {
     if (!flags?.length) return '';
     const help = flags.map(f => (QUALITY_FLAGS[f] || [f, f])[1]).join(' · ');
-    return ` <span class="badge bg-warning text-dark" title="${escapeHtml(help)}">⚠</span>`;
+    return `<span class="flag" title="Liste suspecte : ${escapeHtml(help)}">${icon('alert')}</span>`;
 }
 
 /* Mention ajoutée aux confirmations d'ajout en lot quand des listes suspectes en font partie */
 function suspectWarning(ids) {
     const n = ids.filter(id => (registryData[id]?.quality_flags || []).length).length;
-    return n ? `\n\n⚠ ${n} liste(s) suspecte(s) en font partie (filtre « Listes suspectes »).` : '';
+    return n ? `\n\nAttention : ${n} liste(s) suspecte(s) en font partie (filtre « Listes suspectes »).` : '';
 }
 
 /* Libellé affiché et infobulle de chaque type de détection */
@@ -931,21 +997,10 @@ const DETECTION_LABELS = {
     lineage: ['lignée', 'copiée de la maître (BasedOnObject DDI), contenu éventuellement modifié depuis'],
 };
 
-const DETECTION_BADGES = {
-    exact: 'success',
-    exact_business: 'success',
-    labels: 'primary',
-    fuzzy: 'warning text-dark',
-    semantic_list: 'info text-dark',
-    semantic_var: 'info text-dark',
-    usage: 'secondary',
-    lineage: 'dark',
-};
-
 const DECISION_BUTTONS = [
-    ['approve', '✓ Approuver', 'success', 'a'],
-    ['reject', '✗ Rejeter', 'danger', 'r'],
-    ['pending', '⏳ En attente', 'secondary', 'p'],
+    ['approve', 'check', 'Approuver', 'a'],
+    ['reject', 'x', 'Rejeter', 'r'],
+    ['pending', 'clock', 'Attente', 'p'],
 ];
 
 function renderDuplicateCard(cl, dup) {
@@ -953,121 +1008,115 @@ function renderDuplicateCard(cl, dup) {
     const decision = decisionOf(dup);
     const dupName = dup.name || 'Inconnu';
     const compareOpen = openComparisons.has(dup.id);
+    const dups = cl.duplicates || [];
+    const position = dups.length > 1 ? ` ${dups.findIndex(d => d.id === dup.id) + 1} / ${dups.length}` : '';
 
-    let html = `<div class="dup-card ${decision} p-2 mb-2${dup.id === activeDupId ? ' dup-active' : ''}" `;
+    let html = `<div class="panel dup-card ${decision}${dup.id === activeDupId ? ' dup-active' : ''}" `;
     html += `data-dup-id="${escapeHtml(dup.id)}" tabindex="-1">`;
-    html += `<div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">`;
-    html += `<div class="flex-grow-1"><strong>${escapeHtml(dupName)}</strong>`;
-    html += ` <code class="dup-id">${escapeHtml(dup.id)}</code>`;
-    html += ` <button type="button" class="btn btn-link p-0 copy-id-btn" data-copy-id="${escapeHtml(dup.id)}" title="Copier l'ID" aria-label="Copier l'ID">📋</button>`;
-    if (dup.origin === 'registry') html += ` <span class="badge bg-primary">📘 registre</span>`;
-    html += qualityBadgeHtml(dup.quality_flags);
-    html += ` ${levelBadgeHtml(dup)}`;
-    if (dup.label) html += `<br><small class="text-muted">${escapeHtml(dup.label)}</small>`;
-    if (dup.suggested_official) html += `<small>${suggestedOfficialHtml(dup)}</small>`;
+    html += `<div class="dup-head">`;
 
-    // Types de détection + confiance
-    html += `<div class="mt-1">`;
-    for (const type of dup.detection_types || []) {
-        const [label, help] = DETECTION_LABELS[type] || [type, type];
-        html += `<span class="badge badge-detection bg-${DETECTION_BADGES[type] || 'secondary'} me-1" `;
-        html += `title="Signal de détection : ${escapeHtml(help)}">${escapeHtml(label)}</span>`;
-    }
-    const confClass = conf >= 0.95 ? 'confidence-high' : conf >= 0.7 ? 'confidence-medium' : 'confidence-low';
-    html += `<span class="confidence-pill ${confClass}" title="Confiance de la détection">${Math.round(conf * 100)} %</span>`;
+    // Identité du doublon
+    html += `<div class="dup-title"><span class="eyebrow">Doublon${position}</span>`;
+    html += `<span class="nm">${escapeHtml(dupName)}</span>`;
+    html += `<span class="meta"><span><span class="mono">${escapeHtml(dup.id)}</span> `;
+    html += `<button type="button" class="copy-id-btn" data-copy-id="${escapeHtml(dup.id)}" title="Copier l'ID" aria-label="Copier l'ID">${icon('copy', 'sm')}</button></span>`;
+    if (dup.operations?.length) html += `<span>Opérations <span class="mono">${dup.operations.map(escapeHtml).join(', ')}</span></span>`;
+    if (dup.vars?.length) html += `<span>${dup.vars.length} variable(s)</span>`;
+    html += `</span>`;
+    if (dup.label && dup.label !== dup.name) html += `<span class="text-muted small">${escapeHtml(dup.label)}</span>`;
     html += `</div>`;
 
-    // Résumé du diff des codes, visible sans ouvrir le tableau
-    html += `<div class="small mt-1 diff-summary">${codeDiffSummaryHtml(cl.codes || [], dup.codes || [])}</div>`;
+    // Détection, confiance, niveau
+    html += `<div class="det">`;
+    if (dup.origin === 'registry') html += `<span class="tag accent">${icon('book', 'sm')}référentiel</span>`;
+    html += levelTagHtml(dup.level, dup.level_suggested);
+    for (const type of dup.detection_types || []) {
+        const [label, help] = DETECTION_LABELS[type] || [type, type];
+        html += `<span class="tag" title="Signal de détection : ${escapeHtml(help)}">${escapeHtml(label)}</span>`;
+    }
+    html += `<span class="conf" title="Confiance de la détection">${Math.round(conf * 100)} %</span>`;
+    html += qualityBadgeHtml(dup.quality_flags);
     html += `</div>`;
 
     // Décision : 3 boutons (état courant mis en évidence)
-    html += `<div class="text-end"><div class="btn-group btn-group-sm decision-group" role="group" aria-label="Décision">`;
-    for (const [value, label, color, key] of DECISION_BUTTONS) {
-        const on = decision === value;
-        html += `<button type="button" class="btn ${on ? `btn-${color}` : `btn-outline-${color}`}" `;
-        html += `data-decision="${value}" aria-pressed="${on}" title="${label.slice(2)} (${key})">${label}</button>`;
+    html += `<div class="decide-col"><div class="decide" role="group" aria-label="Décision">`;
+    for (const [value, ico, label, key] of DECISION_BUTTONS) {
+        html += `<button type="button" class="${value}" data-decision="${value}" aria-pressed="${decision === value}" `;
+        html += `aria-label="${label}" title="${label} (${key})">${icon(ico)}<span class="lbl">${label}</span> <kbd>${key}</kbd></button>`;
     }
     html += `</div>`;
     if (dup.decision_carried) {
-        html += `<div><small class="text-muted" title="Décision reprise d'un run précédent (decisions.json)">↻ reprise</small></div>`;
+        html += `<span class="carried" title="Décision reprise d'un run précédent (decisions.json)">${icon('history', 'sm')}reprise d'un run précédent</span>`;
     }
     html += `</div></div>`;
 
-    // Codes d'échappement (sans objet, non réponse…) de part et d'autre
+    // Résumé des différences et actions secondaires
+    html += `<div class="diffline">${codeDiffSummaryHtml(cl.codes || [], dup.codes || [])}<span class="spacer"></span>`;
+    html += `<button type="button" class="btn btn-ghost btn-sm" data-action="compare" aria-expanded="${compareOpen}">`;
+    html += `${icon('columns')}${compareOpen ? 'Masquer' : 'Comparer'} les codes <kbd>c</kbd></button>`;
+    // Promotion en maître (impossible pour une maître du référentiel
+    // ou un registre produit sans liens par une version antérieure)
+    if (cl.origin !== 'registry' && dup.links) {
+        html += `<button type="button" class="btn btn-ghost btn-sm" data-action="swap" `;
+        html += `title="Faire de ce doublon la CodeList maître du groupe">${icon('swap')}Définir comme maître</button>`;
+    }
+    html += `</div>`;
+
+    // Notes : renvoi, échappement, liens indirects, filiation DDI
+    const notes = [];
+    if (dup.suggested_official) {
+        notes.push(`${icon('link', 'sm')}<span>Renvoi vers une nomenclature : remplacer par « ${escapeHtml(dup.suggested_official.name)} »</span>`);
+    }
     const escMaster = cl.escape_codes || [];
     const escDup = dup.escape_codes || [];
     if (escMaster.length || escDup.length) {
         const fmt = codes => codes.length
             ? codes.map(c => escapeHtml(`${c[0]} ${c[1] || ''}`.trim())).join(' · ')
             : 'aucun';
-        html += `<div class="small text-muted mt-1">Codes d'échappement — maître : ${fmt(escMaster)}`;
-        html += ` | doublon : ${fmt(escDup)}</div>`;
+        notes.push(`${icon('info', 'sm')}<span>Codes d'échappement · maître : ${fmt(escMaster)} · doublon : ${fmt(escDup)}</span>`);
     }
-
-    // Lien indirect : aucune paire détectée directement avec la CodeList principale
-    const nameInGroup = id => escapeHtml((cl.duplicates || []).find(d => d.id === id)?.name || id);
+    const nameInGroup = id => escapeHtml(dups.find(d => d.id === id)?.name || id);
     if (dup.via?.length) {
-        html += `<div class="small text-muted mt-1">↪ lien indirect, via ${dup.via.map(nameInGroup).join(', ')}</div>`;
+        notes.push(`${icon('link', 'sm')}<span>Lien indirect, via ${dup.via.map(nameInGroup).join(', ')}</span>`);
     }
-
-    // Filiation DDI (BasedOnObject) entre le doublon et les listes du groupe
     const nameOf = id => id === cl.id ? 'la maître' : nameInGroup(id);
-    const groupIds = new Set([cl.id, ...(cl.duplicates || []).map(d => d.id)]);
+    const groupIds = new Set([cl.id, ...dups.map(d => d.id)]);
     const basedOn = (dup.based_on || []).filter(id => groupIds.has(id));
     if (basedOn.length) {
-        html += `<div class="small text-muted mt-1" title="BasedOnObject DDI">↳ basé sur ${basedOn.map(nameOf).join(', ')}</div>`;
+        notes.push(`${icon('git', 'sm')}<span title="BasedOnObject DDI">Copié de ${basedOn.map(nameOf).join(', ')}</span>`);
     }
     if ((cl.based_on || []).includes(dup.id)) {
-        html += `<div class="small text-muted mt-1" title="BasedOnObject DDI">↰ la maître est basée sur ce doublon</div>`;
+        notes.push(`${icon('git', 'sm')}<span title="BasedOnObject DDI">La maître est copiée de ce doublon</span>`);
     }
     const outside = (dup.based_on || []).filter(id => !groupIds.has(id));
     if (outside.length) {
-        html += `<div class="small text-muted mt-1" title="BasedOnObject DDI vers une liste hors du groupe">↳ basé sur ${outside.map(id => `<code>${escapeHtml(id)}</code>`).join(', ')} (hors groupe)</div>`;
+        notes.push(`${icon('git', 'sm')}<span title="BasedOnObject DDI vers une liste hors du groupe">Copié de ${outside.map(id => `<code>${escapeHtml(id)}</code>`).join(', ')} (hors groupe)</span>`);
     }
-
-    // Autres liens du doublon dans le groupe (paires avec d'autres doublons)
     const otherLinks = (dup.links || []).filter(lk => lk.id !== cl.id && !(dup.via || []).includes(lk.id));
     if (otherLinks.length) {
         const parts = otherLinks.map(lk => `${nameInGroup(lk.id)} (${escapeHtml(lk.detection_types.join(', '))})`);
-        html += `<div class="small text-muted mt-1">🔗 lié aussi à ${parts.join(', ')}</div>`;
+        notes.push(`${icon('link', 'sm')}<span>Lié aussi à ${parts.join(', ')}</span>`);
         if (decision === 'reject') {
-            html += `<div class="small text-warning-emphasis">Rejeté par rapport à la maître : `;
-            html += `définissez-le comme maître pour examiner ces liens.</div>`;
+            notes.push(`<span class="warn">Rejeté par rapport à la maître : définissez-le comme maître pour examiner ces liens.</span>`);
         }
     }
-
-    // Actions secondaires
-    html += `<div class="d-flex flex-wrap gap-2 mt-2">`;
-    html += `<button type="button" class="btn btn-sm btn-outline-secondary" data-action="compare" aria-expanded="${compareOpen}">`;
-    html += `${compareOpen ? '▾ Masquer' : '▸ Comparer'} les codes (c)</button>`;
-    // Promotion en maître (impossible pour une maître du registre nettoyé
-    // ou un registre produit sans liens par une version antérieure)
-    if (cl.origin !== 'registry' && dup.links) {
-        html += `<button type="button" class="btn btn-sm btn-outline-primary" data-action="swap" `;
-        html += `title="Faire de ce doublon la CodeList maître du groupe">⇅ Définir comme maître</button>`;
+    // Faux doublon : le doublon rejeté peut entrer au référentiel à côté de la maître
+    if (decision === 'reject' || inCleaned.has(dup.id)) {
+        notes.push(inCleaned.has(dup.id)
+            ? `${icon('book', 'sm')}<span>Dans le référentiel</span>`
+                + `<button type="button" class="note-action" data-action="remove-dup-clean">Retirer</button>`
+            : `${icon('plus', 'sm')}<span>Pas un doublon ? Gardez aussi cette liste.</span>`
+                + `<button type="button" class="note-action" data-action="add-dup-clean">Ajouter au référentiel</button>`);
     }
-    html += `</div>`;
+    if (notes.length) html += `<div class="notes">${notes.map(n => `<div>${n}</div>`).join('')}</div>`;
 
     if (compareOpen) {
-        html += `<div class="code-comparison mt-2">${buildCodeComparisonHtml(cl.codes || [], dup.codes || [])}`;
-        html += `<div class="small text-muted mt-2">`;
-        html += `<div><strong>Codes :</strong> ${dup.codes_count || 0}`;
-        if (dup.version) {
-            html += ` · <strong>Référence DDI :</strong> ${escapeHtml(`${dup.agency || '?'}:${dup.id}:${dup.version}`)}`;
-        }
-        html += `</div>`;
-        if (dup.vars?.length) {
-            html += `<div><strong>Variables :</strong> ${dup.vars.map(escapeHtml).join(', ')}</div>`;
-        }
-        if (dup.operations?.length) {
-            html += `<div><strong>Opérations :</strong> ${dup.operations.map(escapeHtml).join(', ')}`;
-            html += ` · <strong>Séries :</strong> ${(dup.series || []).map(escapeHtml).join(', ')}</div>`;
-        }
+        html += buildCodeComparisonHtml(cl.codes || [], dup.codes || [], cl.name || cl.id, dupName);
         if (dup.cat_ids?.length) {
-            html += `<div class="text-break"><strong>Catégories :</strong> ${dup.cat_ids.map(escapeHtml).join(', ')}</div>`;
+            // Repliés : utiles pour une vérification ponctuelle, pas pour décider
+            html += `<details class="notes cat-ids"><summary>Identifiants des catégories (${dup.cat_ids.length})</summary>`
+                + `<div class="text-break mono">${dup.cat_ids.map(escapeHtml).join(', ')}</div></details>`;
         }
-        html += `</div></div>`;
     }
     html += `</div>`;
     return html;
@@ -1079,26 +1128,10 @@ function renderDuplicateCard(cl, dup) {
 
 function renderPagination(total, page, pageSize) {
     TOTAL_PAGES = Math.ceil(total / pageSize) || 1;
-    let html = '';
-
-    // Previous
-    html += `<li class="page-item ${page <= 0 ? 'disabled' : ''}">`;
-    html += `<a class="page-link" href="#" data-page="${page - 1}">← Précédent</a></li>`;
-
-    // Page numbers (max 5 visible)
-    const startPage = Math.max(0, page - 2);
-    const endPage = Math.min(TOTAL_PAGES - 1, page + 2);
-
-    for (let i = startPage; i <= endPage; i++) {
-        html += `<li class="page-item ${i === page ? 'active' : ''}">`;
-        html += `<a class="page-link" href="#" data-page="${i}">${i + 1}</a></li>`;
-    }
-
-    // Next
-    html += `<li class="page-item ${page >= TOTAL_PAGES - 1 ? 'disabled' : ''}">`;
-    html += `<a class="page-link" href="#" data-page="${page + 1}">Suivant →</a></li>`;
-    html += `<li class="page-item disabled"><span class="page-link">${total} CodeList(s)</span></li>`;
-
+    const html = TOTAL_PAGES <= 1 ? '' :
+        `<button type="button" data-page="${page - 1}" ${page <= 0 ? 'disabled' : ''} aria-label="Page précédente">${icon('chevron-left')}</button>`
+        + `<span>${page + 1} / ${TOTAL_PAGES}</span>`
+        + `<button type="button" data-page="${page + 1}" ${page >= TOTAL_PAGES - 1 ? 'disabled' : ''} aria-label="Page suivante">${icon('chevron')}</button>`;
     for (const id of ['pagination', 'paginationBottom']) {
         document.getElementById(id).innerHTML = html;
     }
@@ -1334,7 +1367,6 @@ const HASH_FIELDS = {
     o: 'originFilter',
     q: 'searchFilter',
     s: 'sortBy',
-    n: 'pageSize',
 };
 
 function writeHash() {
@@ -1374,11 +1406,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .addEventListener('click', () => openRegistry(document.getElementById('runSelect').value));
     document.getElementById('runSelect')
         .addEventListener('dblclick', () => openRegistry(document.getElementById('runSelect').value));
-    document.getElementById('outputRoot').addEventListener('change', (e) => {
-        setOutputRoot(e.target.value);
-        loadRunOptions();
-        if (typeof refreshRunsTable === 'function') refreshRunsTable();
-    });
+    document.addEventListener('outputrootchange', loadRunOptions);
     document.getElementById('loadRegistryBtn').addEventListener('click', loadRegistry);
     document.getElementById('registryPath').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') loadRegistry();
@@ -1393,9 +1421,15 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedClId = null;
         renderCodelistsFiltered();
     };
-    for (const id of ['decisionFilter', 'originFilter', 'sortBy', 'pageSize']) {
+    for (const id of ['originFilter', 'sortBy']) {
         document.getElementById(id).addEventListener('change', applyNow);
     }
+    document.getElementById('decisionChips').addEventListener('click', (e) => {
+        const chip = e.target.closest('[data-filter]');
+        if (!chip) return;
+        document.getElementById('decisionFilter').value = chip.dataset.filter;
+        applyNow();
+    });
     let searchTimer = null;
     document.getElementById('searchFilter').addEventListener('input', () => {
         clearTimeout(searchTimer);
@@ -1405,9 +1439,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Pagination (haut et bas)
     for (const id of ['pagination', 'paginationBottom']) {
         document.getElementById(id).addEventListener('click', (e) => {
-            const link = e.target.closest('.page-item:not(.disabled) .page-link[data-page]');
+            const link = e.target.closest('button[data-page]:not([disabled])');
             if (!link) return;
-            e.preventDefault();
             goToPage(parseInt(link.dataset.page, 10));
         });
     }
@@ -1424,10 +1457,13 @@ document.addEventListener('DOMContentLoaded', () => {
             updateBatchBar();
             return;
         }
-        const item = e.target.closest('.list-group-item[data-id]');
+        const item = e.target.closest('.cl-item[data-id]');
         if (!item) return;
-        e.preventDefault();
         selectCodelist(item.dataset.id);
+    });
+    nav.addEventListener('keydown', (e) => {
+        const item = e.target.closest('.cl-item[data-id]');
+        if (item && e.key === 'Enter') selectCodelist(item.dataset.id);
     });
 
     // Colonne de droite : décisions, comparaison, maître, registre nettoyé
@@ -1446,6 +1482,8 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'swap': return swapParent(selectedClId, card.dataset.dupId, btn);
             case 'add-clean': return addToCleaned(selectedClId);
             case 'remove-clean': return removeFromCleaned([selectedClId], btn);
+            case 'add-dup-clean': return addToCleaned(card.dataset.dupId);
+            case 'remove-dup-clean': return removeFromCleaned([card.dataset.dupId], btn);
             case 'dismiss': return setDismissed(selectedClId, true, btn);
             case 'undismiss': return setDismissed(selectedClId, false, btn);
         }

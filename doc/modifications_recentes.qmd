@@ -3,8 +3,10 @@ title: "Changements récents"
 format: html
 ---
 
-Ce document décrit les changements récents en trois parties :
+Ce document décrit les changements récents en quatre parties :
 
+0. **Refonte de l'interface** : étapes Analyser → Valider → Référentiel,
+   thème clair et sombre, comparaison des codes côte à côte.
 1. **API Métadonnées, niveaux et pré-contrôle** : lecture des opérations dans
    l'API de l'Insee, lignée `BasedOnObject`, trois niveaux de CodeLists, service
    de contrôle `scrubber-check`, ergonomie de l'onglet Validation (plan :
@@ -14,6 +16,52 @@ Ce document décrit les changements récents en trois parties :
    `fix/rattachement-variables`).
 3. **Version précédente** : onglet Validation en deux colonnes, correctifs de
    détection et sorties datées (commits du 22 octobre, depuis `4be5503`).
+
+# Refonte de l'interface
+
+L'apparence de l'appli a été revue pour la rendre plus claire. Le
+fonctionnement (routes, fichiers produits, raccourcis) est inchangé, sauf le
+choix des opérations de la source API (voir plus bas).
+
+| Avant | Après |
+|---|---|
+| 4 onglets aux en-têtes de couleurs différentes | Barre d'application avec les étapes **1 Analyser → 2 Valider → 3 Référentiel**, et **Pré-contrôle** à part ; en-têtes neutres |
+| Dossier de sortie saisi dans 3 onglets | Un seul réglage dans la barre du haut, avec le run ouvert, l'état d'enregistrement et l'état du serveur |
+| Emoji comme icônes | Jeu d'icônes à trait ; identifiants, URN et codes en police à chasse fixe |
+| Couleurs Bootstrap fixes, pas de mode sombre | Palette sobre suivant le thème du système ; vert, rouge et ambre réservés aux décisions, une teinte par niveau et par statut de pré-contrôle |
+| Valider : 4 tuiles, 5 filtres, 4 boutons de masse | Barre d'avancement, filtres en pastilles avec leur nombre, actions de masse dans un menu ; liste de gauche collante, paginée par 50 |
+| Comparaison des codes : tableau à 4 colonnes déplié à la demande | Maître et doublon côte à côte, une ligne par code, différences marquées ≠ / − / + |
+| Registre nettoyé : formulaires dépliés pour chaque entrée | **Référentiel** : tableau avec onglets par niveau, édition dans un panneau latéral, barre « modifications non enregistrées » ; chargé à l'ouverture |
+| Pré-contrôle : badges et tableau | Zone de dépôt du fichier, barre de répartition des statuts, tableau groupé par statut |
+
+Une maquette interactive a précédé l'implémentation. Les captures du guide ont
+été refaites.
+
+**Source API : séries et opérations.** Les deux champs sont des listes
+déroulantes « identifiant – nom », filtrées pendant la frappe (identifiant ou
+nom, sans tenir compte des accents) ; chaque choix devient une étiquette
+supprimable. Le champ *Opérations* propose les opérations des séries choisies
+et indique quand une série n'en a aucune ou une seule. **Choisir des opérations
+restreint désormais leur série** : avec `s1998` et `s2297`, seule l'opération
+`s2297` est chargée (auparavant, toute la série). Sans opération choisie, toute
+la série est chargée. Cette règle vaut aussi pour `scrubber-check index build
+--serie … --operation …`. Nouvelle route : `GET /api/insee/series/{id}/operations`.
+
+**Faux doublons.** Un doublon rejeté peut être ajouté au référentiel depuis sa
+carte, et la maître dont tous les doublons sont rejetés depuis son en-tête :
+on garde ainsi les deux listes (ex. `L_DENS7` et `L_DENS3`). Le registre des
+doublons porte désormais l'URN, les opérations et les séries de chaque
+doublon, pour un niveau suggéré correct. La liste des identifiants de
+catégories est repliée sous la comparaison des codes.
+
+**Classement rapide dans le Référentiel.** Chaque ligne porte ses pastilles
+de niveau (le niveau suggéré en pointillés) ; des cases à cocher permettent
+de classer plusieurs listes d'un coup ou de leur appliquer leur niveau
+suggéré, avec Annuler.
+
+**Avertissements de run plus explicites.** Les opérations ignorées faute de
+description DDI sont comptées par rapport au total analysé, et les CodeLists
+de plus de 5000 codes exclues de la détection floue sont nommées.
 
 # API Métadonnées, niveaux et pré-contrôle
 

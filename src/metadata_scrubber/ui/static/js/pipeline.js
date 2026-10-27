@@ -12,27 +12,118 @@ function sourceIsApi() {
 }
 
 /* Champs de la source choisie (XML ou API) ; séries de l'API chargées une fois */
+let seriesPicker = null;
+let operationsPicker = null;
 let seriesLoaded = false;
 function toggleSourceFields() {
     const api = sourceIsApi();
     document.getElementById('sourceXmlFields').classList.toggle('d-none', api);
     document.getElementById('sourceApiFields').classList.toggle('d-none', !api);
-    if (api && !seriesLoaded) {
-        seriesLoaded = true;
-        fetch(`${API_BASE}api/insee/series`)
-            .then(r => (r.ok ? r.json() : []))
-            .then(series => {
-                document.getElementById('seriesOptions').innerHTML = series
-                    .map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.label)}</option>`)
-                    .join('');
-            })
-            .catch(() => { seriesLoaded = false; });
+    if (api) loadSeries();
+}
+
+function loadSeries() {
+    if (seriesLoaded) return;
+    seriesLoaded = true;
+    seriesPicker.setOptions([], 'Chargement des séries…');
+    fetch(`${API_BASE}api/insee/series`)
+        .then(r => (r.ok ? r.json() : Promise.reject(new Error(r.status))))
+        .then(series => seriesPicker.setOptions(series, 'Aucune série ne correspond'))
+        .catch(() => {
+            // Nouvel essai au prochain passage dans le champ
+            seriesLoaded = false;
+            seriesPicker.setOptions([], 'API Insee indisponible : tapez un identifiant puis Entrée');
+        });
+}
+
+/* Opérations d'une série, gardées pour la session (null si indisponibles) */
+const serieOperations = new Map();
+function fetchSerieOperations(serieId) {
+    if (!serieOperations.has(serieId)) {
+        const p = fetch(`${API_BASE}api/insee/series/${encodeURIComponent(serieId)}/operations`)
+            .then(r => (r.ok ? r.json() : null))
+            .catch(() => null)
+            .then((ops) => {
+                if (ops === null) serieOperations.delete(serieId);
+                return ops;
+            });
+        serieOperations.set(serieId, p);
     }
+    return serieOperations.get(serieId);
+}
+
+/* Les opérations proposées sont celles des séries choisies : elles restreignent la série */
+let operationsRequest = 0;
+let operationsState = { series: [], options: [], failed: [] };
+async function refreshOperations() {
+    const all = document.getElementById('apiAll').checked;
+    const series = seriesPicker.getValues();
+    seriesPicker.setDisabled(all);
+    const request = ++operationsRequest;
+    let options = [];
+    let failed = [];
+    if (!all && series.length) {
+        document.getElementById('apiOperationsNote').textContent = 'Chargement des opérations…';
+        const lists = await Promise.all(series.map(fetchSerieOperations));
+        if (request !== operationsRequest) return;
+        options = series.flatMap((sid, i) => (lists[i] || [])
+            .map(op => ({ ...op, hint: series.length > 1 ? sid : '' })));
+        failed = series.filter((_, i) => lists[i] === null);
+    }
+    // Les opérations d'une série retirée partent avec elle
+    const previous = new Set(operationsState.options.map(o => o.id));
+    const known = new Set(options.map(o => o.id));
+    operationsState = { all, series, options, failed };
+    operationsPicker.setOptions(options, 'Aucune opération ne correspond');
+    operationsPicker.setValues(series.length && !all
+        ? operationsPicker.getValues().filter(id => known.has(id) || !previous.has(id)) : []);
+}
+
+function updateOperationsNote() {
+    const { all, series, options, failed } = operationsState;
+    const chosen = operationsPicker.getValues().length;
+    const note = document.getElementById('apiOperationsNote');
+    operationsPicker.setDisabled(all || !series.length || (options.length <= 1 && !chosen && !failed.length),
+        all ? 'Toutes les opérations' : series.length ? '' : 'Choisissez d\'abord une série');
+    if (all || !series.length) {
+        note.textContent = '';
+    } else if (failed.length) {
+        note.textContent = `Opérations indisponibles pour ${failed.join(', ')} (API Insee) : `
+            + 'tapez un identifiant puis Entrée.';
+    } else if (!options.length) {
+        note.textContent = series.length > 1 ? 'Ces séries ne contiennent aucune opération.'
+            : 'Cette série ne contient aucune opération.';
+    } else if (options.length === 1) {
+        note.textContent = `Une seule opération : ${options[0].id} – ${options[0].label}. Elle est chargée.`;
+    } else if (chosen) {
+        const s = chosen > 1 ? 's' : '';
+        note.textContent = `${chosen} opération${s} choisie${s} sur ${options.length} ; les autres ne sont pas chargées.`;
+    } else {
+        note.textContent = `${options.length} opérations : sans choix, toutes sont chargées.`;
+    }
+}
+
+function initApiPickers() {
+    seriesPicker = createIdPicker(document.getElementById('apiSeriesPicker'), {
+        inputId: 'apiSeriesInput',
+        valueInput: document.getElementById('apiSeries'),
+        placeholder: 'Identifiant ou nom, ex. s1998 ou Tous salariés',
+    });
+    operationsPicker = createIdPicker(document.getElementById('apiOperationsPicker'), {
+        inputId: 'apiOperationsInput',
+        valueInput: document.getElementById('apiOperations'),
+        placeholder: 'Toutes les opérations de la série',
+    });
+    seriesPicker.input.addEventListener('focus', loadSeries);
+    document.getElementById('apiSeriesPicker').addEventListener('change', refreshOperations);
+    document.getElementById('apiOperationsPicker').addEventListener('change', updateOperationsNote);
+    document.getElementById('apiAll').addEventListener('change', refreshOperations);
+    refreshOperations();
 }
 
 async function launchPipeline() {
     const xmlSource = document.getElementById('xmlSource').value.trim();
-    const outputBase = document.getElementById('outputBase').value.trim();
+    const outputBase = getOutputRoot();
     const registryPath = document.getElementById('pipelineRegistryPath').value.trim();
     const runLlm = document.getElementById('runLlm').checked;
     const verbose = document.getElementById('verbose').checked;
@@ -46,23 +137,23 @@ async function launchPipeline() {
         return;
     }
     if (api && !apiSeries.length && !apiOperations.length && !apiAll) {
-        showToast('Indiquez au moins une série ou une opération, ou cochez « Toute la base ».', 'warning');
+        showToast('Choisissez au moins une série, ou cochez « Toute la base ».', 'warning');
         return;
     }
     if (!outputBase) {
-        showToast('Veuillez saisir un dossier de sortie (local ou S3).', 'warning');
+        showToast('Choisissez un dossier de sortie dans la barre du haut.', 'warning');
         return;
     }
-    setOutputRoot(outputBase);
 
     // --- UI: loading ---
     const launchBtn = document.getElementById('launchBtn');
-    launchBtn.disabled = true;
-    launchBtn.textContent = '⏳ Lancement en cours…';
+    setBusy(launchBtn, true, 'Lancement…');
 
     const progressSection = document.getElementById('progressSection');
     progressSection.classList.remove('d-none');
     document.getElementById('resultSection').classList.add('d-none');
+    document.getElementById('logsContainer').textContent = '';
+    renderPhaseStrip(0);
     lastRunRegistryPath = null;
 
     // --- API call ---
@@ -72,8 +163,8 @@ async function launchPipeline() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 xml_source: api ? null : xmlSource,
-                api_series: api ? apiSeries : [],
-                api_operations: api ? apiOperations : [],
+                api_series: api && !apiAll ? apiSeries : [],
+                api_operations: api && !apiAll ? apiOperations : [],
                 api_all_operations: api && apiAll,
                 output_base: outputBase,
                 run_llm: runLlm,
@@ -88,22 +179,41 @@ async function launchPipeline() {
 
         const data = await resp.json();
         const jobId = data.job_id;
-        showToast(`Pipeline lancé · job ${jobId}`, 'info');
+        showToast(`Analyse lancée · job ${jobId}`, 'info');
 
         connectSSE(jobId);
 
     } catch (err) {
         console.error('Lancement pipeline:', err);
         showToast(`Erreur: ${err.message}`, 'danger');
-        launchBtn.disabled = false;
-        launchBtn.textContent = '🚀 Lancer le pipeline';
+        setBusy(launchBtn, false);
     }
+}
+
+/* Frise des étapes du pipeline (numéros de phase de main.py regroupés) */
+const PHASE_GROUPS = [
+    ['Lecture', [0, 1]],
+    ['Extraction', [2, 3]],
+    ['Signatures et exact', [4, 5]],
+    ['Flou et usage', [6, 7]],
+    ['Sémantique', [8]],
+    ['Registre', [9]],
+];
+
+function renderPhaseStrip(phase, status = 'running') {
+    const current = PHASE_GROUPS.findIndex(([, phases]) => phases.includes(phase));
+    document.getElementById('phaseStrip').innerHTML = PHASE_GROUPS.map(([label], i) => {
+        let cls = i < current ? 'done' : i === current ? 'now' : '';
+        if (status === 'success') cls = 'done';
+        if (status === 'error' && i === current) cls = 'failed';
+        return `<div class="phase ${cls}"><i></i>${escapeHtml(label)}</div>`;
+    }).join('');
 }
 
 /* ------------------------------------------------------------------ */
 
 function connectSSE(jobId) {
-    const progressBar = document.getElementById('progressBar');
+    const progressPct = document.getElementById('progressPct');
     const phaseLabelEl = document.getElementById('phaseLabel');
     const logsContainer = document.getElementById('logsContainer');
     const logCountEl = document.getElementById('logCount');
@@ -132,23 +242,15 @@ function connectSSE(jobId) {
     let finished = false;
     let usePolling = false;
 
+    let lastPhase = 0;
     function updateUI(progress, message, phase, phase_label) {
-        // Progress bar
         const pct = Math.min(Math.round((progress ?? 0) * 100), 100);
-        progressBar.style.width = pct + '%';
-        progressBar.textContent = pct + '%';
-
-        // Striped/animated while running
-        if (pct < 100) {
-            progressBar.classList.add('progress-bar-striped', 'progress-bar-animated');
-            progressBar.classList.remove('bg-success', 'bg-danger');
-        } else {
-            progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
+        progressPct.textContent = `${pct} %`;
+        phaseLabelEl.textContent = phase_label || message || phaseNames[phase] || '';
+        if (phase != null) {
+            lastPhase = phase;
+            renderPhaseStrip(phase);
         }
-
-        // Phase label
-        phaseLabelEl.textContent = (phase_label || message || phaseNames[phase] || '') +
-            (progress !== null ? ` (${pct}%)` : '');
     }
 
     function appendLog(text) {
@@ -199,10 +301,7 @@ function connectSSE(jobId) {
             showError(d);
         }
 
-        // Re-enable button
-        const lb = document.getElementById('launchBtn');
-        lb.disabled = false;
-        lb.textContent = '🚀 Lancer le pipeline';
+        setBusy(document.getElementById('launchBtn'), false);
     }
 
     es.addEventListener('init', (ev) => {
@@ -268,54 +367,50 @@ function connectSSE(jobId) {
     /* ---- helpers ---- */
 
     function showSuccess(data) {
-        progressBar.style.width = '100%';
-        progressBar.className = 'progress-bar bg-success';
-        progressBar.textContent = '100%';
+        progressPct.textContent = '100 %';
+        phaseLabelEl.textContent = 'Analyse terminée';
+        renderPhaseStrip(9, 'success');
+        document.getElementById('logsDetails').open = false;
 
         resultSection.classList.remove('d-none');
         document.getElementById('resultAlert').classList.remove('d-none');
         document.getElementById('resultError').classList.add('d-none');
-        document.getElementById('goToValidationBtn').classList.remove('d-none');
 
         const dur = data.result?.duration_seconds;
-        document.getElementById('resultDuration').textContent = dur
-            ? dur.toFixed(1) + 's'
-            : '-';
+        document.getElementById('resultDuration').textContent = dur ? `${dur.toFixed(1)} s` : '-';
 
         const fileLinks = document.getElementById('fileLinks');
         fileLinks.innerHTML = '';
         if (data.result?.output_files) {
             for (const [name, url] of Object.entries(data.result.output_files)) {
                 const div = document.createElement('div');
-                div.className = 'mb-2';
-                div.innerHTML = `<strong>${escapeHtml(name)}</strong><br><code class="text-break">${escapeHtml(url)}</code>`;
+                div.innerHTML = `<strong>${escapeHtml(name)}</strong> <code>${escapeHtml(url)}</code>`;
                 fileLinks.appendChild(div);
             }
 
             // « Valider ce run » ouvre directement le registre du run
             lastRunRegistryPath = data.result.output_files['codelist_duplicates.json'] || null;
         }
+        document.getElementById('goToValidationBtn').classList.toggle('d-none', !lastRunRegistryPath);
 
         renderRunWarnings(document.getElementById('resultWarnings'), data.result?.warnings);
         refreshRunsTable();
 
-        showToast('✅ Pipeline terminé avec succès !', 'success');
+        showToast('Analyse terminée', 'success');
     }
 
     function showError(data) {
-        progressBar.style.width = '100%';
-        progressBar.className = 'progress-bar bg-danger';
-        progressBar.textContent = '❌';
+        phaseLabelEl.textContent = 'Analyse en échec';
+        renderPhaseStrip(lastPhase, 'error');
 
         resultSection.classList.remove('d-none');
         document.getElementById('resultAlert').classList.add('d-none');
-        document.getElementById('goToValidationBtn').classList.add('d-none');
         const errorBox = document.getElementById('resultError');
         errorBox.classList.remove('d-none');
-        errorBox.querySelector('p').textContent = data.error || data.error_message || 'Erreur inconnue';
+        errorBox.querySelector('.msg').textContent = data.error || data.error_message || 'Erreur inconnue.';
         refreshRunsTable();
 
-        showToast('❌ Pipeline échoué — le journal du run est dans son dossier daté', 'danger');
+        showToast('Analyse en échec : le journal du run est dans son dossier daté', 'danger');
     }
 }
 
@@ -323,11 +418,17 @@ function connectSSE(jobId) {
 /* Historique des runs (dossiers datés de la racine de sortie)
 /* ------------------------------------------------------------------ */
 
-const RUN_STATUS_BADGES = {
-    success: ['bg-success', 'terminé'],
-    error: ['bg-danger', 'en erreur'],
-    unknown: ['bg-secondary', 'inconnu'],
+const RUN_STATUS = {
+    success: ['ok', 'Terminé'],
+    error: ['ko', 'Échec'],
+    unknown: ['', 'Inconnu'],
 };
+
+/* « api:s1998 » → « API · s1998 » ; un chemin → son nom de fichier */
+function runSourceLabel(source) {
+    source = source || '';
+    return source.startsWith('api:') ? `API · ${source.slice(4)}` : (source.split('/').pop() || '—');
+}
 
 async function refreshRunsTable() {
     const body = document.getElementById('runsTableBody');
@@ -336,30 +437,29 @@ async function refreshRunsTable() {
     try {
         const runs = await fetchRuns(root);
         if (!runs.length) {
-            body.innerHTML = `<tr><td colspan="5" class="text-muted small p-3">Aucun run dans ${escapeHtml(root)}.</td></tr>`;
+            body.innerHTML = `<tr><td colspan="5" class="text-muted">Aucun run dans <code>${escapeHtml(root)}</code>.</td></tr>`;
             return;
         }
         body.innerHTML = runs.map(run => {
-            const [cls, label] = RUN_STATUS_BADGES[run.status] || RUN_STATUS_BADGES.unknown;
-            const source = (run.xml_source || '').startsWith('api:')
-                ? `API ${run.xml_source.slice(4)}`
-                : (run.xml_source || '').split('/').pop() || '—';
+            let [cls, label] = RUN_STATUS[run.status] || RUN_STATUS.unknown;
+            const warnings = run.warnings || [];
+            if (run.status === 'success' && warnings.length) {
+                cls = 'wait';
+                label = `Terminé, ${warnings.length} avertissement(s)`;
+            }
+            const title = warnings.map(w => w.reason).join(' · ');
             const candidates = run.counts?.candidates ?? '—';
-            const warn = (run.warnings || []).length
-                ? ` <span class="badge bg-warning text-dark" title="${escapeHtml(run.warnings.map(w => w.reason).join(' · '))}">⚠ ${run.warnings.length}</span>`
-                : '';
-            return `<tr>
-                <td class="text-nowrap">${escapeHtml(formatRunId(run.run_id))}</td>
-                <td class="text-break" title="${escapeHtml(run.xml_source || '')}">${escapeHtml(source)}</td>
-                <td><span class="badge ${cls}">${label}</span>${warn}</td>
-                <td class="text-end">${escapeHtml(candidates)}</td>
-                <td class="text-end"><button class="btn btn-sm btn-outline-primary" type="button"
-                    data-open-registry="${escapeHtml(run.registry_path)}"
-                    ${run.status === 'error' ? 'disabled' : ''}>Ouvrir</button></td>
+            return `<tr class="hoverable">
+                <td class="num text-nowrap">${escapeHtml(formatRunId(run.run_id))}</td>
+                <td class="text-break" title="${escapeHtml(run.xml_source || '')}">${escapeHtml(runSourceLabel(run.xml_source))}</td>
+                <td><span class="st ${cls}" title="${escapeHtml(title)}"><span class="dot"></span>${escapeHtml(label)}</span></td>
+                <td class="r">${escapeHtml(candidates)}</td>
+                <td class="r">${run.status === 'error' ? '' : `<button class="btn btn-quiet btn-sm" type="button"
+                    data-open-registry="${escapeHtml(run.registry_path)}">Valider</button>`}</td>
             </tr>`;
         }).join('');
     } catch (err) {
-        body.innerHTML = `<tr><td colspan="5" class="text-danger small p-3">Liste des runs indisponible : ${escapeHtml(err.message)}</td></tr>`;
+        body.innerHTML = `<tr><td colspan="5" class="text-danger">Liste des runs indisponible : ${escapeHtml(err.message)}</td></tr>`;
     }
 }
 
@@ -387,13 +487,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Go to validation
     document.getElementById('goToValidationBtn').addEventListener('click', goToValidation);
 
-    // La racine de sortie est commune aux onglets
-    document.getElementById('outputBase').addEventListener('change', (e) => {
-        setOutputRoot(e.target.value);
-        refreshRunsTable();
-    });
+    // La racine de sortie est commune aux onglets (barre du haut)
+    document.addEventListener('outputrootchange', refreshRunsTable);
 
     // Source : fichier XML ou API Insee
+    initApiPickers();
     for (const id of ['sourceXml', 'sourceApi']) {
         document.getElementById(id).addEventListener('change', toggleSourceFields);
     }

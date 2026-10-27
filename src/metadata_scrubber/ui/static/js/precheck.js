@@ -5,11 +5,11 @@
    correspondance parmi les listes publiées et l'action conseillée. */
 
 const PRECHECK_STATUS = {
-    doublon: ['danger', 'doublon'],
-    inclusion: ['warning text-dark', 'inclusion'],
-    proche: ['info text-dark', 'proche'],
-    nouvelle: ['secondary', 'nouvelle'],
-    reutilisee: ['success', 'réutilisée'],
+    doublon: ['doublon', 'doublons', 'Réutiliser la liste publiée'],
+    inclusion: ['inclusion', 'inclusions', 'Réutiliser la liste, ou vérifier la restriction ou les codes ajoutés'],
+    proche: ['proche', 'proches', 'Vérifier les différences avant de créer une nouvelle liste'],
+    nouvelle: ['nouvelle', 'nouvelles', 'Aucune liste équivalente publiée'],
+    reutilisee: ['réutilisée', 'réutilisées', 'La liste publiée elle-même : rien à faire'],
 };
 const PRECHECK_ORDER = ['doublon', 'inclusion', 'proche', 'nouvelle', 'reutilisee'];
 const PRECHECK_DETECTIONS = {
@@ -47,16 +47,15 @@ async function postPrecheck(format) {
 
 async function runPrecheck() {
     const btn = document.getElementById('precheckBtn');
-    btn.disabled = true;
-    btn.textContent = '⏳ Contrôle…';
+    setBusy(btn, true, 'Contrôle…');
     try {
         const report = await (await postPrecheck('json')).json();
         renderPrecheck(report);
+        document.getElementById('precheckCsvBtn').disabled = false;
     } catch (err) {
         showToast(`Pré-contrôle impossible : ${err.message}`, 'danger');
     } finally {
-        btn.disabled = false;
-        btn.textContent = '🔎 Contrôler';
+        setBusy(btn, false);
     }
 }
 
@@ -72,55 +71,68 @@ function diffHtml(diff) {
     return parts.join('') || '<div>Codes identiques.</div>';
 }
 
+const statusHtml = (status) =>
+    `<span class="status s-${status}"><span class="dot"></span>${escapeHtml(PRECHECK_STATUS[status][0])}</span>`;
+
 function renderPrecheck(report) {
     document.getElementById('precheckResult').classList.remove('d-none');
 
+    // Répartition des statuts
     const by = report.summary.by_status;
-    let summary = `<strong>${report.summary.codelists} CodeList(s)</strong>`;
-    for (const status of PRECHECK_ORDER) {
-        if (!by[status]) continue;
-        const [cls, label] = PRECHECK_STATUS[status];
-        summary += ` <span class="badge bg-${cls}">${by[status]} ${label}</span>`;
-    }
-    if (report.summary.internal_duplicates) {
-        summary += ` <span class="badge bg-danger">${report.summary.internal_duplicates} doublon(s) interne(s)</span>`;
-    }
+    const total = report.summary.codelists;
+    const present = PRECHECK_ORDER.filter(s => by[s]);
     const idx = report.index || {};
-    summary += `<span class="small text-muted ms-auto">Référence : ${escapeHtml(idx.scope || '?')}, `
-        + `index du ${escapeHtml(String(idx.built_at || '?').slice(0, 10))}</span>`;
+    let summary = `<div class="dist-head"><span><strong>${total} CodeList(s) contrôlée(s)</strong>`;
+    summary += ` · référence : ${escapeHtml(idx.scope || '?')}, index du ${escapeHtml(String(idx.built_at || '?').slice(0, 10))}</span>`;
+    if (report.summary.internal_duplicates) {
+        summary += `<span class="status s-interne"><span class="dot"></span>${report.summary.internal_duplicates} doublon(s) dans le fichier</span>`;
+    }
+    summary += `</div>`;
+    summary += `<div class="dist-bar" role="img" aria-label="${present.map(s => `${by[s]} ${PRECHECK_STATUS[s][0]}`).join(', ')}">`;
+    summary += present.map(s => `<span class="s-${s}" style="flex: ${by[s]}" title="${by[s]} ${PRECHECK_STATUS[s][0]}">${by[s]}</span>`).join('');
+    summary += `</div><div class="dist-legend">`;
+    summary += present.map(s => `<div class="s-${s}"><span class="dot" style="color: var(--c)"></span>`
+        + `<b>${by[s]}</b><span>${by[s] > 1 ? PRECHECK_STATUS[s][1] : PRECHECK_STATUS[s][0]}</span></div>`).join('');
+    summary += `</div>`;
     document.getElementById('precheckSummary').innerHTML = summary;
 
+    // Tableau groupé par statut, doublons d'abord
     const rows = [...report.codelists].sort(
         (a, b) => PRECHECK_ORDER.indexOf(a.status) - PRECHECK_ORDER.indexOf(b.status)
             || (a.name || '').localeCompare(b.name || '', 'fr')
     );
     let html = '';
+    let group = null;
     rows.forEach((cl, i) => {
-        const [cls, label] = PRECHECK_STATUS[cl.status];
+        if (cl.status !== group) {
+            group = cl.status;
+            html += `<tr class="group-row"><td colspan="6">${statusHtml(group)} · ${escapeHtml(PRECHECK_STATUS[group][2])}</td></tr>`;
+        }
         const best = cl.matches[0];
         const target = best || cl.reused;
         const flags = cl.quality_flags.length
-            ? ` <span class="badge bg-warning text-dark" title="Liste suspecte : ${escapeHtml(cl.quality_flags.join(', '))}">⚠</span>` : '';
+            ? ` <span class="flag" title="Liste suspecte : ${escapeHtml(cl.quality_flags.join(', '))}">${icon('alert')}</span>` : '';
         const hasDetail = cl.matches.length > 0;
-        html += `<tr class="${hasDetail ? 'precheck-row' : ''}" data-row="${i}"${hasDetail ? ' tabindex="0" title="Voir le détail"' : ''}>`;
-        html += `<td><span class="badge bg-${cls}">${label}</span></td>`;
-        html += `<td>${escapeHtml(cl.name || cl.id)}${flags}<br><code class="dup-id">${escapeHtml(cl.id)}</code></td>`;
-        html += `<td>${target ? escapeHtml(target.name || target.id) : '—'}`;
-        if (target?.series?.length) html += `<br><small class="text-muted">série(s) ${escapeHtml(target.series.join(', '))}</small>`;
-        html += `</td><td>${target ? escapeHtml(LEVEL_LABELS[target.level] || target.level || '') : ''}</td>`;
-        html += `<td>${best ? escapeHtml(PRECHECK_DETECTIONS[best.detection] || best.detection) : ''}</td>`;
-        html += `<td class="text-end">${best ? Math.round(best.confidence * 100) + ' %' : ''}</td></tr>`;
-        if (cl.status !== 'reutilisee' && cl.status !== 'nouvelle') {
-            html += `<tr class="precheck-action"><td></td><td colspan="5" class="small">→ ${escapeHtml(cl.action)}</td></tr>`;
+        html += `<tr class="hoverable${hasDetail ? ' precheck-row' : ''}" data-row="${i}"`;
+        html += hasDetail ? ` tabindex="0" aria-expanded="false" title="Voir le détail des codes">` : '>';
+        html += `<td>${hasDetail ? `<span class="chev">${icon('chevron', 'sm')}</span> ` : ''}${statusHtml(cl.status)}</td>`;
+        html += `<td>${escapeHtml(cl.name || cl.id)}${flags}<div class="dup-id">${escapeHtml(cl.id)}</div></td>`;
+        html += `<td>${target ? escapeHtml(target.name || target.id) : '<span class="text-faint">aucune correspondance</span>'}`;
+        if (target?.series?.length) html += `<div class="small text-muted">série(s) ${escapeHtml(target.series.join(', '))}</div>`;
+        if (cl.action && !['reutilisee', 'nouvelle'].includes(cl.status)) {
+            html += `<div class="precheck-action">${escapeHtml(cl.action)}</div>`;
         }
+        html += `</td><td>${target ? levelTagHtml(target.level) : ''}</td>`;
+        html += `<td>${best ? `<span class="tag">${escapeHtml(PRECHECK_DETECTIONS[best.detection] || best.detection)}</span>` : ''}</td>`;
+        html += `<td class="r">${best ? Math.round(best.confidence * 100) + ' %' : '—'}</td></tr>`;
         if (hasDetail) {
-            html += `<tr class="precheck-detail d-none" data-detail="${i}"><td></td><td colspan="5" class="small">`;
+            html += `<tr class="precheck-detail d-none" data-detail="${i}"><td></td><td colspan="5">`;
             for (const m of cl.matches) {
-                html += `<div class="mb-2"><strong>${escapeHtml(m.name || m.id)}</strong> `;
-                html += `<code class="dup-id">${escapeHtml(m.urn || m.id)}</code> · `;
-                html += `${escapeHtml(PRECHECK_DETECTIONS[m.detection] || m.detection)} ${Math.round(m.confidence * 100)} %`;
+                html += `<div class="match"><div><strong>${escapeHtml(m.name || m.id)}</strong> `;
+                html += `<span class="dup-id">${escapeHtml(m.urn || m.id)}</span></div>`;
+                html += `<div class="text-muted small">${escapeHtml(PRECHECK_DETECTIONS[m.detection] || m.detection)} · ${Math.round(m.confidence * 100)} %`;
                 if (m.operations?.length) html += ` · opérations ${escapeHtml(m.operations.join(', '))}`;
-                html += diffHtml(m.diff) + `</div>`;
+                html += `</div>${diffHtml(m.diff)}</div>`;
             }
             html += `</td></tr>`;
         }
@@ -129,15 +141,27 @@ function renderPrecheck(report) {
 
     const internal = report.internal_duplicates || [];
     document.getElementById('precheckInternal').innerHTML = internal.length
-        ? `<h6>Doublons à l'intérieur du fichier</h6><ul class="small">${internal.map(d =>
+        ? `<div class="panel internal-list"><strong>Doublons à l'intérieur du fichier</strong><ul>${internal.map(d =>
             `<li>${escapeHtml(d.a.name || d.a.id)} ↔ ${escapeHtml(d.b.name || d.b.id)} `
             + `(${escapeHtml(PRECHECK_DETECTIONS[d.detection] || d.detection)}, ${Math.round(d.confidence * 100)} %)</li>`
-        ).join('')}</ul>`
+        ).join('')}</ul></div>`
         : '';
 }
 
 function togglePrecheckDetail(row) {
-    document.querySelector(`#precheckRows [data-detail="${row.dataset.row}"]`)?.classList.toggle('d-none');
+    const detail = document.querySelector(`#precheckRows [data-detail="${row.dataset.row}"]`);
+    if (!detail) return;
+    const open = detail.classList.toggle('d-none') === false;
+    row.setAttribute('aria-expanded', open);
+}
+
+/* Fichier choisi (sélecteur ou glisser-déposer) */
+function showPrecheckFile() {
+    const file = document.getElementById('precheckFile').files[0];
+    const pill = document.getElementById('precheckFileName');
+    pill.classList.toggle('d-none', !file);
+    pill.querySelector('.mono').textContent = file ? file.name : '';
+    document.getElementById('precheckCsvBtn').disabled = true;
 }
 
 async function downloadPrecheckCsv() {
@@ -168,6 +192,23 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             togglePrecheckDetail(row);
         }
+    });
+    const input = document.getElementById('precheckFile');
+    input.addEventListener('change', showPrecheckFile);
+    const drop = document.getElementById('precheckDrop');
+    drop.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        drop.classList.add('dragover');
+    });
+    drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+    drop.addEventListener('drop', (e) => {
+        e.preventDefault();
+        drop.classList.remove('dragover');
+        if (!e.dataTransfer.files.length) return;
+        const dt = new DataTransfer();
+        dt.items.add(e.dataTransfer.files[0]);
+        input.files = dt.files;
+        showPrecheckFile();
     });
     document.getElementById('precheckIndex').value = loadPref('precheckIndex', '');
     document.getElementById('precheckIndex').addEventListener('change', (e) => savePref('precheckIndex', e.target.value.trim()));
