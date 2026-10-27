@@ -21,6 +21,11 @@ def client(tmp_path, monkeypatch):
     registry = {
         "a": {"id": "a", "name": "A", "codes": [["1", "x"]], "duplicates": []},
         "b": {"id": "b", "name": "B", "codes": [["1", "x"]], "duplicates": []},
+        # Faux doublon : c2 rejeté, c3 en attente
+        "c": {"id": "c", "name": "C", "codes": [["1", "x"]], "duplicates": [
+            {"id": "c2", "name": "C2", "codes": [["1", "y"]], "series": ["s1161"], "decision": "reject"},
+            {"id": "c3", "name": "C3", "codes": [["1", "x"]], "decision": "pending"},
+        ]},
     }
     path = str(run_dir / "codelist_duplicates.json")
     monkeypatch.setattr(server, "_registries", {path: registry})
@@ -63,3 +68,16 @@ def test_run_summary_route(client):
     r = c.get("/api/registry/run-summary")
     assert r.status_code == 200
     assert r.json()["warnings"][0]["phase"] == "semantic"
+
+
+def test_false_duplicate_keeps_both_lists(client):
+    c, tmp_path, _ = client
+    assert c.post("/api/registry/add-to-cleaned", json={"cl_id": "c2"}).status_code == 200
+    assert c.post("/api/registry/add-to-cleaned", json={"cl_id": "c"}).status_code == 200
+    r = c.post("/api/registry/add-to-cleaned", json={"cl_id": "c3"})
+    assert r.status_code == 409 and "rejeté" in r.json()["detail"]
+
+    saved = json.loads((tmp_path / "out" / "cleaned_codelists.json").read_text(encoding="utf-8"))
+    assert set(saved["codelists"]) == {"c", "c2"}
+    assert saved["codelists"]["c2"]["codes"] == [["1", "y"]]
+    assert saved["codelists"]["c2"]["level_suggested"] == "specifique"

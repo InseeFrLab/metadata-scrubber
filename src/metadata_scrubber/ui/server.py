@@ -47,6 +47,8 @@ from metadata_scrubber.cleaned_registry import SCHEMA_VERSION as CLEANED_SCHEMA_
 from metadata_scrubber.cleaned_registry import (
     add_entries_from_parents,
     add_entry_from_parent,
+    find_codelist,
+    manual_add_blocker,
     remove_entries,
     cleaned_registry_path,
     empty_cleaned_doc,
@@ -466,12 +468,19 @@ def get_cleaned_registry(path: str | None = Query(None)):
 
 @app.post("/api/registry/add-to-cleaned")
 def add_to_cleaned(req: AddToCleanedRequest, path: str | None = Query(None)):
-    """Ajoute manuellement une CodeList (sans doublon) au registre nettoyé."""
+    """Ajoute à la main une CodeList au registre nettoyé.
+
+    Liste sans doublon, maître dont aucun doublon n'est approuvé, ou doublon
+    rejeté (faux doublon : on garde les deux listes).
+    """
     with _registry_lock:
         registry_path, registry = _loaded(path)
-        cl_data = registry.get(req.cl_id)
+        cl_data, _ = find_codelist(registry, req.cl_id)
         if cl_data is None:
             raise HTTPException(status_code=404, detail=f"CodeList {req.cl_id} not found")
+        blocker = manual_add_blocker(registry, req.cl_id)
+        if blocker:
+            raise HTTPException(status_code=409, detail=blocker)
     cleaned_path = cleaned_registry_path(registry_path)
 
     try:

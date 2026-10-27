@@ -122,6 +122,8 @@ def sync_cleaned_registry(
     Sync incrémental (jamais de régénération complète) :
       - un doublon approuvé est ajouté au `replaces` de l'entrée parente
         (entrée créée depuis les données du parent si absente) ;
+      - un doublon approuvé ajouté auparavant à la main (entrée sans
+        `replaces`) perd cette entrée ;
       - un doublon dé-approuvé est retiré de `replaces` — uniquement s'il
         appartient aux duplicates de CE parent dans le registre courant
         (les ids issus d'autres runs ou ajoutés à la main sont préservés) ;
@@ -157,6 +159,14 @@ def sync_cleaned_registry(
         approuves = {
             did: d for did, d in dups_ici.items() if d.get("decision") == "approve"
         }
+
+        # Un doublon approuvé est remplacé par sa maître : son entrée ajoutée à
+        # la main (faux doublon, avant changement d'avis) disparaît
+        for did in approuves:
+            own = entries.get(did)
+            if own is not None and not own.get("replaces") and own.get("source") == "manuel":
+                del entries[did]
+                stats["entries_deleted"] += 1
 
         # Changement de maître : le groupe ne reste pas rattaché à l'ancienne
         prev = cl_data.get("previous_parent")
@@ -273,6 +283,43 @@ def add_entry_from_parent(cleaned: dict[str, Any], cl_data: dict[str, Any]) -> b
     entries[cl_id] = new_entry(cl_data, source="manuel", replaces=[], now=now)
     cleaned["generated_at"] = now
     return True
+
+
+def find_codelist(
+    registry: dict[str, Any], cl_id: str
+) -> tuple[dict[str, Any] | None, str | None]:
+    """CodeList du registre des doublons : (données, id de sa maître si c'est un doublon).
+
+    Une maître est une clé du registre ; un doublon n'existe que dans les
+    `duplicates` de sa maître. (None, None) si l'id est inconnu.
+    """
+    if cl_id in registry:
+        return registry[cl_id], None
+    for parent_id, parent in registry.items():
+        for dup in parent.get("duplicates", []):
+            if dup.get("id") == cl_id:
+                return dup, parent_id
+    return None, None
+
+
+def manual_add_blocker(registry: dict[str, Any], cl_id: str) -> str | None:
+    """Raison qui interdit d'ajouter cette CodeList à la main au registre nettoyé ; None si permis.
+
+    Une maître s'ajoute tant qu'aucun de ses doublons n'est approuvé (sinon la
+    mise à jour du référentiel la crée déjà) ; un doublon, seulement s'il est
+    rejeté (faux doublon : les deux listes sont gardées).
+    """
+    cl_data, parent_id = find_codelist(registry, cl_id)
+    if cl_data is None:
+        return f"CodeList {cl_id} introuvable"
+    if parent_id is not None:
+        if cl_data.get("decision") != "reject":
+            return "Un doublon ne s'ajoute au référentiel qu'une fois rejeté"
+        return None
+    if any(d.get("decision") == "approve" for d in cl_data.get("duplicates", [])):
+        return ("Cette liste a un doublon approuvé : elle entre au référentiel "
+                "par « Mettre à jour le référentiel »")
+    return None
 
 
 def suggested_level(series: list[str] | set[str]) -> str:

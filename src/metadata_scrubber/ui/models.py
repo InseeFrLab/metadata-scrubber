@@ -48,7 +48,7 @@ class PipelineRequest(BaseModel):
 
 class AddToCleanedRequest(BaseModel):
     """Requête d'ajout manuel d'une CodeList au registre nettoyé."""
-    cl_id: str = Field(..., description="Id de la CodeList (parent du registre des doublons).")
+    cl_id: str = Field(..., description="Id de la CodeList : maître du registre des doublons ou doublon rejeté.")
 
 
 class AddToCleanedBatchRequest(BaseModel):
